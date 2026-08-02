@@ -150,71 +150,78 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
       {/* Main Analytics Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Funnel Progress - Dual Track (occupies 2/3 on desktop) */}
+        {/* Funnel Progress - Simultaneous Dual Track (occupies 2/3 on desktop) */}
         <div className="lg:col-span-2 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/85 p-6 shadow-sm backdrop-blur">
           
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div className="flex items-center justify-between gap-3 mb-6 border-b border-slate-100 dark:border-slate-800/80 pb-4">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">パイプライン進捗（デュアルトラック）</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">投資検討と事業開発（PoC・協業）のフェーズ推移。</p>
-            </div>
-
-            {/* Track Switcher Buttons */}
-            <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800">
-              <button
-                onClick={() => setActiveFunnelTab('investment')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  activeFunnelTab === 'investment'
-                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400'
-                }`}
-              >
-                <Briefcase className="h-3.5 w-3.5" />
-                <span>投資トラック</span>
-              </button>
-
-              <button
-                onClick={() => setActiveFunnelTab('bizdev')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  activeFunnelTab === 'bizdev'
-                    ? 'bg-white dark:bg-slate-900 text-teal-600 dark:text-teal-400 shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400'
-                }`}
-              >
-                <Handshake className="h-3.5 w-3.5" />
-                <span>事業・PoCトラック</span>
-              </button>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span>パイプライン進捗（投資 ＆ 事業・PoC 同時比較）</span>
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">投資検討と事業開発（PoC・協業）のフェーズ推移をリアルタイムに同時モニタリング。</p>
             </div>
           </div>
 
-          <div className="space-y-4">
-            {currentCounts.map((stage, idx) => {
-              const percentage = (stage.count / maxCount) * 100;
-              const barGradient = activeFunnelTab === 'investment' 
-                ? 'from-blue-500 to-indigo-600 group-hover:from-blue-400 group-hover:to-indigo-500'
-                : 'from-teal-500 to-cyan-600 group-hover:from-teal-400 group-hover:to-cyan-500';
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Left Track: Investment Track */}
+            <div className="p-4 rounded-xl bg-blue-50/30 dark:bg-blue-950/20 border border-blue-100/60 dark:border-blue-900/30 space-y-3">
+              <div className="flex items-center space-x-2 pb-2 border-b border-blue-200/50 dark:border-blue-900/50">
+                <Briefcase className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">💳 投資検討トラック</h3>
+              </div>
 
-              return (
-                <div key={idx} className="group relative">
-                  <div className="flex justify-between items-center text-sm mb-1.5">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold text-slate-400 dark:text-slate-600 w-5">{idx + 1}</span>
-                      <span className="font-medium text-slate-700 dark:text-slate-300">{stage.jp}</span>
-                      <span className="text-xs text-slate-400 dark:text-slate-500">({stage.label})</span>
+              <div className="space-y-3">
+                {investmentCounts.map((stage, idx) => {
+                  const maxInvest = Math.max(...investmentCounts.map(f => f.count), 1);
+                  const percentage = (stage.count / maxInvest) * 100;
+                  return (
+                    <div key={idx} className="group">
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{stage.jp}</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-400">{stage.count} 件</span>
+                      </div>
+                      <div className="w-full bg-slate-200/60 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500" 
+                          style={{ width: `${stage.count > 0 ? Math.max(percentage, 10) : 0}%` }}
+                        />
+                      </div>
                     </div>
-                    <span className="font-bold text-slate-900 dark:text-white">{stage.count} 件</span>
-                  </div>
-                  {/* Outer Bar */}
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
-                    {/* Inner Progress Bar */}
-                    <div 
-                      className={`bg-gradient-to-r ${barGradient} h-full rounded-full transition-all duration-500 ease-out`} 
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right Track: BizDev Track */}
+            <div className="p-4 rounded-xl bg-emerald-50/30 dark:bg-emerald-950/20 border border-emerald-100/60 dark:border-emerald-900/30 space-y-3">
+              <div className="flex items-center space-x-2 pb-2 border-b border-emerald-200/50 dark:border-emerald-900/50">
+                <Handshake className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">🤝 事業開発・PoCトラック</h3>
+              </div>
+
+              <div className="space-y-3">
+                {bizDevCounts.map((stage, idx) => {
+                  const maxBizDev = Math.max(...bizDevCounts.map(f => f.count), 1);
+                  const percentage = (stage.count / maxBizDev) * 100;
+                  return (
+                    <div key={idx} className="group">
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{stage.jp}</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{stage.count} 件</span>
+                      </div>
+                      <div className="w-full bg-slate-200/60 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-emerald-500 to-teal-600 h-full rounded-full transition-all duration-500" 
+                          style={{ width: `${stage.count > 0 ? Math.max(percentage, 10) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         </div>
 
