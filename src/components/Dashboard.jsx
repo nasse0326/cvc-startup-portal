@@ -242,53 +242,58 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
           </div>
         </div>
 
-        {/* Sector Distribution - Right Column */}
+        {/* Sector Distribution - Proposal A: Progress Bar List (Right Column) */}
         <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/85 p-6 shadow-sm backdrop-blur flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800/80 pb-3">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">セクター比率</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">技術領域ごとのスタートアップ構成。</p>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <TrendingUp className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+                  <span>セクター別構成比（上位順）</span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">登録企業の技術・事業領域割合。</p>
               </div>
-              <TrendingUp className="h-5 w-5 text-slate-400 dark:text-slate-500" />
             </div>
 
-            <div className="h-64 flex items-center justify-center">
-              {sectorData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={sectorData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {sectorData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)', 
-                        borderColor: '#334155',
-                        borderRadius: '12px',
-                        color: '#fff' 
-                      }} 
-                    />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={36} 
-                      iconType="circle"
-                      iconSize={8}
-                      wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+            <div className="space-y-4">
+              {allSectorData.length > 0 ? (
+                allSectorData
+                  .sort((a, b) => b.count - a.count)
+                  .map((item, index) => {
+                    const percentage = Math.round((item.count / totalPipeline) * 100);
+                    const colorGradients = [
+                      'from-blue-500 to-indigo-600',
+                      'from-teal-500 to-emerald-600',
+                      'from-purple-500 to-violet-600',
+                      'from-amber-500 to-orange-600',
+                      'from-pink-500 to-rose-600',
+                      'from-sky-500 to-cyan-600',
+                      'from-slate-500 to-slate-700'
+                    ];
+                    const gradient = colorGradients[index % colorGradients.length];
+
+                    return (
+                      <div key={item.name} className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{item.name}</span>
+                          <div className="flex items-center space-x-1.5">
+                            <span className="font-bold text-slate-900 dark:text-white">{item.count} 件</span>
+                            <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">({percentage}%)</span>
+                          </div>
+                        </div>
+                        
+                        {/* Progress Bar Container */}
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden p-0.5">
+                          <div 
+                            className={`bg-gradient-to-r ${gradient} h-full rounded-full transition-all duration-500 ease-out`} 
+                            style={{ width: `${Math.max(percentage, 8)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
               ) : (
-                <div className="text-slate-400 text-xs">登録スタートアップデータがありません。</div>
+                <div className="py-12 text-center text-slate-400 text-xs font-medium">登録スタートアップデータがありません。</div>
               )}
             </div>
           </div>
