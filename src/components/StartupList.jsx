@@ -51,6 +51,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
 
   const bizDevStatuses = [
     "Not Started / N/A (未着手 / 対象外)",
+    "Sourcing (ソーシング)",
+    "Initial Meeting (初回面談済)",
     "Collaboration Review (協業検討中)",
     "POC Consideration (POC検討中)",
     "POC Executing (POC実施中)",

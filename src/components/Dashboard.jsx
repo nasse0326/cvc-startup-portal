@@ -58,6 +58,8 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
 
   // 3. BizDev Funnel Progress Data
   const bizDevStages = [
+    { label: "Sourcing", jp: "ソーシング", match: ["Sourcing", "ソーシング"] },
+    { label: "Initial Meeting", jp: "初回面談済", match: ["Initial Meeting", "初回面談済"] },
     { label: "Collaboration Review", jp: "協業検討中", match: ["Collaboration Review", "協業検討中"] },
     { label: "POC Consideration", jp: "POC検討中", match: ["POC Consideration", "POC検討中"] },
     { label: "POC Executing", jp: "POC実施中", match: ["POC Executing", "POC実施中"] },
@@ -72,21 +74,36 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
     return { ...stage, count };
   });
 
-  const currentCounts = activeFunnelTab === 'investment' ? investmentCounts : bizDevCounts;
-  const maxCount = Math.max(...currentCounts.map(f => f.count), 1);
-
-  // 4. Sector Distribution Chart Data
-  const sectors = ["AI", "SaaS / Enterprise", "Fintech", "Healthtech", "ClimateTech", "Logistics / Mobility", "Retail / Commerce", "HRTech", "Web3 / Crypto", "Others"];
+  // 4. Sector Distribution Chart Data (with Smart Fuzzy Matching)
+  const sectorCategories = [
+    { name: "AI", keywords: ["AI", "DeepTech"] },
+    { name: "SaaS / Enterprise", keywords: ["SaaS", "Enterprise"] },
+    { name: "Fintech", keywords: ["Fintech"] },
+    { name: "Healthtech", keywords: ["Health", "Bio"] },
+    { name: "ClimateTech", keywords: ["Climate", "Clean", "GX"] },
+    { name: "Logistics / Mobility", keywords: ["Logistics", "Mobility"] },
+    { name: "Retail / Commerce", keywords: ["Retail", "Commerce"] },
+    { name: "HRTech", keywords: ["HR", "Work"] },
+    { name: "Web3 / Crypto", keywords: ["Web3", "Crypto"] }
+  ];
   
-  const sectorData = sectors.map(sector => {
-    const count = startups.filter(s => {
-      if (sector === "Others") {
-        return !sectors.slice(0, -1).includes(s.sector);
-      }
-      return s.sector === sector;
-    }).length;
-    return { name: sector, value: count };
-  }).filter(d => d.value > 0);
+  const sectorCounts = sectorCategories.map(cat => {
+    const count = startups.filter(s => 
+      cat.keywords.some(k => s.sector?.toLowerCase().includes(k.toLowerCase()))
+    ).length;
+    return { name: cat.name, count };
+  });
+
+  // Count others
+  const matchedTotal = sectorCounts.reduce((acc, curr) => acc + curr.count, 0);
+  const othersCount = Math.max(startups.length - matchedTotal, 0);
+  
+  const allSectorData = [
+    ...sectorCounts,
+    { name: "Others", count: othersCount }
+  ].filter(d => d.count > 0);
+
+  const sectorData = allSectorData.map(d => ({ name: d.name, value: d.count }));
 
   const COLORS = [
     '#3b82f6', // blue
