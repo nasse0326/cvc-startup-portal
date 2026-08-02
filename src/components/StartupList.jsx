@@ -33,6 +33,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
   const [newWebsite, setNewWebsite] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [newFunding, setNewFunding] = useState('');
+  const [newBizDevNotes, setNewBizDevNotes] = useState('');
 
   // Dropdown lists
   const sectors = ["AI", "SaaS / Enterprise", "Fintech", "Healthtech", "ClimateTech", "Logistics / Mobility", "Retail / Commerce", "HRTech", "Web3 / Crypto", "Others"];
@@ -94,7 +95,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
       tagline: newTagline,
       website: newWebsite,
       location: newLocation || `${new Date().getFullYear()} / Unknown`,
-      funding: newFunding
+      funding: newFunding,
+      bizDevNotes: newBizDevNotes
     };
 
     onAddStartup(newStartup);
@@ -110,6 +112,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
     setNewWebsite('');
     setNewLocation('');
     setNewFunding('');
+    setNewBizDevNotes('');
     setIsAddModalOpen(false);
   };
 
@@ -484,13 +487,16 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                     {bizDevStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
                   </select>
                 </div>
-                <textarea 
-                  rows="3"
-                  placeholder="例: シードラウンドで1,500万を調達。共同投資家：グローバル・ブレイン。" 
-                  value={newFunding}
-                  onChange={(e) => setNewFunding(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                />
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ / 検討内容</label>
+                  <textarea 
+                    rows="3"
+                    placeholder="例: 当社物流事業部とのデータ連携実証（PoC）案件。2026年Q3開始を目標に協議中。" 
+                    value={newBizDevNotes}
+                    onChange={(e) => setNewBizDevNotes(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                  />
+                </div>
               </div>
 
               {/* Action Buttons (Min 44x44px target) */}

@@ -38,6 +38,7 @@ export default function StartupDetailModal({
   const [editWebsite, setEditWebsite] = useState(startup.website);
   const [editLocation, setEditLocation] = useState(startup.location);
   const [editFunding, setEditFunding] = useState(startup.funding);
+  const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
 
   const sectors = ["AI", "SaaS / Enterprise", "Fintech", "Healthtech", "ClimateTech", "Logistics / Mobility", "Retail / Commerce", "HRTech", "Web3 / Crypto", "Others"];
   const stages = ["Seed", "Pre-A", "Series-A", "Series-B", "Series-C+"];
@@ -82,7 +83,8 @@ export default function StartupDetailModal({
       tagline: editTagline,
       website: editWebsite,
       location: editLocation,
-      funding: editFunding
+      funding: editFunding,
+      bizDevNotes: editBizDevNotes
     };
 
     onUpdateStartup(startup.id, updatedStartup);
@@ -272,12 +274,23 @@ export default function StartupDetailModal({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">資金調達履歴・投資家メモ</label>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">資金調達履歴・投資家メモ (投資トラック)</label>
               <textarea 
-                rows="4"
+                rows="3"
                 value={editFunding}
                 onChange={(e) => setEditFunding(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase">事業開発・PoC協業メモ / シナジー検討 (事業トラック)</label>
+              <textarea 
+                rows="3"
+                placeholder="例: ◯◯事業部と共同PoC検討中。2026年Q3開始目標。"
+                value={editBizDevNotes}
+                onChange={(e) => setEditBizDevNotes(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
               />
             </div>
 
@@ -395,10 +408,18 @@ export default function StartupDetailModal({
               </div>
 
               {/* Funding summary card */}
-              <div className="p-4 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">資金調達＆投資家メモ</span>
-                <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed font-medium">
+              <div className="p-4 rounded-xl border border-blue-100 dark:border-blue-900/30 bg-blue-50/30 dark:bg-blue-950/20">
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-1">💳 資金調達＆投資家メモ (投資トラック)</span>
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
                   {startup.funding || "投資メモはまだ登録されていません。"}
+                </p>
+              </div>
+
+              {/* BizDev summary card */}
+              <div className="p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-950/20 md:col-span-2">
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">🤝 事業開発＆PoC協業メモ (事業トラック)</span>
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                  {startup.bizDevNotes || "事業・PoC協業メモはまだ登録されていません。"}
                 </p>
               </div>
 
