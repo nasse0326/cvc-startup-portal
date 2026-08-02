@@ -637,13 +637,31 @@ export default function App() {
               </div>
 
               {/* Firebase Section */}
+              {/* Firebase Settings */}
               <div className="space-y-3">
-                <div className="flex items-center space-x-1.5 border-b border-slate-100 dark:border-slate-800/80 pb-1.5">
-                  <Database className="h-4 w-4 text-blue-500" />
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Firebase Web Config</h3>
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-1.5">
+                  <div className="flex items-center space-x-1.5">
+                    <Database className="h-4 w-4 text-blue-500" />
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Firebase Web Config</h3>
+                  </div>
+                  {currentUser?.email === 'nasse0326@gmail.com' ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      管理者権限 (Admin)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 flex items-center gap-1">
+                      🔒 閲覧のみ (Read Only)
+                    </span>
+                  )}
                 </div>
 
-                <div className="space-y-3.5 text-xs">
+                {currentUser?.email !== 'nasse0326@gmail.com' && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-200/50 dark:border-amber-900/30">
+                    🔒 データベース接続設定はシステム管理者（nasse0326@gmail.com）のみ変更可能です。一般メンバーは編集できません。
+                  </p>
+                )}
+
+                <fieldset disabled={currentUser?.email !== 'nasse0326@gmail.com'} className="space-y-3.5 text-xs disabled:opacity-60">
                   <div className="space-y-1">
                     <label className="font-bold text-slate-500 dark:text-slate-400 uppercase">API Key</label>
                     <input 
@@ -651,7 +669,7 @@ export default function App() {
                       placeholder="apiKey" 
                       value={fbApiKey}
                       onChange={(e) => setFbApiKey(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm"
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -662,7 +680,7 @@ export default function App() {
                       placeholder="projectId" 
                       value={fbProjectId}
                       onChange={(e) => setFbProjectId(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-855 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm"
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-855 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -673,7 +691,7 @@ export default function App() {
                       placeholder="authDomain (optional)" 
                       value={fbAuthDomain}
                       onChange={(e) => setFbAuthDomain(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm"
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -684,7 +702,7 @@ export default function App() {
                       placeholder="storageBucket (optional)" 
                       value={fbStorageBucket}
                       onChange={(e) => setFbStorageBucket(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm"
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -695,10 +713,10 @@ export default function App() {
                       placeholder="appId (optional)" 
                       value={fbAppId}
                       onChange={(e) => setFbAppId(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm"
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
                     />
                   </div>
-                </div>
+                </fieldset>
               </div>
 
               {/* Action Buttons (Min 44x44px target) */}
