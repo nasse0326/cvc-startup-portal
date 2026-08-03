@@ -5,26 +5,30 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
     "企業名 (Name)",
     "セクター (Sector)",
     "調達ステージ (Stage)",
-    "投資ステータス (Investment Status)",
-    "事業・PoCステータス (BizDev Status)",
     "優先度評価 (Score)",
-    "事業概要 (Tagline)",
-    "Webサイト (Website)",
     "設立・拠点 (Location)",
-    "資金調達・メモ (Funding)"
+    "Webサイト (Website)",
+    "事業概要 (Tagline)",
+    "資金調達履歴 (Funding History)",
+    "投資ステータス (Investment Status)",
+    "投資検討メモ (Investment Memo)",
+    "事業・PoCステータス (BizDev Status)",
+    "事業開発・PoC協業メモ (BizDev Notes)"
   ];
 
   const rows = startups.map(s => [
     s.name || "",
     s.sector || "",
     s.stage || "",
-    s.status || "",
-    s.bizDevStatus || "",
     s.score || "",
-    s.tagline || "",
-    s.website || "",
     s.location || "",
-    s.funding || ""
+    s.website || "",
+    s.tagline || "",
+    s.funding || "",
+    s.status || "",
+    s.investmentMemo || "",
+    s.bizDevStatus || "",
+    s.bizDevNotes || ""
   ]);
 
   downloadCSV([headers, ...rows], filename);

@@ -37,7 +37,8 @@ export default function StartupDetailModal({
   const [editTagline, setEditTagline] = useState(startup.tagline);
   const [editWebsite, setEditWebsite] = useState(startup.website);
   const [editLocation, setEditLocation] = useState(startup.location);
-  const [editFunding, setEditFunding] = useState(startup.funding);
+  const [editFunding, setEditFunding] = useState(startup.funding || '');
+  const [editInvestmentMemo, setEditInvestmentMemo] = useState(startup.investmentMemo || '');
   const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
 
   const sectors = ["AI", "SaaS / Enterprise", "Fintech", "Healthtech", "ClimateTech", "Logistics / Mobility", "Retail / Commerce", "HRTech", "Web3 / Crypto", "Others"];
@@ -86,6 +87,7 @@ export default function StartupDetailModal({
       website: editWebsite,
       location: editLocation,
       funding: editFunding,
+      investmentMemo: editInvestmentMemo,
       bizDevNotes: editBizDevNotes
     };
 
@@ -168,6 +170,7 @@ export default function StartupDetailModal({
         {/* Drawer Body */}
         {isEditing ? (
           <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-4">
+            {/* 基本プロファイル・優先度評価・資金調達履歴 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
               <div className="space-y-1">
@@ -204,28 +207,6 @@ export default function StartupDetailModal({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">投資ステータス</label>
-                <select 
-                  value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
-                >
-                  {investmentStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
-                </select>
-              </div>
-
-              <div className="space-y-1 md:col-span-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業・PoC協業ステータス</label>
-                <select 
-                  value={editBizDevStatus}
-                  onChange={(e) => setEditBizDevStatus(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
-                >
-                  {bizDevStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
-                </select>
-              </div>
-
-              <div className="space-y-1 md:col-span-2">
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">優先度評価 (1-5)</label>
                 <div className="flex items-center space-x-1.5 h-[44px]">
                   {[1, 2, 3, 4, 5].map((val) => (
@@ -243,7 +224,17 @@ export default function StartupDetailModal({
                 </div>
               </div>
 
-              <div className="space-y-1 md:col-span-2">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">設立年 / 拠点</label>
+                <input 
+                  type="text" 
+                  value={editLocation}
+                  onChange={(e) => setEditLocation(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                />
+              </div>
+
+              <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Webサイト URL</label>
                 <input 
                   type="url" 
@@ -253,16 +244,6 @@ export default function StartupDetailModal({
                 />
               </div>
 
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">設立年 / 拠点</label>
-              <input 
-                type="text" 
-                value={editLocation}
-                onChange={(e) => setEditLocation(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
-              />
             </div>
 
             <div className="space-y-1">
@@ -276,24 +257,78 @@ export default function StartupDetailModal({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">資金調達履歴・投資家メモ (投資トラック)</label>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">資金調達履歴</label>
               <textarea 
-                rows="3"
+                rows="2"
+                placeholder="例: シードラウンドで1,500万を調達。主要投資家：グローバル・ブレイン。"
                 value={editFunding}
                 onChange={(e) => setEditFunding(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase">事業開発・PoC協業メモ / シナジー検討 (事業トラック)</label>
-              <textarea 
-                rows="3"
-                placeholder="例: ◯◯事業部と共同PoC検討中。2026年Q3開始目標。"
-                value={editBizDevNotes}
-                onChange={(e) => setEditBizDevNotes(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-              />
+            {/* 💳 投資検討トラック */}
+            <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl space-y-3">
+              <div className="flex items-center space-x-2 border-b border-blue-200/50 dark:border-blue-900/50 pb-2">
+                <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                  💳 投資検討トラック (Investment Track)
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス</label>
+                <select 
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
+                >
+                  {investmentStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ (投資トラック)</label>
+                <textarea 
+                  rows="3"
+                  placeholder="例: 当社の投資基準に合致。DD結果良好につき投資委員会へ提出予定。"
+                  value={editInvestmentMemo}
+                  onChange={(e) => setEditInvestmentMemo(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            {/* 🤝 事業開発・PoC協業トラック */}
+            <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl space-y-3">
+              <div className="flex items-center space-x-2 border-b border-emerald-200/50 dark:border-emerald-900/50 pb-2">
+                <Handshake className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                  🤝 事業開発・PoC協業トラック (BizDev / PoC Track)
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業・PoC協業ステータス</label>
+                <select 
+                  value={editBizDevStatus}
+                  onChange={(e) => setEditBizDevStatus(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
+                >
+                  {bizDevStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ / シナジー検討 (事業トラック)</label>
+                <textarea 
+                  rows="3"
+                  placeholder="例: ◯◯事業部と共同PoC検討中。2026年Q3開始目標。"
+                  value={editBizDevNotes}
+                  onChange={(e) => setEditBizDevNotes(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                />
+              </div>
             </div>
 
             {/* Save Buttons (Min 44x44px target) */}
@@ -409,11 +444,19 @@ export default function StartupDetailModal({
                 </div>
               </div>
 
-              {/* Funding summary card */}
+              {/* Funding history summary card */}
               <div className="p-4 rounded-xl border border-blue-100 dark:border-blue-900/30 bg-blue-50/30 dark:bg-blue-950/20">
-                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-1">💳 資金調達＆投資家メモ (投資トラック)</span>
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-1">💳 資金調達履歴</span>
                 <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                  {startup.funding || "投資メモはまだ登録されていません。"}
+                  {startup.funding || "資金調達履歴はまだ登録されていません。"}
+                </p>
+              </div>
+
+              {/* Investment memo summary card */}
+              <div className="p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/30 dark:bg-indigo-950/20">
+                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block mb-1">📝 投資検討メモ (投資トラック)</span>
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                  {startup.investmentMemo || "投資検討メモはまだ登録されていません。"}
                 </p>
               </div>
 

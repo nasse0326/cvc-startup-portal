@@ -397,15 +397,15 @@ export default function App() {
           </div>
 
           {/* Workspace Switcher Component */}
-          <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200/40 dark:border-slate-800 ml-4 max-w-[200px] sm:max-w-xs">
-            <Building className="h-4 w-4 text-slate-455 ml-2 shrink-0" />
+          <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200/40 dark:border-slate-800 ml-2 sm:ml-4 max-w-[170px] xs:max-w-[200px] sm:max-w-xs shrink-0">
+            <Building className="h-4 w-4 text-slate-400 ml-1 sm:ml-1.5 shrink-0" />
             <select
               value={activeWorkspaceId}
               onChange={(e) => {
                 setActiveWorkspaceId(e.target.value);
                 localStorage.setItem('cvc_active_workspace', e.target.value);
               }}
-              className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-350 pr-8 pl-1.5 py-1.5 focus:outline-none cursor-pointer truncate"
+              className="flex-1 min-w-0 bg-transparent text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-350 pr-4 sm:pr-6 pl-1 py-1 focus:outline-none cursor-pointer truncate"
             >
               <option value={`personal_${currentUser.uid}`}>Personal Workspace</option>
               {myTeams.map(team => (
@@ -414,7 +414,7 @@ export default function App() {
             </select>
             <button 
               onClick={() => setIsTeamModalOpen(true)}
-              className="p-1 rounded bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 text-blue-600 dark:text-blue-400 border border-slate-200/40 dark:border-slate-800 text-[10px] font-bold px-1.5 shrink-0 transition-all min-h-[28px]"
+              className="relative z-10 px-2 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-500 dark:bg-blue-600 dark:hover:bg-blue-500 font-bold text-xs shrink-0 transition-all shadow-sm active:scale-95 flex items-center justify-center min-h-[36px] sm:min-h-[30px]"
               title="Manage Teams"
             >
               + Team

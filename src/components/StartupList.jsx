@@ -33,6 +33,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
   const [newWebsite, setNewWebsite] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [newFunding, setNewFunding] = useState('');
+  const [newInvestmentMemo, setNewInvestmentMemo] = useState('');
   const [newBizDevNotes, setNewBizDevNotes] = useState('');
 
   // Dropdown lists
@@ -98,6 +99,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
       website: newWebsite,
       location: newLocation || `${new Date().getFullYear()} / Unknown`,
       funding: newFunding,
+      investmentMemo: newInvestmentMemo,
       bizDevNotes: newBizDevNotes
     };
 
@@ -114,6 +116,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
     setNewWebsite('');
     setNewLocation('');
     setNewFunding('');
+    setNewInvestmentMemo('');
     setNewBizDevNotes('');
     setIsAddModalOpen(false);
   };
@@ -342,7 +345,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-800 pb-2">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    🏢 基本プロファイル
+                    🏢 基本プロファイル＆評価
                   </span>
                 </div>
                 
@@ -382,65 +385,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Webサイト URL</label>
-                    <input 
-                      type="url" 
-                      placeholder="https://example.com" 
-                      value={newWebsite}
-                      onChange={(e) => setNewWebsite(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">設立年 / 拠点</label>
-                    <input 
-                      type="text" 
-                      placeholder="例: 2024年設立 / 東京" 
-                      value={newLocation}
-                      onChange={(e) => setNewLocation(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業概要（一言タグライン）</label>
-                    <input 
-                      type="text" 
-                      placeholder="例: 倉庫車両の自動トラッキング向けクラウドプラットフォーム。" 
-                      value={newTagline}
-                      onChange={(e) => setNewTagline(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. 💳 投資トラック (Investment Track) */}
-              <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl space-y-4">
-                <div className="flex items-center space-x-2 border-b border-blue-200/50 dark:border-blue-900/50 pb-2">
-                  <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                    💳 投資検討トラック (Investment Track)
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス</label>
-                    <select 
-                      value={newStatus}
-                      onChange={(e) => setNewStatus(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-300 text-sm transition-all"
-                    >
-                      {investmentStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase block mb-1">優先度評価 (1-5)</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">優先度評価 (1-5)</label>
                     <div className="flex items-center space-x-1.5 h-[44px]">
                       {[1, 2, 3, 4, 5].map((val) => (
                         <button
@@ -456,15 +401,80 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                       ))}
                     </div>
                   </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">設立年 / 拠点</label>
+                    <input 
+                      type="text" 
+                      placeholder="例: 2024年設立 / 東京" 
+                      value={newLocation}
+                      onChange={(e) => setNewLocation(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Webサイト URL</label>
+                    <input 
+                      type="url" 
+                      placeholder="https://example.com" 
+                      value={newWebsite}
+                      onChange={(e) => setNewWebsite(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">資金調達履歴・投資家メモ</label>
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業概要（一言タグライン）</label>
+                  <input 
+                    type="text" 
+                    placeholder="例: 倉庫車両の自動トラッキング向けクラウドプラットフォーム。" 
+                    value={newTagline}
+                    onChange={(e) => setNewTagline(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">資金調達履歴</label>
                   <textarea 
                     rows="2"
                     placeholder="例: シードラウンドで1,500万を調達。共同投資家：グローバル・ブレイン。" 
                     value={newFunding}
                     onChange={(e) => setNewFunding(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* 2. 💳 投資検討トラック (Investment Track) */}
+              <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl space-y-4">
+                <div className="flex items-center space-x-2 border-b border-blue-200/50 dark:border-blue-900/50 pb-2">
+                  <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                    💳 投資検討トラック (Investment Track)
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス</label>
+                  <select 
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-300 text-sm transition-all"
+                  >
+                    {investmentStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ (投資トラック)</label>
+                  <textarea 
+                    rows="2"
+                    placeholder="例: 当社の投資基準に合致。DD結果良好につき投資委員会へ提出予定。" 
+                    value={newInvestmentMemo}
+                    onChange={(e) => setNewInvestmentMemo(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
                   />
                 </div>
