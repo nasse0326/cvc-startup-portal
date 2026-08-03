@@ -446,14 +446,6 @@ export default function App() {
           {/* Utility Tools & User Profile */}
           <div className="flex items-center space-x-2 shrink-0">
             
-            {/* Theme Toggle (Min 44x44px target) */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200/60 dark:border-slate-850 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all flex items-center justify-center min-h-[44px] min-w-[44px]"
-            >
-              {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
-
             {/* Settings Toggler (Min 44x44px target) */}
             <button
               onClick={() => setIsSettingsOpen(true)}
@@ -612,6 +604,39 @@ export default function App() {
                       <CheckCircle className="h-4 w-4 mr-1" /> Local Sandbox Mode
                     </span>
                   )}
+                </div>
+              </div>
+
+              {/* Theme Settings Section */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-1.5 border-b border-slate-100 dark:border-slate-800/80 pb-1.5">
+                  {darkMode ? <Moon className="h-4 w-4 text-indigo-400" /> : <Sun className="h-4 w-4 text-amber-500" />}
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">画面テーマ設定 (Theme)</h3>
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                      {darkMode ? "🌙 ダークモード (Dark Mode)" : "☀️ ライトモード (Light Mode)"}
+                    </span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block">
+                      背景色と文字色の表示モードを切り替えます
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setDarkMode(!darkMode)}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none shrink-0 ${
+                      darkMode ? 'bg-indigo-600' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                        darkMode ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
 
