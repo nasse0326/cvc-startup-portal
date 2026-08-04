@@ -25,6 +25,7 @@ import StartupList from './components/StartupList';
 import MeetingTimeline from './components/MeetingTimeline';
 import StartupDetailModal from './components/StartupDetailModal';
 import Login from './components/Login';
+import { Analytics } from '@vercel/analytics/react';
 
 import { 
   subscribeToCollection, 
@@ -930,6 +931,8 @@ export default function App() {
         ))}
       </div>
 
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }
