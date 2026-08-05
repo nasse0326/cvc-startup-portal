@@ -16,12 +16,50 @@ export const analyzeMeetingNotes = async (notes, startup) => {
     throw new Error("Gemini APIキーが設定されていません。ヘッダーの ⚙️「設定」画面から Gemini API Key を保存してください。");
   }
 
-  const candidateEndpoints = [
-    { apiVersion: 'v1beta', model: 'gemini-2.5-flash' },
+  // 1. Fetch available models for this specific API key dynamically
+  let detectedModels = [];
+  let apiKeyStatusError = null;
+
+  try {
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      if (listData.models && Array.isArray(listData.models)) {
+        detectedModels = listData.models
+          .filter(m => m.supportedGenerationMethods?.includes("generateContent"))
+          .map(m => ({
+            apiVersion: 'v1beta',
+            model: m.name.replace(/^models\//, '')
+          }));
+      }
+    } else {
+      const errJson = await listRes.json().catch(() => ({}));
+      const errMsg = errJson?.error?.message || `HTTP ${listRes.status}`;
+      apiKeyStatusError = `APIキー検証エラー: ${errMsg}`;
+    }
+  } catch (e) {
+    console.warn("Failed to fetch model list dynamically:", e);
+  }
+
+  // Fallback candidate endpoints if model list API failed or returned empty
+  const fallbackEndpoints = [
+    { apiVersion: 'v1beta', model: 'gemini-1.5-flash' },
     { apiVersion: 'v1beta', model: 'gemini-2.0-flash' },
     { apiVersion: 'v1', model: 'gemini-1.5-flash' },
-    { apiVersion: 'v1beta', model: 'gemini-1.5-flash-latest' }
+    { apiVersion: 'v1beta', model: 'gemini-2.5-flash' }
   ];
+
+  // Combine detected models first, then fallbacks without duplicates
+  const candidateEndpoints = [];
+  const seen = new Set();
+
+  [...detectedModels, ...fallbackEndpoints].forEach(item => {
+    const key = `${item.apiVersion}/${item.model}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      candidateEndpoints.push(item);
+    }
+  });
 
   const startupName = startup?.name || "Unknown Startup";
   const startupSector = startup?.sector || "General";
@@ -111,6 +149,10 @@ The JSON MUST follow this exact structure:
       console.error(`Error requesting ${apiVersion}/${model}:`, err);
       lastError = err;
     }
+  }
+
+  if (apiKeyStatusError) {
+    throw new Error(`${apiKeyStatusError}。Google AI Studioで有効なGemini APIキーを再取得・設定してください。`);
   }
 
   throw lastError || new Error("Gemini APIとの通信に失敗しました。APIキー（無料枠有効）と接続をご確認ください。");
