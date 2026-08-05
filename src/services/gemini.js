@@ -16,7 +16,12 @@ export const analyzeMeetingNotes = async (notes, startup) => {
     throw new Error("Gemini APIキーが設定されていません。ヘッダーの ⚙️「設定」画面から Gemini API Key を保存してください。");
   }
 
-  const candidateModels = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"];
+  const candidateModels = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash"
+  ];
 
   const startupName = startup?.name || "Unknown Startup";
   const startupSector = startup?.sector || "General";
