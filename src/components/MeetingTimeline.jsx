@@ -11,7 +11,8 @@ import {
   Filter,
   Search,
   Download,
-  X
+  X,
+  Edit3
 } from 'lucide-react';
 import { analyzeMeetingNotes } from '../services/gemini';
 import { exportMeetingsToCSV } from '../services/exportCsv';
@@ -28,6 +29,15 @@ export default function MeetingTimeline({
   const [selectedStartupFilter, setSelectedStartupFilter] = useState('');
   const [selectedPurposeFilter, setSelectedPurposeFilter] = useState('');
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+
+  // Edit Meeting State
+  const [editingMeeting, setEditingMeeting] = useState(null);
+  const [editStartupId, setEditStartupId] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editPurpose, setEditPurpose] = useState('');
+  const [editAttendees, setEditAttendees] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [editNextStep, setEditNextStep] = useState('');
 
   // Gemini loading states mapping meetingId -> boolean
   const [aiLoadingState, setAiLoadingState] = useState({});
@@ -108,6 +118,42 @@ export default function MeetingTimeline({
     setFormNextStep('');
     setIsAddFormOpen(false);
     showToast("Meeting log created successfully!", "success");
+  };
+
+  // Open Edit Modal
+  const handleOpenEditModal = (meeting) => {
+    setEditingMeeting(meeting);
+    setEditStartupId(meeting.startupId || '');
+    setEditDate(meeting.date || new Date().toISOString().split('T')[0]);
+    setEditPurpose(meeting.purpose || 'Initial pitch');
+    setEditAttendees(meeting.attendees ? meeting.attendees.join(', ') : '');
+    setEditNotes(meeting.notes || '');
+    setEditNextStep(meeting.nextStep || '');
+  };
+
+  // Submit Update Meeting
+  const handleUpdateSubmit = (e) => {
+    e.preventDefault();
+    if (!editingMeeting || !editStartupId) return;
+
+    const attendeesArray = editAttendees
+      .split(',')
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+
+    const updatedMeeting = {
+      ...editingMeeting,
+      startupId: editStartupId,
+      date: editDate,
+      purpose: editPurpose,
+      attendees: attendeesArray,
+      notes: editNotes,
+      nextStep: editNextStep
+    };
+
+    onUpdateMeeting(editingMeeting.id, updatedMeeting);
+    setEditingMeeting(null);
+    if (showToast) showToast("面談ログを更新しました！", "success");
   };
 
   // Trigger Gemini Analysis
@@ -255,19 +301,27 @@ export default function MeetingTimeline({
                       </h3>
                     </div>
                     
-                    {/* Badge purpose */}
-                    <div className="flex flex-wrap gap-2 items-center">
+                    {/* Badge purpose & Edit Button */}
+                    <div className="flex items-center space-x-3">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30">
                         {meeting.purpose}
                       </span>
+                      <button
+                        onClick={() => handleOpenEditModal(meeting)}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs transition-all flex items-center space-x-1 min-h-[36px]"
+                        title="過去の面談ログを修正"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                        <span>編集</span>
+                      </button>
                     </div>
                   </div>
 
                   {/* Body Content */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+                  <div className="pt-4">
                     
                     {/* Raw details column */}
-                    <div className="lg:col-span-2 space-y-4">
+                    <div className="space-y-4">
                       {/* Attendees */}
                       {meeting.attendees && meeting.attendees.length > 0 && (
                         <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400">
@@ -297,80 +351,7 @@ export default function MeetingTimeline({
                       )}
                     </div>
 
-                    {/* AI Synergy Brief Panel */}
-                    <div className="rounded-xl border border-purple-200/50 dark:border-purple-950/40 bg-purple-50/30 dark:bg-purple-950/10 p-5 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-1.5 text-purple-700 dark:text-purple-400">
-                            <Sparkles className="h-4.5 w-4.5" />
-                            <h4 className="text-xs font-bold uppercase tracking-wider">Gemini シナジー分析</h4>
-                          </div>
-
-                          {/* Trigger Analysis Button (Min 44x44px target) */}
-                          <button
-                            onClick={() => handleTriggerAI(meeting)}
-                            disabled={isAnalyzing}
-                            className="p-2 rounded-lg bg-purple-100 dark:bg-purple-950 hover:bg-purple-200 dark:hover:bg-purple-900/80 text-purple-700 dark:text-purple-300 disabled:opacity-50 transition-all flex items-center justify-center min-h-[44px] min-w-[44px]"
-                            title="AIシナジー分析を生成"
-                          >
-                            {isAnalyzing ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Sparkles className="h-4 w-4" />
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Brief content or actions */}
-                        {isAnalyzing ? (
-                          <div className="py-8 text-center space-y-2">
-                            <Loader2 className="h-6 w-6 animate-spin text-purple-500 mx-auto" />
-                            <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">Gemini AIで面談内容を分析中...</p>
-                          </div>
-                        ) : aiError ? (
-                          <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 text-rose-700 dark:text-rose-450 text-xs flex items-start space-x-2">
-                            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                            <span>{aiError}</span>
-                          </div>
-                        ) : meeting.aiBrief ? (
-                          <div className="space-y-4 text-xs">
-                            
-                            {/* Summary Bullet Points */}
-                            <div className="space-y-1.5">
-                              <span className="font-bold text-slate-500 dark:text-slate-450 uppercase block">ビジネスモデル要旨</span>
-                              <ul className="list-disc pl-4 space-y-1 text-slate-650 dark:text-slate-350 leading-relaxed font-medium">
-                                {meeting.aiBrief.summary?.map((b, i) => (
-                                  <li key={i}>{b}</li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            {/* Strengths & Bottlenecks */}
-                            <div className="space-y-1">
-                              <span className="font-bold text-slate-500 dark:text-slate-450 uppercase block">強みとリスク・課題</span>
-                              <p className="text-slate-650 dark:text-slate-350 leading-relaxed font-medium">
-                                {meeting.aiBrief.strengths_and_bottlenecks}
-                              </p>
-                            </div>
-
-                            {/* CVC Synergy */}
-                            <div className="space-y-1">
-                              <span className="font-bold text-slate-500 dark:text-slate-450 uppercase block">CVCシナジー検討案</span>
-                              <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">
-                                {meeting.aiBrief.cvc_synergy}
-                              </p>
-                            </div>
-
-                          </div>
-                        ) : (
-                          <div className="py-8 text-center text-slate-400 dark:text-slate-600">
-                            <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-800" />
-                            <p className="text-xs">分析結果はまだありません。💡ボタンを押してAIシナジー評価を実行してください。</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
+                    {/* Gemini Synergy Brief Panel (Hidden by user request) */}
                   </div>
                 </div>
 
@@ -504,6 +485,130 @@ export default function MeetingTimeline({
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Meeting Modal Dialogue */}
+      {editingMeeting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col animate-scale-up">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                <Edit3 className="h-5 w-5 text-blue-500" />
+                <span>過去の面談ログを編集</span>
+              </h2>
+              <button 
+                onClick={() => setEditingMeeting(null)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all min-h-[40px] min-w-[40px] flex items-center justify-center"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
+              {/* Select Startup */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">対象企業 *</label>
+                <select 
+                  required
+                  value={editStartupId}
+                  onChange={(e) => setEditStartupId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 text-sm font-medium transition-all"
+                >
+                  <option value="" disabled>企業を選択してください</option>
+                  {startups.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+
+              {/* Date & Purpose */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">面談実施日 *</label>
+                  <input 
+                    type="date" 
+                    required
+                    value={editDate}
+                    onChange={(e) => setEditDate(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">面談目的 *</label>
+                  <select 
+                    value={editPurpose}
+                    onChange={(e) => setEditPurpose(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  >
+                    {meetingPurposes.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Attendees */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">同席メンバー / 担当者</label>
+                <input 
+                  type="text" 
+                  placeholder="カンマ区切りで入力 (例: 山田太郎, 佐藤次郎)" 
+                  value={editAttendees}
+                  onChange={(e) => setEditAttendees(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-450 transition-all"
+                />
+              </div>
+
+              {/* Discussion Notes */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase">ディスカッションメモ *</label>
+                  <VoiceInputButton onTranscript={(text) => setEditNotes(prev => prev ? `${prev}\n${text}` : text)} />
+                </div>
+                <textarea 
+                  rows="5"
+                  required
+                  placeholder="面談の詳細なメモや文字起こしなど..." 
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-450 transition-all resize-none"
+                />
+              </div>
+
+              {/* Next Steps */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase">次回のタスクと期限</label>
+                  <VoiceInputButton onTranscript={(text) => setEditNextStep(prev => prev ? `${prev} ${text}` : text)} />
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="例：7月30日までにAPI技術検証を実施" 
+                  value={editNextStep}
+                  onChange={(e) => setEditNextStep(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-450 transition-all"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="pt-4 flex justify-end space-x-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingMeeting(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 text-sm transition-all min-h-[44px]"
+                >
+                  キャンセル
+                </button>
+                <button 
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md shadow-blue-500/10 text-sm transition-all min-h-[44px]"
+                >
+                  更新内容を保存
+                </button>
+              </div>
+            </form>
+
           </div>
         </div>
       )}
