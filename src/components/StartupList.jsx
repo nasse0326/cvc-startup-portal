@@ -10,13 +10,21 @@ import {
   X,
   Briefcase,
   Handshake,
-  Download
+  Download,
+  LayoutGrid,
+  Table,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { exportStartupsToCSV } from '../services/exportCsv';
 import VoiceInputButton from './VoiceInputButton';
 
 export default function StartupList({ startups, onSelectStartup, onAddStartup, showToast }) {
   const [companyType, setCompanyType] = useState('startup'); // 'startup' | 'enterprise'
+  const [viewMode, setViewMode] = useState('table'); // 'grid' | 'table'
+  const [sortField, setSortField] = useState('score');
+  const [sortDirection, setSortDirection] = useState('desc'); // 'asc' | 'desc'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSector, setSelectedSector] = useState('');
   const [selectedStage, setSelectedStage] = useState('');
@@ -96,6 +104,44 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
     return matchesType && matchesSearch && matchesSector && matchesStage && matchesInvestStatus && matchesBizDevStatus;
   });
 
+  // Sort Handler
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  // Sorted Array
+  const sortedStartups = [...filteredStartups].sort((a, b) => {
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+
+    if (sortField === 'score') {
+      aVal = Number(a.score || 0);
+      bVal = Number(b.score || 0);
+    } else if (typeof aVal === 'string') {
+      aVal = (aVal || '').toLowerCase();
+      bVal = (bVal || '').toLowerCase();
+    } else if (!aVal) {
+      aVal = '';
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Helper Sort Icon
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 text-slate-300 dark:text-slate-600 ml-1 inline" />;
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-3 w-3 text-blue-600 dark:text-blue-400 ml-1 inline font-bold" />
+      : <ArrowDown className="h-3 w-3 text-blue-600 dark:text-blue-400 ml-1 inline font-bold" />;
+  };
+
   // Submit Handler
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -173,7 +219,38 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center space-x-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+
+          {/* View Mode Switcher (Grid vs Table) */}
+          <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all min-h-[40px] flex items-center space-x-1.5 ${
+                viewMode === 'table'
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
+              }`}
+              title="データテーブル（表）表示"
+            >
+              <Table className="h-4 w-4" />
+              <span>テーブル</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all min-h-[40px] flex items-center space-x-1.5 ${
+                viewMode === 'grid'
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
+              }`}
+              title="カードグリッド表示"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              <span>カード</span>
+            </button>
+          </div>
+
           {/* CSV Export Button */}
           <button
             onClick={handleExportCSV}
@@ -306,10 +383,131 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
 
       </div>
 
-      {/* Grid of Startup Cards */}
-      {filteredStartups.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredStartups.map(startup => (
+      {/* List of Startup Companies (Table View vs Grid View) */}
+      {sortedStartups.length > 0 ? (
+        viewMode === 'table' ? (
+          /* Table View */
+          <div className="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 shadow-sm backdrop-blur">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold select-none">
+                  <th onClick={() => handleSort('name')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <div className="flex items-center space-x-1">
+                      <span>企業名</span>
+                      <SortIcon field="name" />
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort('sector')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <div className="flex items-center space-x-1">
+                      <span>セクター</span>
+                      <SortIcon field="sector" />
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort('stage')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <div className="flex items-center space-x-1">
+                      <span>ステージ</span>
+                      <SortIcon field="stage" />
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort('score')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <div className="flex items-center space-x-1">
+                      <span>優先度評価</span>
+                      <SortIcon field="score" />
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort('status')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <div className="flex items-center space-x-1">
+                      <span>投資ステータス</span>
+                      <SortIcon field="status" />
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort('bizDevStatus')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <div className="flex items-center space-x-1">
+                      <span>事業・PoC</span>
+                      <SortIcon field="bizDevStatus" />
+                    </div>
+                  </th>
+                  <th className="py-3.5 px-4">拠点 / Web</th>
+                  <th className="py-3.5 px-4 text-right">詳細</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                {sortedStartups.map((startup) => (
+                  <tr 
+                    key={startup.id}
+                    onClick={() => onSelectStartup(startup)}
+                    className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
+                  >
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-sm">
+                        {startup.name}
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs">
+                        {startup.tagline}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium">
+                        {startup.sector}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
+                        {startup.stage}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center space-x-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`h-3.5 w-3.5 ${i < startup.score ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'}`} 
+                          />
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${getInvestmentStatusColor(startup.status)}`}>
+                        {startup.status?.split(" (")?.[0]}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${getBizDevStatusColor(startup.bizDevStatus)}`}>
+                        {startup.bizDevStatus ? startup.bizDevStatus.split(" (")[0] : "未着手"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
+                      <div>{startup.location}</div>
+                      {startup.website && (
+                        <a 
+                          href={startup.website} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-blue-500 hover:underline flex items-center gap-0.5 mt-0.5"
+                        >
+                          <Globe className="h-3 w-3" />
+                          <span className="truncate max-w-[100px]">{startup.website.replace(/^https?:\/\//, '')}</span>
+                        </a>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); onSelectStartup(startup); }}
+                        className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all min-h-[32px]"
+                      >
+                        詳細
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Grid of Startup Cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedStartups.map(startup => (
             <div 
               key={startup.id}
               onClick={() => onSelectStartup(startup)}
@@ -382,7 +580,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
 
             </div>
           ))}
-        </div>
+          </div>
+        )
       ) : (
         <div className="text-center py-16 rounded-2xl border border-dashed border-slate-250 dark:border-slate-800 bg-white/40 dark:bg-slate-950/20 backdrop-blur">
           <SlidersHorizontal className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
