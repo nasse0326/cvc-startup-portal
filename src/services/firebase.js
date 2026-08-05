@@ -19,7 +19,8 @@ import {
   signInWithPopup, 
   GoogleAuthProvider, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  sendPasswordResetEmail 
 } from 'firebase/auth';
 
 let firebaseApp = null;
@@ -110,8 +111,13 @@ export const loginWithEmail = (email, password) => {
 };
 
 export const registerWithEmail = (email, password) => {
-  if (!auth) throw new Error("Firebase Auth is not initialized. Check your config.");
+  if (!auth) throw new Error("Firebase Auth is not initialized.");
   return createUserWithEmailAndPassword(auth, email, password);
+};
+
+export const resetPasswordEmail = (email) => {
+  if (!auth) throw new Error("Firebase Auth is not initialized.");
+  return sendPasswordResetEmail(auth, email);
 };
 
 export const loginWithGoogle = () => {

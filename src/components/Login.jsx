@@ -32,6 +32,7 @@ const GoogleIcon = (props) => (
 import { 
   loginWithEmail, 
   registerWithEmail, 
+  resetPasswordEmail,
   loginWithGoogle, 
   loginMockUser,
   isFirebaseConfigured
@@ -43,6 +44,11 @@ export default function Login({ onLoginSuccess, showToast }) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Password Reset Modal State
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetSent, setResetSent] = useState(false);
 
   const hasFirebase = isFirebaseConfigured();
 
@@ -185,9 +191,24 @@ export default function Login({ onLoginSuccess, showToast }) {
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              {hasFirebase ? "Password" : "Password (Optional in Sandbox)"}
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                {hasFirebase ? "Password" : "Password (Optional in Sandbox)"}
+              </label>
+              {hasFirebase && !isRegister && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetEmail(email);
+                    setResetSent(false);
+                    setIsResetModalOpen(true);
+                  }}
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  パスワードをお忘れですか？
+                </button>
+              )}
+            </div>
             <div className="relative">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400" />
               <input 
@@ -201,22 +222,92 @@ export default function Login({ onLoginSuccess, showToast }) {
             </div>
           </div>
 
-          {/* Primary Action Button (Min 44x44px target) */}
-          <button 
+          <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center space-x-2 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold shadow-md shadow-blue-500/10 hover:shadow-lg transition-all min-h-[44px]"
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-md shadow-blue-500/10 transition-all flex items-center justify-center space-x-2 text-sm min-h-[44px]"
           >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <>
-                <span>{isRegister ? "Create SaaS Account" : "Sign In to Portal"}</span>
-                <ArrowRight className="h-4.5 w-4.5" />
+                <span>{isRegister ? 'アカウントを新規作成' : 'ログイン'}</span>
+                <ArrowRight className="h-4 w-4 ml-1" />
               </>
             )}
           </button>
         </form>
+
+        {/* Modal for Reset Password */}
+        {isResetModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 p-6 space-y-4 animate-scale-up">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">パスワードの再設定・復旧</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                登録されているメールアドレスを入力してください。Firebaseからパスワード再設定用のURLリンクをお送りします。
+              </p>
+
+              {resetSent ? (
+                <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs space-y-2">
+                  <p className="font-bold">📩 再設定メールを送信しました！</p>
+                  <p>メールボックス（迷惑メールフォルダ含む）をご確認いただき、案内リンクから新しいパスワードを設定してください。</p>
+                  <button
+                    type="button"
+                    onClick={() => setIsResetModalOpen(false)}
+                    className="w-full mt-2 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold text-xs"
+                  >
+                    閉じる
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!resetEmail) return;
+                  setIsLoading(true);
+                  try {
+                    await resetPasswordEmail(resetEmail);
+                    setResetSent(true);
+                    showToast("パスワード再設定メールを送信しました", "success");
+                  } catch (err) {
+                    console.error(err);
+                    showToast(err.message || "送信に失敗しました", "error");
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">登録メールアドレス</label>
+                    <input 
+                      type="email" 
+                      required
+                      placeholder="you@company.com" 
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm"
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-2 pt-2">
+                    <button 
+                      type="button"
+                      onClick={() => setIsResetModalOpen(false)}
+                      className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-semibold text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      キャンセル
+                    </button>
+                    <button 
+                      type="submit"
+                      disabled={isLoading}
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-sm"
+                    >
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '再設定メールを送信'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Divider */}
         <div className="relative my-6 text-center">
