@@ -88,6 +88,11 @@ export default function App() {
   const [meetings, setMeetings] = useState([]);
   const [selectedStartup, setSelectedStartup] = useState(null);
 
+  // User Name (for audit trail updatedBy)
+  const [userName, setUserName] = useState(() => {
+    return localStorage.getItem('cvc_user_name') || '';
+  });
+
   // Settings Drawer Toggle
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [configReloadTrigger, setConfigReloadTrigger] = useState(0);
@@ -227,6 +232,13 @@ export default function App() {
   const handleSaveSettings = (e) => {
     e.preventDefault();
     
+    // Save User Name
+    if (userName) {
+      localStorage.setItem('cvc_user_name', userName.trim());
+    } else {
+      localStorage.removeItem('cvc_user_name');
+    }
+
     // Save Gemini API Key
     saveGeminiApiKey(geminiKey);
 
@@ -303,10 +315,15 @@ export default function App() {
   // Pipeline Mutators (Enriches data with workspaceId and ownerId)
   const handleAddStartup = async (startupData) => {
     try {
+      const nowStr = new Date().toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const currentAuthor = userName || (currentUser?.displayName || currentUser?.email?.split('@')[0] || '担当者');
+
       const enriched = {
         ...startupData,
         workspaceId: activeWorkspaceId,
         ownerId: currentUser.uid,
+        updatedBy: currentAuthor,
+        updatedAt: nowStr,
         createdAt: new Date().toISOString()
       };
       await addDocument('startups', enriched);
@@ -366,9 +383,18 @@ export default function App() {
 
   const handleUpdateStartup = async (id, updatedData) => {
     try {
-      await updateDocument('startups', id, updatedData);
+      const nowStr = new Date().toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const currentAuthor = userName || (currentUser?.displayName || currentUser?.email?.split('@')[0] || '担当者');
+
+      const enriched = {
+        ...updatedData,
+        updatedBy: currentAuthor,
+        updatedAt: nowStr
+      };
+
+      await updateDocument('startups', id, enriched);
       if (selectedStartup && selectedStartup.id === id) {
-        setSelectedStartup(updatedData);
+        setSelectedStartup(enriched);
       }
     } catch (error) {
       console.error(error);
@@ -391,10 +417,15 @@ export default function App() {
 
   const handleAddMeeting = async (meetingData) => {
     try {
+      const nowStr = new Date().toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const currentAuthor = userName || (currentUser?.displayName || currentUser?.email?.split('@')[0] || '担当者');
+
       const enriched = {
         ...meetingData,
         workspaceId: activeWorkspaceId,
         ownerId: currentUser.uid,
+        updatedBy: currentAuthor,
+        updatedAt: nowStr,
         createdAt: new Date().toISOString()
       };
       await addDocument('meetings', enriched);
@@ -406,7 +437,16 @@ export default function App() {
 
   const handleUpdateMeeting = async (id, updatedData) => {
     try {
-      await updateDocument('meetings', id, updatedData);
+      const nowStr = new Date().toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const currentAuthor = userName || (currentUser?.displayName || currentUser?.email?.split('@')[0] || '担当者');
+
+      const enriched = {
+        ...updatedData,
+        updatedBy: currentAuthor,
+        updatedAt: nowStr
+      };
+
+      await updateDocument('meetings', id, enriched);
     } catch (error) {
       console.error(error);
       showToast("Failed to update meeting log.", "error");
@@ -632,7 +672,24 @@ export default function App() {
             </div>
 
             {/* Drawer Body Form */}
-            <form onSubmit={handleSaveSettings} className="flex-1 overflow-y-auto p-6 space-y-6">
+            <form onSubmit={handleSaveSettings} className="p-6 overflow-y-auto space-y-6 flex-1 text-sm">
+              
+              {/* User Name Config */}
+              <div className="space-y-1 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                <label className="font-bold text-slate-800 dark:text-slate-200 block text-xs uppercase tracking-wider">
+                  担当者名 / お名前 (更新スタンプ用)
+                </label>
+                <p className="text-xs text-slate-500 dark:text-slate-400 pb-1">
+                  データ更新時に「最終更新者」として自動記録されるお名前です。
+                </p>
+                <input 
+                  type="text" 
+                  placeholder="例：山田 太郎"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm font-medium"
+                />
+              </div>
               
               {/* Integration Status Badges */}
               <div className="p-4 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-3">

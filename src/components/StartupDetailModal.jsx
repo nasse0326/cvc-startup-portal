@@ -558,6 +558,25 @@ export default function StartupDetailModal({
 
             </div>
 
+            {/* Modal Footer with Updated Audit Trail Stamp */}
+            <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+              <div className="flex items-center space-x-1.5">
+                <span>🕒 最終更新:</span>
+                <span className="font-semibold text-slate-600 dark:text-slate-350">{startup.updatedAt || startup.createdAt || '記録なし'}</span>
+                {startup.updatedBy && (
+                  <span className="bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded text-[10px] font-bold ml-1">
+                    担当: {startup.updatedBy}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={onClose}
+                className="px-4 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-white dark:hover:bg-slate-800 transition-all text-xs"
+              >
+                閉じる
+              </button>
+            </div>
+
           </div>
         )}
 

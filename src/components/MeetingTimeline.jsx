@@ -349,6 +349,18 @@ export default function MeetingTimeline({
                           </div>
                         </div>
                       )}
+
+                      {/* Updated By Stamp */}
+                      {(meeting.updatedAt || meeting.updatedBy) && (
+                        <div className="pt-2 text-[11px] text-slate-400 dark:text-slate-500 flex items-center space-x-1.5 border-t border-slate-100 dark:border-slate-800/60">
+                          <span>最終更新: {meeting.updatedAt}</span>
+                          {meeting.updatedBy && (
+                            <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold">
+                              担当: {meeting.updatedBy}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Gemini Synergy Brief Panel (Hidden by user request) */}
