@@ -15,6 +15,7 @@ import {
 import { exportStartupsToCSV } from '../services/exportCsv';
 
 export default function StartupList({ startups, onSelectStartup, onAddStartup, showToast }) {
+  const [companyType, setCompanyType] = useState('startup'); // 'startup' | 'enterprise'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSector, setSelectedSector] = useState('');
   const [selectedStage, setSelectedStage] = useState('');
@@ -23,6 +24,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Form State
+  const [newCompanyType, setNewCompanyType] = useState('startup');
   const [newName, setNewName] = useState('');
   const [newSector, setNewSector] = useState('SaaS');
   const [newStage, setNewStage] = useState('Seed');
@@ -38,7 +40,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
 
   // Dropdown lists
   const sectors = ["AI", "SaaS / Enterprise", "Fintech", "Healthtech", "ClimateTech", "Logistics / Mobility", "Retail / Commerce", "HRTech", "Web3 / Crypto", "Others"];
-  const stages = ["Seed", "Pre-A", "Series-A", "Series-B", "Series-C+"];
+  const stages = ["Seed", "Pre-A", "Series-A", "Series-B", "Series-C+", "N/A (一般企業)"];
   
   const investmentStatuses = [
     "Sourcing (ソーシング)",
@@ -61,11 +63,18 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
     "Commercialized (事業化・提携済)"
   ];
 
+  // Company Type Counts
+  const startupCount = startups.filter(s => s.companyType !== 'enterprise').length;
+  const enterpriseCount = startups.filter(s => s.companyType === 'enterprise').length;
+
   // Export CSV handler
   const handleExportCSV = () => {
-    const success = exportStartupsToCSV(filteredStartups, `CVC_Startups_${new Date().toISOString().split('T')[0]}.csv`);
+    const filename = companyType === 'enterprise' 
+      ? `CVC_Enterprises_${new Date().toISOString().split('T')[0]}.csv`
+      : `CVC_Startups_${new Date().toISOString().split('T')[0]}.csv`;
+    const success = exportStartupsToCSV(filteredStartups, filename);
     if (success) {
-      if (showToast) showToast(`${filteredStartups.length}件のスタートアップを出力しました (Excel対応)`, "success");
+      if (showToast) showToast(`${filteredStartups.length}件の企業データを出力しました (Excel対応)`, "success");
     } else {
       if (showToast) showToast("出力対象のデータがありません。", "warning");
     }
@@ -73,14 +82,17 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
 
   // Filtering Logic
   const filteredStartups = startups.filter(startup => {
+    const isEnterprise = startup.companyType === 'enterprise';
+    const matchesType = companyType === 'enterprise' ? isEnterprise : !isEnterprise;
+
     const matchesSearch = 
       startup.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      startup.tagline.toLowerCase().includes(searchTerm.toLowerCase());
+      (startup.tagline && startup.tagline.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesSector = selectedSector ? startup.sector === selectedSector : true;
     const matchesStage = selectedStage ? startup.stage === selectedStage : true;
     const matchesInvestStatus = selectedInvestStatus ? (startup.status === selectedInvestStatus || startup.status?.includes(selectedInvestStatus)) : true;
     const matchesBizDevStatus = selectedBizDevStatus ? (startup.bizDevStatus === selectedBizDevStatus || startup.bizDevStatus?.includes(selectedBizDevStatus)) : true;
-    return matchesSearch && matchesSector && matchesStage && matchesInvestStatus && matchesBizDevStatus;
+    return matchesType && matchesSearch && matchesSector && matchesStage && matchesInvestStatus && matchesBizDevStatus;
   });
 
   // Submit Handler
@@ -90,8 +102,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
 
     const newStartup = {
       name: newName,
+      companyType: newCompanyType,
       sector: newSector,
-      stage: newStage,
+      stage: newCompanyType === 'enterprise' && newStage === 'Seed' ? 'N/A (一般企業)' : newStage,
       status: newStatus,
       bizDevStatus: newBizDevStatus,
       score: Number(newScore),
@@ -148,13 +161,19 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
       {/* Top Header Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">スタートアップ名簿</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">投資検討と事業開発（PoC・協業）のデュアルトラック管理。</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center space-x-2">
+            <span>{companyType === 'enterprise' ? '一般企業・パートナー企業名簿' : 'スタートアップ名簿'}</span>
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            {companyType === 'enterprise' 
+              ? '大手パートナー企業や事業会社との面談・協業（PoC）進捗管理。' 
+              : '投資検討と事業開発（PoC・協業）のデュアルトラック管理。'}
+          </p>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-2.5">
-          {/* CSV Export Button (Min 44x44px target) */}
+          {/* CSV Export Button */}
           <button
             onClick={handleExportCSV}
             className="inline-flex items-center justify-center space-x-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-950 text-slate-700 dark:text-slate-200 font-semibold shadow-sm transition-all min-h-[44px]"
@@ -164,15 +183,61 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
             <span>CSV/Excel出力</span>
           </button>
 
-          {/* Add Startup Button (Min 44x44px target) */}
+          {/* Add Startup / Enterprise Button */}
           <button 
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              setNewCompanyType(companyType);
+              setIsAddModalOpen(true);
+            }}
             className="inline-flex items-center justify-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold shadow-md shadow-blue-500/10 hover:shadow-lg transition-all min-h-[44px]"
           >
             <Plus className="h-5 w-5" />
-            <span>スタートアップ登録</span>
+            <span>{companyType === 'enterprise' ? '一般企業を登録' : 'スタートアップ登録'}</span>
           </button>
         </div>
+      </div>
+
+      {/* Primary Category Switcher Sub-Tabs */}
+      <div className="flex items-center space-x-1 p-1.5 bg-slate-100/80 dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 w-fit backdrop-blur">
+        <button
+          type="button"
+          onClick={() => setCompanyType('startup')}
+          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 flex items-center space-x-2 min-h-[40px] ${
+            companyType === 'startup'
+              ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+              : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+          }`}
+        >
+          <span className="text-sm">🚀</span>
+          <span>スタートアップ</span>
+          <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold ${
+            companyType === 'startup'
+              ? 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+              : 'bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+          }`}>
+            {startupCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setCompanyType('enterprise')}
+          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 flex items-center space-x-2 min-h-[40px] ${
+            companyType === 'enterprise'
+              ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+              : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+          }`}
+        >
+          <span className="text-sm">🏢</span>
+          <span>一般企業・パートナー企業</span>
+          <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold ${
+            companyType === 'enterprise'
+              ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
+              : 'bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+          }`}>
+            {enterpriseCount}
+          </span>
+        </button>
       </div>
 
       {/* Filters Bar */}
@@ -331,7 +396,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
             
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-250 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">新規スタートアップ登録</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                {newCompanyType === 'enterprise' ? '新規一般企業・パートナー登録' : '新規スタートアップ登録'}
+              </h2>
               <button 
                 onClick={() => setIsAddModalOpen(false)}
                 className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all min-h-[40px] min-w-[40px] flex items-center justify-center"
@@ -343,10 +410,40 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-6 flex-1">
               {/* 1. 基本プロファイル */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                     🏢 基本プロファイル＆評価
                   </span>
+                </div>
+
+                {/* Company Type Selection Radio Group */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">企業区分 *</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setNewCompanyType('startup')}
+                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
+                        newCompanyType === 'startup'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>🚀 スタートアップ</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setNewCompanyType('enterprise')}
+                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
+                        newCompanyType === 'enterprise'
+                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-700 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span>🏢 一般企業・パートナー企業</span>
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -355,7 +452,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                     <input 
                       type="text" 
                       required
-                      placeholder="例: Aegis AI" 
+                      placeholder={newCompanyType === 'enterprise' ? "例: 株式会社トヨタITソリューションズ" : "例: Aegis AI"} 
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"

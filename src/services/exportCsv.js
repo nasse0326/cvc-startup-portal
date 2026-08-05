@@ -3,6 +3,7 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
 
   const headers = [
     "企業名 (Name)",
+    "企業種別 (Type)",
     "セクター (Sector)",
     "調達ステージ (Stage)",
     "優先度評価 (Score)",
@@ -18,6 +19,7 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
 
   const rows = startups.map(s => [
     s.name || "",
+    s.companyType === 'enterprise' ? '一般企業' : 'スタートアップ',
     s.sector || "",
     s.stage || "",
     s.score || "",

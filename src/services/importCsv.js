@@ -1,6 +1,7 @@
 export const downloadImportTemplate = () => {
   const headers = [
     "企業名 (Name)",
+    "企業種別 (Type)",
     "セクター (Sector)",
     "調達ステージ (Stage)",
     "優先度評価 (Score)",
@@ -16,6 +17,7 @@ export const downloadImportTemplate = () => {
 
   const sampleRow1 = [
     "サンプルAI株式会社",
+    "スタートアップ",
     "AI",
     "Series-A",
     "4",
@@ -30,18 +32,19 @@ export const downloadImportTemplate = () => {
   ];
 
   const sampleRow2 = [
-    "NextGen Logistics",
-    "Logistics / Mobility",
-    "Seed",
-    "3",
-    "2023 / 大阪",
-    "https://example-logistics.com",
-    "ラストワンマイル配送自動化プラットフォーム",
-    "Seed 8,000万円",
-    "Initial Meeting (初回面談済)",
-    "現場課題にフィットしたプロダクト。現場見学を調整予定。",
-    "Sourcing (ソーシング)",
-    "次回面談時にアセット連携の可能性をヒアリング。"
+    "大和ITソリューションズ",
+    "一般企業",
+    "SaaS / Enterprise",
+    "N/A (一般企業)",
+    "5",
+    "1998 / 東京",
+    "https://example-enterprise.com",
+    "大手製造業向け基幹システムの導入支援および協業パートナー",
+    "資本金 10億円",
+    "Passed / On Hold (見送り / 保留)",
+    "投資対象外だが、アセット連携・PoCパートナーとして非常に有力。",
+    "POC Executing (POC実施中)",
+    "製造ラインデータ連携のPoCを共同推進中。"
   ];
 
   const csvContent = [headers, sampleRow1, sampleRow2]
@@ -72,6 +75,7 @@ export const parseStartupsCSV = (csvText) => {
   };
 
   const nameIdx = getIndex(["企業名", "name"]);
+  const typeIdx = getIndex(["企業種別", "種別", "type", "companytype"]);
   const sectorIdx = getIndex(["セクター", "sector"]);
   const stageIdx = getIndex(["調達ステージ", "ステージ", "stage"]);
   const scoreIdx = getIndex(["優先度評価", "評価", "score"]);
@@ -94,11 +98,16 @@ export const parseStartupsCSV = (csvText) => {
     if (!name) continue;
 
     const scoreVal = scoreIdx !== -1 ? parseInt(row[scoreIdx], 10) : 3;
+    const typeStr = typeIdx !== -1 && row[typeIdx] ? row[typeIdx].trim().toLowerCase() : "";
+    const companyTypeVal = (typeStr.includes("一般") || typeStr.includes("大企業") || typeStr.includes("enterprise")) 
+      ? "enterprise" 
+      : "startup";
 
     parsedStartups.push({
       name: name,
+      companyType: companyTypeVal,
       sector: sectorIdx !== -1 && row[sectorIdx] ? row[sectorIdx].trim() : "SaaS",
-      stage: stageIdx !== -1 && row[stageIdx] ? row[stageIdx].trim() : "Seed",
+      stage: stageIdx !== -1 && row[stageIdx] ? row[stageIdx].trim() : (companyTypeVal === "enterprise" ? "N/A (一般企業)" : "Seed"),
       score: !isNaN(scoreVal) && scoreVal >= 1 && scoreVal <= 5 ? scoreVal : 3,
       location: locationIdx !== -1 && row[locationIdx] ? row[locationIdx].trim() : "Unknown",
       website: websiteIdx !== -1 && row[websiteIdx] ? row[websiteIdx].trim() : "",

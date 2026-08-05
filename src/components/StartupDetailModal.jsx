@@ -28,6 +28,7 @@ export default function StartupDetailModal({
   const [isEditing, setIsEditing] = useState(false);
 
   // Form State
+  const [editCompanyType, setEditCompanyType] = useState(startup.companyType || 'startup');
   const [editName, setEditName] = useState(startup.name);
   const [editSector, setEditSector] = useState(startup.sector);
   const [editStage, setEditStage] = useState(startup.stage);
@@ -42,7 +43,7 @@ export default function StartupDetailModal({
   const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
 
   const sectors = ["AI", "SaaS / Enterprise", "Fintech", "Healthtech", "ClimateTech", "Logistics / Mobility", "Retail / Commerce", "HRTech", "Web3 / Crypto", "Others"];
-  const stages = ["Seed", "Pre-A", "Series-A", "Series-B", "Series-C+"];
+  const stages = ["Seed", "Pre-A", "Series-A", "Series-B", "Series-C+", "N/A (一般企業)"];
   
   const investmentStatuses = [
     "Sourcing (ソーシング)",
@@ -77,6 +78,7 @@ export default function StartupDetailModal({
 
     const updatedStartup = {
       ...startup,
+      companyType: editCompanyType,
       name: editName,
       sector: editSector,
       stage: editStage,
@@ -93,7 +95,7 @@ export default function StartupDetailModal({
 
     onUpdateStartup(startup.id, updatedStartup);
     setIsEditing(false);
-    showToast("Startup profile updated successfully!", "success");
+    showToast("Profile updated successfully!", "success");
   };
 
   // Delete handler
