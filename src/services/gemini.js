@@ -1,5 +1,5 @@
 export const getGeminiApiKey = () => {
-  return localStorage.getItem('cvc_gemini_api_key') || '';
+  return localStorage.getItem('cvc_gemini_api_key') || (import.meta.env.VITE_GEMINI_API_KEY || '');
 };
 
 export const saveGeminiApiKey = (key) => {
@@ -13,11 +13,10 @@ export const saveGeminiApiKey = (key) => {
 export const analyzeMeetingNotes = async (notes, startup) => {
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
-    throw new Error("Gemini API key is missing. Please set it in the Settings drawer.");
+    throw new Error("Gemini APIキーが設定されていません。ヘッダーの ⚙️「設定」画面から Gemini API Key を保存してください。");
   }
 
-  const model = "gemini-1.5-flash"; // Highly reliable, fast model
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const candidateModels = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"];
 
   const startupName = startup?.name || "Unknown Startup";
   const startupSector = startup?.sector || "General";
@@ -84,37 +83,48 @@ Return ONLY a JSON object that conforms exactly to this schema. Do not add markd
     }
   };
 
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+  let lastError = null;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errMsg = errorData?.error?.message || `HTTP ${response.status} Error`;
-      throw new Error(`Gemini API Error: ${errMsg}`);
-    }
-
-    const resJson = await response.json();
-    const candidateText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!candidateText) {
-      throw new Error("Empty response received from Gemini model.");
-    }
-
+  for (const model of candidateModels) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     try {
-      const parsedBrief = JSON.parse(candidateText.trim());
-      return parsedBrief;
-    } catch (parseError) {
-      console.error("Failed to parse Gemini JSON:", candidateText);
-      throw new Error("Failed to parse Gemini output as JSON schema. Please retry.");
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errMsg = errorData?.error?.message || `HTTP ${response.status} Error`;
+        lastError = new Error(`Gemini API Error (${model}): ${errMsg}`);
+        console.warn(`Model ${model} failed, trying next candidate...`, errMsg);
+        continue;
+      }
+
+      const resJson = await response.json();
+      const candidateText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!candidateText) {
+        lastError = new Error(`Empty response received from ${model}.`);
+        continue;
+      }
+
+      try {
+        const parsedBrief = JSON.parse(candidateText.trim());
+        return parsedBrief;
+      } catch (parseError) {
+        console.error("Failed to parse Gemini JSON:", candidateText);
+        lastError = new Error("Gemini出力のJSON解析に失敗しました。再試行してください。");
+        continue;
+      }
+    } catch (err) {
+      console.error(`Error with model ${model}:`, err);
+      lastError = err;
     }
-  } catch (error) {
-    console.error("analyzeMeetingNotes error:", error);
-    throw error;
   }
+
+  throw lastError || new Error("Gemini APIとの通信に失敗しました。APIキーまたはネットワーク接続をご確認ください。");
 };

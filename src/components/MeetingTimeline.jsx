@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { analyzeMeetingNotes } from '../services/gemini';
 import { exportMeetingsToCSV } from '../services/exportCsv';
+import VoiceInputButton from './VoiceInputButton';
 
 export default function MeetingTimeline({ 
   meetings, 
@@ -456,7 +457,10 @@ export default function MeetingTimeline({
 
               {/* Discussion Notes */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">ディスカッションメモ *</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">ディスカッションメモ *</label>
+                  <VoiceInputButton onTranscript={(text) => setFormNotes(prev => prev ? `${prev}\n${text}` : text)} />
+                </div>
                 <textarea 
                   rows="4"
                   required
@@ -469,7 +473,10 @@ export default function MeetingTimeline({
 
               {/* Next Steps */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">次回のタスクと期限</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">次回のタスクと期限</label>
+                  <VoiceInputButton onTranscript={(text) => setFormNextStep(prev => prev ? `${prev} ${text}` : text)} />
+                </div>
                 <input 
                   type="text" 
                   placeholder="例：7月30日までにAPI技術検証を実施" 

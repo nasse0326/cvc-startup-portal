@@ -13,6 +13,7 @@ import {
   Download
 } from 'lucide-react';
 import { exportStartupsToCSV } from '../services/exportCsv';
+import VoiceInputButton from './VoiceInputButton';
 
 export default function StartupList({ startups, onSelectStartup, onAddStartup, showToast }) {
   const [companyType, setCompanyType] = useState('startup'); // 'startup' | 'enterprise'
@@ -523,7 +524,10 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業概要（一言タグライン）</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業概要（一言タグライン）</label>
+                    <VoiceInputButton onTranscript={(text) => setNewTagline(prev => prev ? `${prev} ${text}` : text)} />
+                  </div>
                   <input 
                     type="text" 
                     placeholder="例: 倉庫車両の自動トラッキング向けクラウドプラットフォーム。" 
@@ -566,7 +570,10 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ (投資トラック)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ (投資トラック)</label>
+                    <VoiceInputButton onTranscript={(text) => setNewInvestmentMemo(prev => prev ? `${prev}\n${text}` : text)} />
+                  </div>
                   <textarea 
                     rows="2"
                     placeholder="例: 当社の投資基準に合致。DD結果良好につき投資委員会へ提出予定。" 
@@ -597,7 +604,10 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ / 検討内容</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ / 検討内容</label>
+                    <VoiceInputButton onTranscript={(text) => setNewBizDevNotes(prev => prev ? `${prev}\n${text}` : text)} />
+                  </div>
                   <textarea 
                     rows="3"
                     placeholder="例: 当社物流事業部とのデータ連携実証（PoC）案件。2026年Q3開始を目標に協議中。" 

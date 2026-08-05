@@ -16,6 +16,7 @@ import {
   Briefcase,
   Handshake
 } from 'lucide-react';
+import VoiceInputButton from './VoiceInputButton';
 
 export default function StartupDetailModal({ 
   startup, 
@@ -249,7 +250,10 @@ export default function StartupDetailModal({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業概要（タグライン）</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業概要（タグライン）</label>
+                <VoiceInputButton onTranscript={(text) => setEditTagline(prev => prev ? `${prev} ${text}` : text)} />
+              </div>
               <input 
                 type="text" 
                 value={editTagline}
@@ -290,9 +294,12 @@ export default function StartupDetailModal({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ (投資トラック)</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ (投資トラック)</label>
+                  <VoiceInputButton onTranscript={(text) => setEditInvestmentMemo(prev => prev ? `${prev}\n${text}` : text)} />
+                </div>
                 <textarea 
-                  rows="3"
+                  rows="2"
                   placeholder="例: 当社の投資基準に合致。DD結果良好につき投資委員会へ提出予定。"
                   value={editInvestmentMemo}
                   onChange={(e) => setEditInvestmentMemo(e.target.value)}
@@ -322,7 +329,10 @@ export default function StartupDetailModal({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ / シナジー検討 (事業トラック)</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ / シナジー検討 (事業トラック)</label>
+                  <VoiceInputButton onTranscript={(text) => setEditBizDevNotes(prev => prev ? `${prev}\n${text}` : text)} />
+                </div>
                 <textarea 
                   rows="3"
                   placeholder="例: ◯◯事業部と共同PoC検討中。2026年Q3開始目標。"
