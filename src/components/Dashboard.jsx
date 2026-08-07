@@ -51,7 +51,7 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
 
   const investmentCounts = investmentStages.map(stage => {
     const count = startups.filter(s => 
-      stage.match.some(m => s.status === m || s.status?.includes(m))
+      stage.match.some(m => s.status === m || (typeof s.status === 'string' && s.status.includes(m)))
     ).length;
     return { ...stage, count };
   });
@@ -69,7 +69,7 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
 
   const bizDevCounts = bizDevStages.map(stage => {
     const count = startups.filter(s => 
-      stage.match.some(m => s.bizDevStatus === m || s.bizDevStatus?.includes(m))
+      stage.match.some(m => s.bizDevStatus === m || (typeof s.bizDevStatus === 'string' && s.bizDevStatus.includes(m)))
     ).length;
     return { ...stage, count };
   });
@@ -89,7 +89,7 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
   
   const sectorCounts = sectorCategories.map(cat => {
     const count = startups.filter(s => 
-      cat.keywords.some(k => s.sector?.toLowerCase().includes(k.toLowerCase()))
+      cat.keywords.some(k => typeof s.sector === 'string' && s.sector.toLowerCase().includes(k.toLowerCase()))
     ).length;
     return { name: cat.name, count };
   });

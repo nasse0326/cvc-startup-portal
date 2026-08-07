@@ -229,7 +229,7 @@ export default function App() {
 
     return startups.map(s => {
       const fixedNo = idToNoMap.get(s.id) || s.no || 1;
-      const dateStr = s.createdAtDate || (s.createdAt ? s.createdAt.split('T')[0].replace(/-/g, '/') : '2026/08/01');
+      const dateStr = s.createdAtDate || (s.createdAt && typeof s.createdAt === 'string' ? s.createdAt.split('T')[0].replace(/-/g, '/') : '2026/08/01');
       return {
         ...s,
         no: fixedNo,

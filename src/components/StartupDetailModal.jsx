@@ -32,7 +32,7 @@ export default function StartupDetailModal({
   const [editCompanyType, setEditCompanyType] = useState(startup.companyType || 'startup');
   const [editName, setEditName] = useState(startup.name);
   const [editCreatedAtDate, setEditCreatedAtDate] = useState(
-    startup.createdAtDate ? startup.createdAtDate.replace(/\//g, '-') : new Date().toISOString().split('T')[0]
+    startup.createdAtDate ? String(startup.createdAtDate).replace(/\//g, '-') : new Date().toISOString().split('T')[0]
   );
   const [editSector, setEditSector] = useState(startup.sector);
   const [editStage, setEditStage] = useState(startup.stage);
@@ -127,23 +127,25 @@ export default function StartupDetailModal({
   };
 
   const getInvestmentStatusColor = (status) => {
-    if (status?.includes("Sourcing")) return "bg-slate-100 text-slate-700 dark:bg-slate-800/80 dark:text-slate-350";
-    if (status?.includes("Initial")) return "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30";
-    if (status?.includes("Review") || status?.includes("詳細検討")) return "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/30";
-    if (status?.includes("DD") || status?.includes("Diligence")) return "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-100/50 dark:border-purple-900/30";
-    if (status?.includes("Committee")) return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30";
-    if (status?.includes("Invested") || status?.includes("Portfolio")) return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100/50 dark:border-emerald-900/30";
-    if (status?.includes("Passed") || status?.includes("見送り")) return "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-100/50 dark:border-rose-900/30";
+    const s = String(status || '');
+    if (s.includes("Sourcing")) return "bg-slate-100 text-slate-700 dark:bg-slate-800/80 dark:text-slate-350";
+    if (s.includes("Initial")) return "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30";
+    if (s.includes("Review") || s.includes("詳細検討")) return "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/30";
+    if (s.includes("DD") || s.includes("Diligence")) return "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-100/50 dark:border-purple-900/30";
+    if (s.includes("Committee")) return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30";
+    if (s.includes("Invested") || s.includes("Portfolio")) return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100/50 dark:border-emerald-900/30";
+    if (s.includes("Passed") || s.includes("見送り")) return "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-100/50 dark:border-rose-900/30";
     return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
   };
 
   const getBizDevStatusColor = (status) => {
-    if (!status || status?.includes("Not Started") || status?.includes("未着手")) return "bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-400";
-    if (status?.includes("Collaboration Review") || status?.includes("協業検討")) return "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-100/50 dark:border-sky-900/30";
-    if (status?.includes("POC Consideration") || status?.includes("POC検討")) return "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 border border-cyan-100/50 dark:border-cyan-900/30";
-    if (status?.includes("POC Executing") || status?.includes("POC実施中")) return "bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 border border-teal-100/50 dark:border-teal-900/30";
-    if (status?.includes("POC Completed") || status?.includes("POC実施済")) return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100/50 dark:border-emerald-900/30";
-    if (status?.includes("Commercialized") || status?.includes("事業化")) return "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-100/50 dark:border-violet-900/30";
+    const s = String(status || '');
+    if (!status || s.includes("Not Started") || s.includes("未着手")) return "bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-400";
+    if (s.includes("Collaboration Review") || s.includes("協業検討")) return "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-100/50 dark:border-sky-900/30";
+    if (s.includes("POC Consideration") || s.includes("POC検討")) return "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 border border-cyan-100/50 dark:border-cyan-900/30";
+    if (s.includes("POC Executing") || s.includes("POC実施中")) return "bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 border border-teal-100/50 dark:border-teal-900/30";
+    if (s.includes("POC Completed") || s.includes("POC実施済")) return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100/50 dark:border-emerald-900/30";
+    if (s.includes("Commercialized") || s.includes("事業化")) return "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-100/50 dark:border-violet-900/30";
     return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
   };
 
