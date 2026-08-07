@@ -2,15 +2,20 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
   if (!startups || startups.length === 0) return false;
 
   const headers = [
+    "No.",
     "企業名 (Name)",
     "企業種別 (Type)",
     "セクター (Sector)",
     "調達ステージ (Stage)",
+    "登録日 (Registered Date)",
     "優先度評価 (Score)",
     "設立・拠点 (Location)",
     "Webサイト (Website)",
     "事業概要 (Tagline)",
     "資金調達履歴 (Funding History)",
+    "案件流入元 (Deal Source)",
+    "案件流入元・詳細 (Deal Source Detail)",
+    "社内連携先 (Internal Partner Dept)",
     "投資ステータス (Investment Status)",
     "投資検討メモ (Investment Memo)",
     "事業・PoCステータス (BizDev Status)",
@@ -18,15 +23,20 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
   ];
 
   const rows = startups.map(s => [
+    s.no || "",
     s.name || "",
     s.companyType === 'enterprise' ? '一般企業' : 'スタートアップ',
     s.sector || "",
     s.stage || "",
+    s.createdAtDate || "",
     s.score || "",
     s.location || "",
     s.website || "",
     s.tagline || "",
     s.funding || "",
+    s.dealSource || "",
+    s.dealSourceDetail || "",
+    s.internalPartnerDept || "",
     s.status || "",
     s.investmentMemo || "",
     s.bizDevStatus || "",

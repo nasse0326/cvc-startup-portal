@@ -210,6 +210,34 @@ export default function App() {
     };
   }, [activeWorkspaceId, currentUser, configReloadTrigger]);
 
+  // Process startups to ensure immutable fixed sequence number 'no' and 'createdAtDate'
+  const processedStartups = useMemo(() => {
+    if (!startups || startups.length === 0) return [];
+    
+    // Sort copy by createdAt if available to assign consistent numbers for legacy data
+    const sortedByCreated = [...startups].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateA - dateB;
+    });
+
+    // Map fixed index 'no' if not present
+    const idToNoMap = new Map();
+    sortedByCreated.forEach((s, idx) => {
+      idToNoMap.set(s.id, s.no || (idx + 1));
+    });
+
+    return startups.map(s => {
+      const fixedNo = idToNoMap.get(s.id) || s.no || 1;
+      const dateStr = s.createdAtDate || (s.createdAt ? s.createdAt.split('T')[0].replace(/-/g, '/') : '2026/08/01');
+      return {
+        ...s,
+        no: fixedNo,
+        createdAtDate: dateStr
+      };
+    });
+  }, [startups]);
+
   // Handle Logout
   const handleLogout = async () => {
     try {
@@ -415,6 +443,25 @@ export default function App() {
     }
   };
 
+  const handleBulkDeleteStartups = async (ids) => {
+    if (!ids || ids.length === 0) return;
+    try {
+      let count = 0;
+      for (const id of ids) {
+        await deleteDocument('startups', id);
+        const linked = meetings.filter(m => m.startupId === id);
+        for (const m of linked) {
+          await deleteDocument('meetings', m.id);
+        }
+        count++;
+      }
+      showToast(`${count}件の企業データを一括削除しました。`, "success");
+    } catch (error) {
+      console.error(error);
+      showToast("一括削除処理中にエラーが発生しました。", "error");
+    }
+  };
+
   const handleAddMeeting = async (meetingData) => {
     try {
       const nowStr = new Date().toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -612,7 +659,7 @@ export default function App() {
         {/* Render Tab Contents */}
         {activeTab === 'dashboard' && (
           <Dashboard 
-            startups={startups} 
+            startups={processedStartups} 
             meetings={meetings} 
             onSelectStartup={setSelectedStartup}
             setActiveTab={setActiveTab}
@@ -621,9 +668,10 @@ export default function App() {
 
         {activeTab === 'directory' && (
           <StartupList 
-            startups={startups} 
+            startups={processedStartups} 
             onSelectStartup={setSelectedStartup}
             onAddStartup={handleAddStartup}
+            onBulkDeleteStartups={handleBulkDeleteStartups}
             showToast={showToast}
           />
         )}
@@ -631,7 +679,7 @@ export default function App() {
         {activeTab === 'meetings' && (
           <MeetingTimeline 
             meetings={meetings} 
-            startups={startups} 
+            startups={processedStartups} 
             onAddMeeting={handleAddMeeting}
             onUpdateMeeting={handleUpdateMeeting}
             showToast={showToast}

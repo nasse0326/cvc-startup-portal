@@ -83,6 +83,9 @@ export const parseStartupsCSV = (csvText) => {
   const websiteIdx = getIndex(["webサイト", "ウェブサイト", "website", "url"]);
   const taglineIdx = getIndex(["事業概要", "概要", "tagline", "description"]);
   const fundingIdx = getIndex(["資金調達履歴", "調達履歴", "funding"]);
+  const dealSourceIdx = getIndex(["案件流入元", "流入元", "dealsource", "source"]);
+  const dealSourceDetailIdx = getIndex(["案件流入元・詳細", "流入元詳細", "dealsourcedetail"]);
+  const internalPartnerDeptIdx = getIndex(["社内連携先", "連携先", "internalpartnerdept", "department"]);
   const statusIdx = getIndex(["投資ステータス", "ステータス", "investment status"]);
   const investmentMemoIdx = getIndex(["投資検討メモ", "投資メモ", "investment memo"]);
   const bizDevStatusIdx = getIndex(["事業・pocステータス", "pocステータス", "bizdev status"]);
@@ -113,6 +116,9 @@ export const parseStartupsCSV = (csvText) => {
       website: websiteIdx !== -1 && row[websiteIdx] ? row[websiteIdx].trim() : "",
       tagline: taglineIdx !== -1 && row[taglineIdx] ? row[taglineIdx].trim() : "",
       funding: fundingIdx !== -1 && row[fundingIdx] ? row[fundingIdx].trim() : "",
+      dealSource: dealSourceIdx !== -1 && row[dealSourceIdx] ? row[dealSourceIdx].trim() : "VC / アクセラレーター紹介",
+      dealSourceDetail: dealSourceDetailIdx !== -1 && row[dealSourceDetailIdx] ? row[dealSourceDetailIdx].trim() : "",
+      internalPartnerDept: internalPartnerDeptIdx !== -1 && row[internalPartnerDeptIdx] ? row[internalPartnerDeptIdx].trim() : "",
       status: statusIdx !== -1 && row[statusIdx] ? row[statusIdx].trim() : "Sourcing (ソーシング)",
       investmentMemo: investmentMemoIdx !== -1 && row[investmentMemoIdx] ? row[investmentMemoIdx].trim() : "",
       bizDevStatus: bizDevStatusIdx !== -1 && row[bizDevStatusIdx] ? row[bizDevStatusIdx].trim() : "Not Started / N/A (未着手 / 対象外)",

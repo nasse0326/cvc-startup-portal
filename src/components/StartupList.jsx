@@ -15,12 +15,13 @@ import {
   Table,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Trash2
 } from 'lucide-react';
 import { exportStartupsToCSV } from '../services/exportCsv';
 import VoiceInputButton from './VoiceInputButton';
 
-export default function StartupList({ startups, onSelectStartup, onAddStartup, showToast }) {
+export default function StartupList({ startups, onSelectStartup, onAddStartup, onBulkDeleteStartups, showToast }) {
   const [companyType, setCompanyType] = useState('startup'); // 'startup' | 'enterprise'
   const [viewMode, setViewMode] = useState('table'); // 'grid' | 'table'
   const [sortField, setSortField] = useState('score');
@@ -32,11 +33,18 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
   const [selectedBizDevStatus, setSelectedBizDevStatus] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  // Bulk Selection State
+  const [selectedIds, setSelectedIds] = useState(new Set());
+
   // Form State
   const [newCompanyType, setNewCompanyType] = useState('startup');
   const [newName, setNewName] = useState('');
+  const [newCreatedAtDate, setNewCreatedAtDate] = useState(new Date().toISOString().split('T')[0]);
   const [newSector, setNewSector] = useState('SaaS');
   const [newStage, setNewStage] = useState('Seed');
+  const [newDealSource, setNewDealSource] = useState('VC / アクセラレーター紹介');
+  const [newDealSourceDetail, setNewDealSourceDetail] = useState('');
+  const [newInternalPartnerDept, setNewInternalPartnerDept] = useState('');
   const [newStatus, setNewStatus] = useState('Sourcing (ソーシング)');
   const [newBizDevStatus, setNewBizDevStatus] = useState('Not Started / N/A (未着手 / 対象外)');
   const [newScore, setNewScore] = useState(3);
@@ -46,6 +54,15 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
   const [newFunding, setNewFunding] = useState('');
   const [newInvestmentMemo, setNewInvestmentMemo] = useState('');
   const [newBizDevNotes, setNewBizDevNotes] = useState('');
+
+  const dealSourceOptions = [
+    "VC / アクセラレーター紹介",
+    "展示会・ピッチイベント",
+    "社内事業部からの推薦",
+    "直アプローチ (Outbound)",
+    "Web問合せ / 自主応募",
+    "その他"
+  ];
 
   // Dropdown lists
   const sectors = ["AI", "SaaS / Enterprise", "Fintech", "Healthtech", "ClimateTech", "Logistics / Mobility", "Retail / Commerce", "HRTech", "Web3 / Crypto", "Others"];
@@ -119,9 +136,12 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
     let aVal = a[sortField];
     let bVal = b[sortField];
 
-    if (sortField === 'score') {
-      aVal = Number(a.score || 0);
-      bVal = Number(b.score || 0);
+    if (sortField === 'no' || sortField === 'score') {
+      aVal = Number(a[sortField] || 0);
+      bVal = Number(b[sortField] || 0);
+    } else if (sortField === 'createdAtDate') {
+      aVal = a.createdAtDate || '';
+      bVal = b.createdAtDate || '';
     } else if (typeof aVal === 'string') {
       aVal = (aVal || '').toLowerCase();
       bVal = (bVal || '').toLowerCase();
@@ -142,16 +162,52 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
       : <ArrowDown className="h-3 w-3 text-blue-600 dark:text-blue-400 ml-1 inline font-bold" />;
   };
 
+  // Toggle selection for a single row
+  const toggleSelectOne = (id, e) => {
+    if (e) e.stopPropagation();
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Toggle select all visible items
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedStartups.length && sortedStartups.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedStartups.map(s => s.id)));
+    }
+  };
+
+  // Handle Bulk Delete Confirmation
+  const handleConfirmBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    const confirmMsg = `選択した ${selectedIds.size} 件の企業データを一括削除しますか？\n（関連する面談ログも同時に削除されます）`;
+    if (window.confirm(confirmMsg)) {
+      if (onBulkDeleteStartups) {
+        onBulkDeleteStartups(Array.from(selectedIds));
+        setSelectedIds(new Set());
+      }
+    }
+  };
+
   // Submit Handler
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!newName.trim()) return;
 
-    const newStartup = {
+    const newStartupObj = {
       name: newName,
       companyType: newCompanyType,
+      createdAtDate: newCreatedAtDate ? newCreatedAtDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/'),
       sector: newSector,
       stage: newCompanyType === 'enterprise' && newStage === 'Seed' ? 'N/A (一般企業)' : newStage,
+      dealSource: newDealSource,
+      dealSourceDetail: newDealSourceDetail,
+      internalPartnerDept: newInternalPartnerDept,
       status: newStatus,
       bizDevStatus: newBizDevStatus,
       score: Number(newScore),
@@ -163,7 +219,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
       bizDevNotes: newBizDevNotes
     };
 
-    onAddStartup(newStartup);
+    onAddStartup(newStartupObj);
     
     // Reset Form
     setNewName('');
@@ -220,6 +276,17 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
+
+          {/* Bulk Delete Button */}
+          {selectedIds.size > 0 && (
+            <button
+              onClick={handleConfirmBulkDelete}
+              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all animate-fade-in min-h-[44px]"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>選択した {selectedIds.size} 件を一括削除</span>
+            </button>
+          )}
 
           {/* View Mode Switcher (Grid vs Table) */}
           <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
@@ -391,6 +458,20 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold select-none">
+                  <th className="py-3.5 px-3 text-center w-10">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === sortedStartups.length && sortedStartups.length > 0}
+                      onChange={toggleSelectAll}
+                      className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
+                    />
+                  </th>
+                  <th onClick={() => handleSort('no')} className="py-3.5 px-3 text-center cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors w-14">
+                    <div className="flex items-center justify-center space-x-0.5">
+                      <span>No.</span>
+                      <SortIcon field="no" />
+                    </div>
+                  </th>
                   <th onClick={() => handleSort('name')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                     <div className="flex items-center space-x-1">
                       <span>企業名</span>
@@ -409,9 +490,15 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                       <SortIcon field="stage" />
                     </div>
                   </th>
+                  <th onClick={() => handleSort('dealSource')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <div className="flex items-center space-x-1">
+                      <span>案件流入元</span>
+                      <SortIcon field="dealSource" />
+                    </div>
+                  </th>
                   <th onClick={() => handleSort('score')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                     <div className="flex items-center space-x-1">
-                      <span>優先度評価</span>
+                      <span>優先度</span>
                       <SortIcon field="score" />
                     </div>
                   </th>
@@ -423,8 +510,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                   </th>
                   <th onClick={() => handleSort('bizDevStatus')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                     <div className="flex items-center space-x-1">
-                      <span>事業・PoC</span>
+                      <span>事業・PoC / 連携先</span>
                       <SortIcon field="bizDevStatus" />
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort('createdAtDate')} className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <div className="flex items-center space-x-1">
+                      <span>登録日</span>
+                      <SortIcon field="createdAtDate" />
                     </div>
                   </th>
                   <th className="py-3.5 px-4">拠点 / Web</th>
@@ -436,8 +529,21 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                   <tr 
                     key={startup.id}
                     onClick={() => onSelectStartup(startup)}
-                    className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
+                    className={`hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group ${
+                      selectedIds.has(startup.id) ? 'bg-blue-50/60 dark:bg-blue-950/30' : ''
+                    }`}
                   >
+                    <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(startup.id)}
+                        onChange={(e) => toggleSelectOne(startup.id, e)}
+                        className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-3 px-3 text-center font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
+                      No. {startup.no}
+                    </td>
                     <td className="py-3 px-4">
                       <div className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-sm">
                         {startup.name}
@@ -455,6 +561,16 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
                         {startup.stage}
                       </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-[11px] text-slate-600 dark:text-slate-300 block font-medium">
+                        {startup.dealSource || '未設定'}
+                      </span>
+                      {startup.dealSourceDetail && (
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[110px] block">
+                          {startup.dealSourceDetail}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-0.5">
@@ -475,6 +591,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${getBizDevStatusColor(startup.bizDevStatus)}`}>
                         {startup.bizDevStatus ? startup.bizDevStatus.split(" (")[0] : "未着手"}
                       </span>
+                      {startup.internalPartnerDept && (
+                        <div className="text-[10px] text-teal-600 dark:text-teal-400 font-semibold mt-0.5 truncate max-w-[120px]">
+                          🤝 {startup.internalPartnerDept}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                      {startup.createdAtDate || '2026/08/01'}
                     </td>
                     <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
                       <div>{startup.location}</div>
@@ -519,9 +643,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {startup.name}
                   </h3>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
-                    {startup.stage}
-                  </span>
+                  <div className="flex items-center space-x-1.5 shrink-0">
+                    <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                      No.{startup.no}
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
+                      {startup.stage}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Tagline */}
@@ -660,6 +789,16 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                   </div>
 
                   <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">登録年月日 (登録日)</label>
+                    <input 
+                      type="date" 
+                      value={newCreatedAtDate}
+                      onChange={(e) => setNewCreatedAtDate(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">セクター</label>
                     <select 
                       value={newSector}
@@ -720,6 +859,28 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                       className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
                     />
                   </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">案件流入元</label>
+                    <select 
+                      value={newDealSource}
+                      onChange={(e) => setNewDealSource(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
+                    >
+                      {dealSourceOptions.map(src => <option key={src} value={src}>{src}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">案件流入元・詳細（自由記述）</label>
+                    <input 
+                      type="text" 
+                      placeholder="例: ジャフコ金子様紹介、Interop 2026ピッチ等" 
+                      value={newDealSourceDetail}
+                      onChange={(e) => setNewDealSourceDetail(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -774,46 +935,59 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, s
                     <VoiceInputButton onTranscript={(text) => setNewInvestmentMemo(prev => prev ? `${prev}\n${text}` : text)} />
                   </div>
                   <textarea 
-                    rows="2"
-                    placeholder="例: 当社の投資基準に合致。DD結果良好につき投資委員会へ提出予定。" 
+                    rows="3"
+                    placeholder="投資的な評価点やデューデリジェンスの進捗状況..." 
                     value={newInvestmentMemo}
                     onChange={(e) => setNewInvestmentMemo(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-450 transition-all resize-none"
                   />
                 </div>
               </div>
 
-              {/* 3. 🤝 事業・PoC協業トラック (BizDev & PoC Track) */}
-              <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl space-y-4">
-                <div className="flex items-center space-x-2 border-b border-emerald-200/50 dark:border-emerald-900/50 pb-2">
-                  <Handshake className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                    🤝 事業開発・PoC協業トラック (BizDev / PoC Track)
+              {/* 3. 🤝 事業開発・PoC協業トラック (BizDev & PoC Track) */}
+              <div className="p-4 bg-teal-50/50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900/30 rounded-2xl space-y-4">
+                <div className="flex items-center space-x-2 border-b border-teal-200/50 dark:border-teal-900/50 pb-2">
+                  <Handshake className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300">
+                    🤝 事業開発・PoC協業トラック (BizDev & PoC Track)
                   </span>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業・PoC協業ステータス</label>
-                  <select 
-                    value={newBizDevStatus}
-                    onChange={(e) => setNewBizDevStatus(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-700 dark:text-slate-300 text-sm transition-all"
-                  >
-                    {bizDevStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ / 検討内容</label>
-                    <VoiceInputButton onTranscript={(text) => setNewBizDevNotes(prev => prev ? `${prev}\n${text}` : text)} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業・PoCステータス</label>
+                    <select 
+                      value={newBizDevStatus}
+                      onChange={(e) => setNewBizDevStatus(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-slate-700 dark:text-slate-300 text-sm transition-all"
+                    >
+                      {bizDevStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
+                    </select>
                   </div>
-                  <textarea 
-                    rows="3"
-                    placeholder="例: 当社物流事業部とのデータ連携実証（PoC）案件。2026年Q3開始を目標に協議中。" 
-                    value={newBizDevNotes}
-                    onChange={(e) => setNewBizDevNotes(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                  />
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">社内連携先（事業部・部署名）</label>
+                    <input 
+                      type="text" 
+                      placeholder="例: DX推進部、生産技術部第2課" 
+                      value={newInternalPartnerDept}
+                      onChange={(e) => setNewInternalPartnerDept(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ / 検討内容</label>
+                      <VoiceInputButton onTranscript={(text) => setNewBizDevNotes(prev => prev ? `${prev}\n${text}` : text)} />
+                    </div>
+                    <textarea 
+                      rows="3"
+                      placeholder="例: 当社物流事業部とのデータ連携実証（PoC）案件。2026年Q3開始を目標に協議中。" 
+                      value={newBizDevNotes}
+                      onChange={(e) => setNewBizDevNotes(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                    />
+                  </div>
                 </div>
               </div>
 

@@ -31,8 +31,14 @@ export default function StartupDetailModal({
   // Form State
   const [editCompanyType, setEditCompanyType] = useState(startup.companyType || 'startup');
   const [editName, setEditName] = useState(startup.name);
+  const [editCreatedAtDate, setEditCreatedAtDate] = useState(
+    startup.createdAtDate ? startup.createdAtDate.replace(/\//g, '-') : new Date().toISOString().split('T')[0]
+  );
   const [editSector, setEditSector] = useState(startup.sector);
   const [editStage, setEditStage] = useState(startup.stage);
+  const [editDealSource, setEditDealSource] = useState(startup.dealSource || 'VC / アクセラレーター紹介');
+  const [editDealSourceDetail, setEditDealSourceDetail] = useState(startup.dealSourceDetail || '');
+  const [editInternalPartnerDept, setEditInternalPartnerDept] = useState(startup.internalPartnerDept || '');
   const [editStatus, setEditStatus] = useState(startup.status);
   const [editBizDevStatus, setEditBizDevStatus] = useState(startup.bizDevStatus || 'Not Started / N/A (未着手 / 対象外)');
   const [editScore, setEditScore] = useState(startup.score);
@@ -42,6 +48,15 @@ export default function StartupDetailModal({
   const [editFunding, setEditFunding] = useState(startup.funding || '');
   const [editInvestmentMemo, setEditInvestmentMemo] = useState(startup.investmentMemo || '');
   const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
+
+  const dealSourceOptions = [
+    "VC / アクセラレーター紹介",
+    "展示会・ピッチイベント",
+    "社内事業部からの推薦",
+    "直アプローチ (Outbound)",
+    "Web問合せ / 自主応募",
+    "その他"
+  ];
 
   const sectors = ["AI", "SaaS / Enterprise", "Fintech", "Healthtech", "ClimateTech", "Logistics / Mobility", "Retail / Commerce", "HRTech", "Web3 / Crypto", "Others"];
   const stages = ["Seed", "Pre-A", "Series-A", "Series-B", "Series-C+", "N/A (一般企業)"];
@@ -80,18 +95,21 @@ export default function StartupDetailModal({
     const updatedStartup = {
       ...startup,
       companyType: editCompanyType,
-      name: editName,
+      name: editName.trim(),
       sector: editSector,
       stage: editStage,
+      dealSource: editDealSource,
+      dealSourceDetail: editDealSourceDetail.trim(),
+      internalPartnerDept: editInternalPartnerDept.trim(),
       status: editStatus,
       bizDevStatus: editBizDevStatus,
       score: Number(editScore),
-      tagline: editTagline,
-      website: editWebsite,
-      location: editLocation,
-      funding: editFunding,
-      investmentMemo: editInvestmentMemo,
-      bizDevNotes: editBizDevNotes
+      tagline: editTagline.trim(),
+      website: editWebsite.trim(),
+      location: editLocation.trim(),
+      funding: editFunding.trim(),
+      investmentMemo: editInvestmentMemo.trim(),
+      bizDevNotes: editBizDevNotes.trim()
     };
 
     onUpdateStartup(startup.id, updatedStartup);
@@ -188,6 +206,16 @@ export default function StartupDetailModal({
               </div>
 
               <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">登録年月日 (登録日)</label>
+                <input 
+                  type="date" 
+                  value={editCreatedAtDate}
+                  onChange={(e) => setEditCreatedAtDate(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                />
+              </div>
+
+              <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">セクター</label>
                 <select 
                   value={editSector}
@@ -207,6 +235,28 @@ export default function StartupDetailModal({
                 >
                   {stages.map(stg => <option key={stg} value={stg}>{stg}</option>)}
                 </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">案件流入元</label>
+                <select 
+                  value={editDealSource}
+                  onChange={(e) => setEditDealSource(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
+                >
+                  {dealSourceOptions.map(src => <option key={src} value={src}>{src}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">案件流入元・詳細 (自由記述)</label>
+                <input 
+                  type="text" 
+                  placeholder="例: ジャフコ金子様紹介" 
+                  value={editDealSourceDetail}
+                  onChange={(e) => setEditDealSourceDetail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                />
               </div>
 
               <div className="space-y-1">
@@ -317,15 +367,28 @@ export default function StartupDetailModal({
                 </span>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業・PoC協業ステータス</label>
-                <select 
-                  value={editBizDevStatus}
-                  onChange={(e) => setEditBizDevStatus(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
-                >
-                  {bizDevStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業・PoC協業ステータス</label>
+                  <select 
+                    value={editBizDevStatus}
+                    onChange={(e) => setEditBizDevStatus(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
+                  >
+                    {bizDevStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">社内連携先（事業部・部署名）</label>
+                  <input 
+                    type="text" 
+                    placeholder="例: DX推進部、生産技術部第2課" 
+                    value={editInternalPartnerDept}
+                    onChange={(e) => setEditInternalPartnerDept(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -408,6 +471,11 @@ export default function StartupDetailModal({
                   <MapPin className="h-4 w-4 text-slate-400" />
                   <span>設立 / 拠点: {startup.location}</span>
                 </div>
+                {startup.dealSource && (
+                  <div className="flex items-center space-x-1.5 py-2 text-indigo-600 dark:text-indigo-400 font-semibold">
+                    <span>💡 流入元: {startup.dealSource} {startup.dealSourceDetail ? `(${startup.dealSourceDetail})` : ''}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -441,6 +509,13 @@ export default function StartupDetailModal({
                       {startup.bizDevStatus || "未着手"}
                     </span>
                   </div>
+
+                  {startup.internalPartnerDept && (
+                    <div className="flex justify-between items-center pt-1 border-t border-slate-200/40 dark:border-slate-800">
+                      <span className="text-slate-500 dark:text-slate-400">社内連携先:</span>
+                      <span className="font-bold text-teal-600 dark:text-teal-400">🤝 {startup.internalPartnerDept}</span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between items-center pt-1 border-t border-slate-200/40 dark:border-slate-800">
                     <span className="text-slate-500 dark:text-slate-400">優先度評価:</span>
