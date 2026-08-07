@@ -1,14 +1,19 @@
 export const downloadImportTemplate = () => {
   const headers = [
+    "No.",
     "企業名 (Name)",
     "企業種別 (Type)",
     "セクター (Sector)",
     "調達ステージ (Stage)",
+    "登録日 (Registered Date)",
     "優先度評価 (Score)",
     "設立・拠点 (Location)",
     "Webサイト (Website)",
     "事業概要 (Tagline)",
     "資金調達履歴 (Funding History)",
+    "案件流入元 (Deal Source)",
+    "案件流入元・詳細 (Deal Source Detail)",
+    "社内連携先 (Internal Partner Dept)",
     "投資ステータス (Investment Status)",
     "投資検討メモ (Investment Memo)",
     "事業・PoCステータス (BizDev Status)",
@@ -16,15 +21,20 @@ export const downloadImportTemplate = () => {
   ];
 
   const sampleRow1 = [
+    "",
     "サンプルAI株式会社",
     "スタートアップ",
     "AI",
     "Series-A",
+    "2026/08/01",
     "4",
     "2022 / 東京",
     "https://example.com",
     "エンタープライズ向け生成AIソリューションの開発",
     "Series-A 5億円 (2024/01)",
+    "VC / アクセラレーター紹介",
+    "〇〇キャピタルの田中様からの紹介",
+    "DX推進部",
     "Deep Review (詳細検討中)",
     "技術力・チームともに優秀。知財周りの確認が必要。",
     "POC Consideration (POC検討中)",
@@ -32,15 +42,20 @@ export const downloadImportTemplate = () => {
   ];
 
   const sampleRow2 = [
+    "",
     "大和ITソリューションズ",
     "一般企業",
     "SaaS / Enterprise",
     "N/A (一般企業)",
+    "2026/08/05",
     "5",
     "1998 / 東京",
     "https://example-enterprise.com",
     "大手製造業向け基幹システムの導入支援および協業パートナー",
     "資本金 10億円",
+    "直アプローチ (Outbound)",
+    "",
+    "生産技術部第2課",
     "Passed / On Hold (見送り / 保留)",
     "投資対象外だが、アセット連携・PoCパートナーとして非常に有力。",
     "POC Executing (POC実施中)",
@@ -74,10 +89,12 @@ export const parseStartupsCSV = (csvText) => {
     return headers.findIndex(h => possibleNames.some(name => h.includes(name.toLowerCase())));
   };
 
+  const noIdx = getIndex(["no.", "no", "番号"]);
   const nameIdx = getIndex(["企業名", "name"]);
   const typeIdx = getIndex(["企業種別", "種別", "type", "companytype"]);
   const sectorIdx = getIndex(["セクター", "sector"]);
   const stageIdx = getIndex(["調達ステージ", "ステージ", "stage"]);
+  const createdAtDateIdx = getIndex(["登録日", "registered date", "createdat"]);
   const scoreIdx = getIndex(["優先度評価", "評価", "score"]);
   const locationIdx = getIndex(["設立・拠点", "拠点", "location"]);
   const websiteIdx = getIndex(["webサイト", "ウェブサイト", "website", "url"]);
@@ -106,11 +123,16 @@ export const parseStartupsCSV = (csvText) => {
       ? "enterprise" 
       : "startup";
 
+    const parsedNo = noIdx !== -1 && row[noIdx] ? parseInt(row[noIdx], 10) : null;
+    const createdAtDateStr = createdAtDateIdx !== -1 && row[createdAtDateIdx] ? row[createdAtDateIdx].trim() : "";
+
     parsedStartups.push({
+      no: !isNaN(parsedNo) && parsedNo ? parsedNo : null,
       name: name,
       companyType: companyTypeVal,
       sector: sectorIdx !== -1 && row[sectorIdx] ? row[sectorIdx].trim() : "SaaS",
       stage: stageIdx !== -1 && row[stageIdx] ? row[stageIdx].trim() : (companyTypeVal === "enterprise" ? "N/A (一般企業)" : "Seed"),
+      createdAtDate: createdAtDateStr || new Date().toISOString().split('T')[0].replace(/-/g, '/'),
       score: !isNaN(scoreVal) && scoreVal >= 1 && scoreVal <= 5 ? scoreVal : 3,
       location: locationIdx !== -1 && row[locationIdx] ? row[locationIdx].trim() : "Unknown",
       website: websiteIdx !== -1 && row[websiteIdx] ? row[websiteIdx].trim() : "",
