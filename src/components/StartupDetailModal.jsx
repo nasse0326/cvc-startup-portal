@@ -443,7 +443,7 @@ export default function StartupDetailModal({
                   </span>
                   {startup.bizDevStatus && (
                     <span className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold ${getBizDevStatusColor(startup.bizDevStatus)}`}>
-                      事業: {startup.bizDevStatus.split(" (")[0]}
+                      事業: {startup.bizDevStatus?.split(" (")?.[0]}
                     </span>
                   )}
                 </div>

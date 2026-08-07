@@ -611,7 +611,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           className="text-blue-500 hover:underline flex items-center gap-0.5 mt-0.5"
                         >
                           <Globe className="h-3 w-3" />
-                          <span className="truncate max-w-[100px]">{startup.website.replace(/^https?:\/\//, '')}</span>
+                          <span className="truncate max-w-[100px]">{startup.website?.replace(/^https?:\/\//, '')}</span>
                         </a>
                       )}
                     </td>
