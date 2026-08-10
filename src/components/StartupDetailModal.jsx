@@ -194,9 +194,46 @@ export default function StartupDetailModal({
 
         {/* Drawer Body */}
         {isEditing ? (
-          <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-4">
-            {/* 基本プロファイル・優先度評価・資金調達履歴 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* 1. 基本プロファイル */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  🏢 基本プロファイル＆評価
+                </span>
+              </div>
+
+              {/* Company Type Selection Radio Group */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">企業区分 *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditCompanyType('startup')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
+                      editCompanyType === 'startup'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>🚀 スタートアップ</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditCompanyType('enterprise')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center space-x-2 transition-all ${
+                      editCompanyType === 'enterprise'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-700 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>🏢 一般企業・パートナー企業</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">企業名 *</label>
@@ -336,9 +373,10 @@ export default function StartupDetailModal({
                 className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
               />
             </div>
+            </div>
 
-            {/* 💳 投資検討トラック */}
-            <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl space-y-3">
+            {/* 2. 💳 投資検討トラック */}
+            <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl space-y-4">
               <div className="flex items-center space-x-2 border-b border-blue-200/50 dark:border-blue-900/50 pb-2">
                 <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
@@ -372,22 +410,22 @@ export default function StartupDetailModal({
               </div>
             </div>
 
-            {/* 🤝 事業開発・PoC協業トラック */}
-            <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl space-y-3">
-              <div className="flex items-center space-x-2 border-b border-emerald-200/50 dark:border-emerald-900/50 pb-2">
-                <Handshake className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                  🤝 事業開発・PoC協業トラック (BizDev / PoC Track)
+            {/* 3. 🤝 事業開発・PoC協業トラック */}
+            <div className="p-4 bg-teal-50/50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900/30 rounded-2xl space-y-4">
+              <div className="flex items-center space-x-2 border-b border-teal-200/50 dark:border-teal-900/50 pb-2">
+                <Handshake className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300">
+                  🤝 事業開発・PoC協業トラック (BizDev & PoC Track)
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業・PoC協業ステータス</label>
                   <select 
                     value={editBizDevStatus}
                     onChange={(e) => setEditBizDevStatus(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-slate-700 dark:text-slate-350 text-sm transition-all"
                   >
                     {bizDevStatuses.map(stat => <option key={stat} value={stat}>{stat}</option>)}
                   </select>
@@ -400,7 +438,7 @@ export default function StartupDetailModal({
                     placeholder="例: DX推進部、生産技術部第2課" 
                     value={editInternalPartnerDept}
                     onChange={(e) => setEditInternalPartnerDept(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
                   />
                 </div>
               </div>
@@ -415,7 +453,7 @@ export default function StartupDetailModal({
                   placeholder="例: ◯◯事業部と共同PoC検討中。2026年Q3開始目標。"
                   value={editBizDevNotes}
                   onChange={(e) => setEditBizDevNotes(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
                 />
               </div>
             </div>

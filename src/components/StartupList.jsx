@@ -34,18 +34,30 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isColumnDropdownOpen, setIsColumnDropdownOpen] = useState(false);
 
-  const [visibleColumns, setVisibleColumns] = useState({
-    no: true,
-    name: true,
-    sector: true,
-    stage: true,
-    dealSource: true,
-    score: true,
-    status: true,
-    bizDevStatus: true,
-    createdAtDate: true,
-    location: true
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    const saved = localStorage.getItem('cvc_visible_columns');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return {
+      no: true,
+      name: true,
+      sector: true,
+      stage: true,
+      dealSource: true,
+      score: true,
+      status: true,
+      investmentMemo: false,
+      bizDevStatus: true,
+      bizDevNotes: false,
+      createdAtDate: true,
+      location: true
+    };
   });
+
+  React.useEffect(() => {
+    localStorage.setItem('cvc_visible_columns', JSON.stringify(visibleColumns));
+  }, [visibleColumns]);
 
   // Bulk Selection State
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -359,7 +371,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   dealSource: "案件流入元",
                   score: "優先度",
                   status: "投資ステータス",
+                  investmentMemo: "投資検討メモ",
                   bizDevStatus: "事業・PoC",
+                  bizDevNotes: "事業開発メモ",
                   createdAtDate: "登録日",
                   location: "拠点 / Web"
                 }).map(([key, label]) => (
@@ -517,7 +531,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold select-none">
-                  <th className="py-3.5 px-3 text-center w-10">
+                  <th className="sticky left-0 z-20 bg-slate-100 dark:bg-slate-900 py-3.5 px-3 text-center w-10">
                     <input
                       type="checkbox"
                       checked={selectedIds.size === sortedStartups.length && sortedStartups.length > 0}
@@ -526,7 +540,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                     />
                   </th>
                   {visibleColumns.no && (
-                    <th onClick={() => handleSort('no')} className="py-3.5 px-3 text-center cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors w-14">
+                    <th style={{ left: '40px' }} onClick={() => handleSort('no')} className="sticky z-20 bg-slate-100 dark:bg-slate-900 py-3.5 px-3 text-center cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors w-14">
                       <div className="flex items-center justify-center space-x-0.5">
                         <span>No.</span>
                         <SortIcon field="no" />
@@ -534,7 +548,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                     </th>
                   )}
                   {visibleColumns.name && (
-                    <th onClick={() => handleSort('name')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <th style={{ left: visibleColumns.no ? '96px' : '40px' }} onClick={() => handleSort('name')} className="sticky z-20 bg-slate-100 dark:bg-slate-900 py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors border-r border-slate-200 dark:border-slate-800/80 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)] dark:shadow-[4px_0_12px_-4px_rgba(0,0,0,0.3)]">
                       <div className="flex items-center space-x-1">
                         <span>企業名</span>
                         <SortIcon field="name" />
@@ -581,11 +595,27 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       </div>
                     </th>
                   )}
+                  {visibleColumns.investmentMemo && (
+                    <th onClick={() => handleSort('investmentMemo')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>投資検討メモ</span>
+                        <SortIcon field="investmentMemo" />
+                      </div>
+                    </th>
+                  )}
                   {visibleColumns.bizDevStatus && (
                     <th onClick={() => handleSort('bizDevStatus')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                       <div className="flex items-center space-x-1">
                         <span>事業・PoC / 連携先</span>
                         <SortIcon field="bizDevStatus" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.bizDevNotes && (
+                    <th onClick={() => handleSort('bizDevNotes')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>事業開発メモ</span>
+                        <SortIcon field="bizDevNotes" />
                       </div>
                     </th>
                   )}
@@ -610,7 +640,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       selectedIds.has(startup.id) ? 'bg-blue-50/60 dark:bg-blue-950/30' : ''
                     }`}
                   >
-                    <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className={`sticky left-0 z-10 py-3 px-3 text-center ${selectedIds.has(startup.id) ? 'bg-blue-100 dark:bg-blue-900/80' : 'bg-white dark:bg-slate-900 group-hover:bg-blue-50 dark:group-hover:bg-slate-800'} transition-colors`} onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedIds.has(startup.id)}
@@ -619,12 +649,12 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       />
                     </td>
                     {visibleColumns.no && (
-                      <td className="py-3 px-3 text-center font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
+                      <td style={{ left: '40px' }} className={`sticky z-10 py-3 px-3 text-center font-mono text-xs font-bold text-slate-500 dark:text-slate-400 ${selectedIds.has(startup.id) ? 'bg-blue-100 dark:bg-blue-900/80' : 'bg-white dark:bg-slate-900 group-hover:bg-blue-50 dark:group-hover:bg-slate-800'} transition-colors`}>
                         {startup.no}
                       </td>
                     )}
                     {visibleColumns.name && (
-                      <td className="py-3 px-4">
+                      <td style={{ left: visibleColumns.no ? '96px' : '40px' }} className={`sticky z-10 py-3 px-4 border-r border-slate-200 dark:border-slate-800/80 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)] dark:shadow-[4px_0_12px_-4px_rgba(0,0,0,0.3)] ${selectedIds.has(startup.id) ? 'bg-blue-100 dark:bg-blue-900/80' : 'bg-white dark:bg-slate-900 group-hover:bg-blue-50 dark:group-hover:bg-slate-800'} transition-colors`}>
                         <div className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-sm">
                           {startup.name}
                         </div>
@@ -678,6 +708,13 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                         </span>
                       </td>
                     )}
+                    {visibleColumns.investmentMemo && (
+                      <td className="py-3 px-4">
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs line-clamp-3">
+                          {startup.investmentMemo}
+                        </div>
+                      </td>
+                    )}
                     {visibleColumns.bizDevStatus && (
                       <td className="py-3 px-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${getBizDevStatusColor(startup.bizDevStatus)}`}>
@@ -688,6 +725,13 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                             🤝 {startup.internalPartnerDept}
                           </div>
                         )}
+                      </td>
+                    )}
+                    {visibleColumns.bizDevNotes && (
+                      <td className="py-3 px-4">
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs line-clamp-3">
+                          {startup.bizDevNotes}
+                        </div>
                       </td>
                     )}
                     {visibleColumns.createdAtDate && (
@@ -936,10 +980,21 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">設立年 / 拠点</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">設立年</label>
                     <input 
                       type="text" 
-                      placeholder="例: 2024年設立 / 東京" 
+                      placeholder="例: 2024年" 
+                      value={newFoundedYear}
+                      onChange={(e) => setNewFoundedYear(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">拠点</label>
+                    <input 
+                      type="text" 
+                      placeholder="例: 東京" 
                       value={newLocation}
                       onChange={(e) => setNewLocation(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
