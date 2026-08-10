@@ -7,7 +7,8 @@ export const downloadImportTemplate = () => {
     "調達ステージ (Stage)",
     "登録日 (Registered Date)",
     "優先度評価 (Score)",
-    "設立・拠点 (Location)",
+    "設立年 (Founded Year)",
+    "拠点 (Location)",
     "Webサイト (Website)",
     "事業概要 (Tagline)",
     "資金調達履歴 (Funding History)",
@@ -28,7 +29,8 @@ export const downloadImportTemplate = () => {
     "Series-A",
     "2026/08/01",
     "4",
-    "2022 / 東京",
+    "2022年",
+    "東京",
     "https://example.com",
     "エンタープライズ向け生成AIソリューションの開発",
     "Series-A 5億円 (2024/01)",
@@ -49,7 +51,8 @@ export const downloadImportTemplate = () => {
     "N/A (一般企業)",
     "2026/08/05",
     "5",
-    "1998 / 東京",
+    "1998年",
+    "東京",
     "https://example-enterprise.com",
     "大手製造業向け基幹システムの導入支援および協業パートナー",
     "資本金 10億円",
@@ -96,7 +99,8 @@ export const parseStartupsCSV = (csvText) => {
   const stageIdx = getIndex(["調達ステージ", "ステージ", "stage"]);
   const createdAtDateIdx = getIndex(["登録日", "registered date", "createdat"]);
   const scoreIdx = getIndex(["優先度評価", "評価", "score"]);
-  const locationIdx = getIndex(["設立・拠点", "拠点", "location"]);
+  const foundedYearIdx = getIndex(["設立年", "founded year"]);
+  const locationIdx = getIndex(["拠点", "location", "設立・拠点"]);
   const websiteIdx = getIndex(["webサイト", "ウェブサイト", "website", "url"]);
   const taglineIdx = getIndex(["事業概要", "概要", "tagline", "description"]);
   const fundingIdx = getIndex(["資金調達履歴", "調達履歴", "funding"]);
@@ -134,6 +138,7 @@ export const parseStartupsCSV = (csvText) => {
       stage: stageIdx !== -1 && row[stageIdx] ? row[stageIdx].trim() : (companyTypeVal === "enterprise" ? "N/A (一般企業)" : "Seed"),
       createdAtDate: createdAtDateStr || new Date().toISOString().split('T')[0].replace(/-/g, '/'),
       score: !isNaN(scoreVal) && scoreVal >= 1 && scoreVal <= 5 ? scoreVal : 3,
+      foundedYear: foundedYearIdx !== -1 && row[foundedYearIdx] ? row[foundedYearIdx].trim() : "",
       location: locationIdx !== -1 && row[locationIdx] ? row[locationIdx].trim() : "Unknown",
       website: websiteIdx !== -1 && row[websiteIdx] ? row[websiteIdx].trim() : "",
       tagline: taglineIdx !== -1 && row[taglineIdx] ? row[taglineIdx].trim() : "",

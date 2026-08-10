@@ -44,6 +44,7 @@ export default function StartupDetailModal({
   const [editScore, setEditScore] = useState(startup.score);
   const [editTagline, setEditTagline] = useState(startup.tagline);
   const [editWebsite, setEditWebsite] = useState(startup.website);
+  const [editFoundedYear, setEditFoundedYear] = useState(startup.foundedYear || '');
   const [editLocation, setEditLocation] = useState(startup.location);
   const [editFunding, setEditFunding] = useState(startup.funding || '');
   const [editInvestmentMemo, setEditInvestmentMemo] = useState(startup.investmentMemo || '');
@@ -106,6 +107,7 @@ export default function StartupDetailModal({
       score: Number(editScore),
       tagline: editTagline.trim(),
       website: editWebsite.trim(),
+      foundedYear: editFoundedYear.trim(),
       location: editLocation.trim(),
       funding: editFunding.trim(),
       investmentMemo: editInvestmentMemo.trim(),
@@ -280,7 +282,17 @@ export default function StartupDetailModal({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">設立年 / 拠点</label>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">設立年</label>
+                <input 
+                  type="text" 
+                  value={editFoundedYear}
+                  onChange={(e) => setEditFoundedYear(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">拠点</label>
                 <input 
                   type="text" 
                   value={editLocation}
@@ -471,7 +483,7 @@ export default function StartupDetailModal({
                 )}
                 <div className="flex items-center space-x-1.5 py-2">
                   <MapPin className="h-4 w-4 text-slate-400" />
-                  <span>設立 / 拠点: {startup.location}</span>
+                  <span>設立: {startup.foundedYear} / 拠点: {startup.location}</span>
                 </div>
                 {startup.dealSource && (
                   <div className="flex items-center space-x-1.5 py-2 text-indigo-600 dark:text-indigo-400 font-semibold">

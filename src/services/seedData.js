@@ -9,7 +9,8 @@ export const initialStartups = [
     score: 5,
     tagline: "金融コンプライアンス監査ワークフロー向けの次世代生成AIセーフティガードレール。",
     website: "https://aegis-ai.example.com",
-    location: "2024年設立 / 米国・サンフランシスコ",
+    foundedYear: "2024年",
+    location: "米国・サンフランシスコ",
     funding: "Vertex Venturesが主導するシリーズAで450万ドルを調達。",
     investmentMemo: "リアルタイムのコンプライアンス監査にフォーカス。DD結果良好につき投資委員会へ提出予定。",
     bizDevNotes: "当社法務部との実証実験（PoC）を完了。契約書の自動チェック制度98%を達成し、2026年Q4の全社導入に向けて協議中。"
@@ -24,7 +25,8 @@ export const initialStartups = [
     score: 4,
     tagline: "自律型倉庫車両トラッキングのためのエンタープライズクラウドオーケストレーションプラットフォーム。",
     website: "https://saasify-logistics.example.com",
-    location: "2022年設立 / 東京",
+    foundedYear: "2022年",
+    location: "東京",
     funding: "シリーズBで1,200万ドルを調達。共同投資家：グローバル・ブレイン、三井住友海上キャピタル等。",
     investmentMemo: "本業シナジーが高く、ポートフォリオ企業として投資実行済み。",
     bizDevNotes: "当社物流子会社の第3倉庫にて本番導入済み。年間配車コストの12%削減を達成。"
@@ -39,7 +41,8 @@ export const initialStartups = [
     score: 3,
     tagline: "人工衛星テレメトリを統合した、分散型炭素クレジット検証用APIサービス。",
     website: "https://carbontrace.example.com",
-    location: "2025年設立 / ドイツ・ベルリン",
+    foundedYear: "2025年",
+    location: "ドイツ・ベルリン",
     funding: "シードで120万ドル調達。Speedinvestが主導。",
     investmentMemo: "当社の製造部門との強力なシナジーが見込まれるため詳細検討中。",
     bizDevNotes: "サステナビリティ推進部と Scope 3 算定自動化に関するPoC仕様を策定中。"
@@ -54,7 +57,8 @@ export const initialStartups = [
     score: 4,
     tagline: "ステーブルコインの流動性プールを活用した、クロスボーダーかつ即時のB2B決済インフラ。",
     website: "https://payflow.example.com",
-    location: "2023年設立 / シンガポール",
+    foundedYear: "2023年",
+    location: "シンガポール",
     funding: "プレシリーズAで200万ドル調達。",
     investmentMemo: "銀行・金融分野における事業会社パートナーを探索中。規制面の検証が必要。",
     bizDevNotes: "海外事業部における東南アジア向け仕入送金の手数料削減の可能性について初回検討中。"

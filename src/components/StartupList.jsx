@@ -32,6 +32,20 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [selectedInvestStatus, setSelectedInvestStatus] = useState('');
   const [selectedBizDevStatus, setSelectedBizDevStatus] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isColumnDropdownOpen, setIsColumnDropdownOpen] = useState(false);
+
+  const [visibleColumns, setVisibleColumns] = useState({
+    no: true,
+    name: true,
+    sector: true,
+    stage: true,
+    dealSource: true,
+    score: true,
+    status: true,
+    bizDevStatus: true,
+    createdAtDate: true,
+    location: true
+  });
 
   // Bulk Selection State
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -50,6 +64,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [newScore, setNewScore] = useState(3);
   const [newTagline, setNewTagline] = useState('');
   const [newWebsite, setNewWebsite] = useState('');
+  const [newFoundedYear, setNewFoundedYear] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [newFunding, setNewFunding] = useState('');
   const [newInvestmentMemo, setNewInvestmentMemo] = useState('');
@@ -213,7 +228,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
       score: Number(newScore),
       tagline: newTagline,
       website: newWebsite,
-      location: newLocation || `${new Date().getFullYear()} / Unknown`,
+      foundedYear: newFoundedYear || `${new Date().getFullYear()}年`,
+      location: newLocation || 'Unknown',
       funding: newFunding,
       investmentMemo: newInvestmentMemo,
       bizDevNotes: newBizDevNotes
@@ -230,6 +246,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     setNewScore(3);
     setNewTagline('');
     setNewWebsite('');
+    setNewFoundedYear('');
     setNewLocation('');
     setNewFunding('');
     setNewInvestmentMemo('');
@@ -318,6 +335,46 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
               <LayoutGrid className="h-4 w-4" />
               <span>カード</span>
             </button>
+          </div>
+
+          {/* Column Visibility Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setIsColumnDropdownOpen(!isColumnDropdownOpen)}
+              className="inline-flex items-center justify-center space-x-1.5 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-950 text-slate-700 dark:text-slate-200 font-semibold shadow-sm transition-all min-h-[40px] text-xs"
+              title="表示列の設定"
+            >
+              <SlidersHorizontal className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span>表示設定</span>
+            </button>
+            
+            {isColumnDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 p-3 flex flex-col space-y-2">
+                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 px-1">表示する列を選択</div>
+                {Object.entries({
+                  no: "No.",
+                  name: "企業名",
+                  sector: "セクター",
+                  stage: "ステージ",
+                  dealSource: "案件流入元",
+                  score: "優先度",
+                  status: "投資ステータス",
+                  bizDevStatus: "事業・PoC",
+                  createdAtDate: "登録日",
+                  location: "拠点 / Web"
+                }).map(([key, label]) => (
+                  <label key={key} className="flex items-center space-x-2 px-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns[key]}
+                      onChange={() => setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))}
+                      className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                    />
+                    <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">{label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* CSV Export Button */}
@@ -468,61 +525,79 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
                     />
                   </th>
-                  <th onClick={() => handleSort('no')} className="py-3.5 px-3 text-center cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors w-14">
-                    <div className="flex items-center justify-center space-x-0.5">
-                      <span>No.</span>
-                      <SortIcon field="no" />
-                    </div>
-                  </th>
-                  <th onClick={() => handleSort('name')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    <div className="flex items-center space-x-1">
-                      <span>企業名</span>
-                      <SortIcon field="name" />
-                    </div>
-                  </th>
-                  <th onClick={() => handleSort('sector')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    <div className="flex items-center space-x-1">
-                      <span>セクター</span>
-                      <SortIcon field="sector" />
-                    </div>
-                  </th>
-                  <th onClick={() => handleSort('stage')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    <div className="flex items-center space-x-1">
-                      <span>ステージ</span>
-                      <SortIcon field="stage" />
-                    </div>
-                  </th>
-                  <th onClick={() => handleSort('dealSource')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    <div className="flex items-center space-x-1">
-                      <span>案件流入元</span>
-                      <SortIcon field="dealSource" />
-                    </div>
-                  </th>
-                  <th onClick={() => handleSort('score')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    <div className="flex items-center space-x-1">
-                      <span>優先度</span>
-                      <SortIcon field="score" />
-                    </div>
-                  </th>
-                  <th onClick={() => handleSort('status')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    <div className="flex items-center space-x-1">
-                      <span>投資ステータス</span>
-                      <SortIcon field="status" />
-                    </div>
-                  </th>
-                  <th onClick={() => handleSort('bizDevStatus')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    <div className="flex items-center space-x-1">
-                      <span>事業・PoC / 連携先</span>
-                      <SortIcon field="bizDevStatus" />
-                    </div>
-                  </th>
-                  <th onClick={() => handleSort('createdAtDate')} className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    <div className="flex items-center space-x-1">
-                      <span>登録日</span>
-                      <SortIcon field="createdAtDate" />
-                    </div>
-                  </th>
-                  <th className="py-3.5 px-4">拠点 / Web</th>
+                  {visibleColumns.no && (
+                    <th onClick={() => handleSort('no')} className="py-3.5 px-3 text-center cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors w-14">
+                      <div className="flex items-center justify-center space-x-0.5">
+                        <span>No.</span>
+                        <SortIcon field="no" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.name && (
+                    <th onClick={() => handleSort('name')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>企業名</span>
+                        <SortIcon field="name" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.sector && (
+                    <th onClick={() => handleSort('sector')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>セクター</span>
+                        <SortIcon field="sector" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.stage && (
+                    <th onClick={() => handleSort('stage')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>ステージ</span>
+                        <SortIcon field="stage" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.dealSource && (
+                    <th onClick={() => handleSort('dealSource')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>案件流入元</span>
+                        <SortIcon field="dealSource" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.score && (
+                    <th onClick={() => handleSort('score')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>優先度</span>
+                        <SortIcon field="score" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.status && (
+                    <th onClick={() => handleSort('status')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>投資ステータス</span>
+                        <SortIcon field="status" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.bizDevStatus && (
+                    <th onClick={() => handleSort('bizDevStatus')} className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>事業・PoC / 連携先</span>
+                        <SortIcon field="bizDevStatus" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.createdAtDate && (
+                    <th onClick={() => handleSort('createdAtDate')} className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                      <div className="flex items-center space-x-1">
+                        <span>登録日</span>
+                        <SortIcon field="createdAtDate" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleColumns.location && <th className="py-3.5 px-4">設立 / 拠点 / Web</th>}
                   <th className="py-3.5 px-4 text-right">詳細</th>
                 </tr>
               </thead>
@@ -543,80 +618,100 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                         className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
                       />
                     </td>
-                    <td className="py-3 px-3 text-center font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
-                      No. {startup.no}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-sm">
-                        {startup.name}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs">
-                        {startup.tagline}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium">
-                        {startup.sector}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
-                        {startup.stage}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-[11px] text-slate-600 dark:text-slate-300 block font-medium">
-                        {startup.dealSource || '未設定'}
-                      </span>
-                      {startup.dealSourceDetail && (
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[110px] block">
-                          {startup.dealSourceDetail}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center space-x-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
-                            className={`h-3.5 w-3.5 ${i < startup.score ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'}`} 
-                          />
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${getInvestmentStatusColor(startup.status)}`}>
-                        {startup.status?.split(" (")?.[0]}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${getBizDevStatusColor(startup.bizDevStatus)}`}>
-                        {startup.bizDevStatus?.split?.(" (")?.[0] || "未着手"}
-                      </span>
-                      {startup.internalPartnerDept && (
-                        <div className="text-[10px] text-teal-600 dark:text-teal-400 font-semibold mt-0.5 truncate max-w-[120px]">
-                          🤝 {startup.internalPartnerDept}
+                    {visibleColumns.no && (
+                      <td className="py-3 px-3 text-center font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
+                        {startup.no}
+                      </td>
+                    )}
+                    {visibleColumns.name && (
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-sm">
+                          {startup.name}
                         </div>
-                      )}
-                    </td>
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                      {startup.createdAtDate || '2026/08/01'}
-                    </td>
-                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
-                      <div>{startup.location}</div>
-                      {startup.website && (
-                        <a 
-                          href={startup.website} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-blue-500 hover:underline flex items-center gap-0.5 mt-0.5"
-                        >
-                          <Globe className="h-3 w-3" />
-                          <span className="truncate max-w-[100px]">{startup.website?.replace(/^https?:\/\//, '')}</span>
-                        </a>
-                      )}
-                    </td>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs">
+                          {startup.tagline}
+                        </div>
+                      </td>
+                    )}
+                    {visibleColumns.sector && (
+                      <td className="py-3 px-4">
+                        <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium">
+                          {startup.sector}
+                        </span>
+                      </td>
+                    )}
+                    {visibleColumns.stage && (
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
+                          {startup.stage}
+                        </span>
+                      </td>
+                    )}
+                    {visibleColumns.dealSource && (
+                      <td className="py-3 px-4">
+                        <span className="text-[11px] text-slate-600 dark:text-slate-300 block font-medium">
+                          {startup.dealSource || '未設定'}
+                        </span>
+                        {startup.dealSourceDetail && (
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[110px] block">
+                            {startup.dealSourceDetail}
+                          </span>
+                        )}
+                      </td>
+                    )}
+                    {visibleColumns.score && (
+                      <td className="py-3 px-4">
+                        <div className="flex items-center space-x-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <Star 
+                              key={i} 
+                              className={`h-3.5 w-3.5 ${i < startup.score ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'}`} 
+                            />
+                          ))}
+                        </div>
+                      </td>
+                    )}
+                    {visibleColumns.status && (
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${getInvestmentStatusColor(startup.status)}`}>
+                          {startup.status?.split(" (")?.[0]}
+                        </span>
+                      </td>
+                    )}
+                    {visibleColumns.bizDevStatus && (
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${getBizDevStatusColor(startup.bizDevStatus)}`}>
+                          {startup.bizDevStatus?.split?.(" (")?.[0] || "未着手"}
+                        </span>
+                        {startup.internalPartnerDept && (
+                          <div className="text-[10px] text-teal-600 dark:text-teal-400 font-semibold mt-0.5 truncate max-w-[120px]">
+                            🤝 {startup.internalPartnerDept}
+                          </div>
+                        )}
+                      </td>
+                    )}
+                    {visibleColumns.createdAtDate && (
+                      <td className="py-3 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        {startup.createdAtDate || '2026/08/01'}
+                      </td>
+                    )}
+                    {visibleColumns.location && (
+                      <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
+                        <div>{startup.foundedYear ? `設立: ${startup.foundedYear} / ` : ''}拠点: {startup.location}</div>
+                        {startup.website && (
+                          <a 
+                            href={startup.website} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-blue-500 hover:underline flex items-center gap-0.5 mt-0.5"
+                          >
+                            <Globe className="h-3 w-3" />
+                            <span className="truncate max-w-[100px]">{startup.website?.replace(/^https?:\/\//, '')}</span>
+                          </a>
+                        )}
+                      </td>
+                    )}
                     <td className="py-3 px-4 text-right">
                       <button 
                         onClick={(e) => { e.stopPropagation(); onSelectStartup(startup); }}
@@ -647,7 +742,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   </h3>
                   <div className="flex items-center space-x-1.5 shrink-0">
                     <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                      No.{startup.no}
+                      {startup.no}
                     </span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
                       {startup.stage}
@@ -670,7 +765,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   </div>
                   <div className="flex items-center text-xs text-slate-500 dark:text-slate-400">
                     <MapPin className="h-3.5 w-3.5 text-slate-400 mr-1.5 shrink-0" />
-                    <span>{startup.location}</span>
+                    <span>{startup.foundedYear ? `設立: ${startup.foundedYear} / ` : ''}拠点: {startup.location}</span>
                   </div>
                 </div>
 
