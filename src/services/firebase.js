@@ -28,13 +28,13 @@ let db = null;
 let auth = null;
 
 const DEFAULT_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCu2OSAdLTVgpAHfG9P47aOZuwKjoZPOvY",
-  authDomain: "cvc-portal-c73b0.firebaseapp.com",
-  projectId: "cvc-portal-c73b0",
-  storageBucket: "cvc-portal-c73b0.firebasestorage.app",
-  messagingSenderId: "922441157837",
-  appId: "1:922441157837:web:f2dd3c47bbb694d9276d84",
-  measurementId: "G-HJ1Z37QJFH"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "cvc-portal-c73b0.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "cvc-portal-c73b0",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "cvc-portal-c73b0.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "922441157837",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:922441157837:web:f2dd3c47bbb694d9276d84",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-HJ1Z37QJFH"
 };
 
 export const isFirebaseConfigured = () => {
