@@ -28,7 +28,8 @@ import {
   EyeOff,
   RotateCw,
   AlertCircle,
-  Table
+  Table,
+  Download
 } from 'lucide-react';
 import { exportStartupsToCSV } from '../services/exportCsv';
 import VoiceInputButton from './VoiceInputButton';
