@@ -1,16 +1,46 @@
-# React + Vite
+# 🚀 CVC Startup Intelligence Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+企業のCVC（コーポレートベンチャーキャピタル）および事業開発（BizDev）部門向けに設計された、スタートアップ投資検討・協業検討・面談録AI要約・パイプライン管理ポータルです。
 
-Currently, two official plugins are available:
+- **Web Application URL**: [https://cvc-startup-portal.vercel.app](https://cvc-startup-portal.vercel.app)
+- **Repository**: [https://github.com/nasse0326/cvc-startup-portal.git](https://github.com/nasse0326/cvc-startup-portal.git)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🌟 主要機能
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. 🤝 協業・事業連携パイプライン管理 (BizDev)
+- **ステータス管理**: 1 発掘 〜 6 協業完了 / 7 保留 / 8 クローズ
+- **最高到達ステージ**: どこまで検討・検証が進んだかを記録
+- **クローズ理由 & サジェスト**: ワンクリックでよくある理由を入力
+- **復活シナリオ & 復活可能性**: 再アプローチ条件（トリガー）と確度（A〜D）を管理
+- **事業開発・PoC協業メモ**: 事業部門との検証項目や所見を記録
 
-## Expanding the Oxlint configuration
+### 2. 💳 投資・出資パイプライン管理 (Investment)
+- **ステータス管理**: 1 ソーシング 〜 6 投資実行済 / 7 保留 / 8 見送り
+- **最高到達ステージ**: ソーシング 〜 IC承認・投資実行までの到達度
+- **見送り理由 & サジェスト**: Valuationや競合優位性などの理由をクイック入力
+- **次回検討トリガー & 復活可能性**: 次回ラウンド等の再検討シナリオ
+- **投資検討メモ・所見**: 投資判断やDD留意事項を記録
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### 3. 📂 Chevron開閉アコーディオンUI
+- 詳細モーダル内で「協業枠」「投資枠」を必要に応じて折りたたみ/展開可能
+- 閉じた状態でも最新ステータスバッジがヘッダーに常時表示
+
+### 4. 📊 表示設定（ワンクリック・プリセット ＆ カテゴリ分け）
+- **標準 (総合)** / **協業重視** / **投資重視** / **クローズ・復活検討** / **コンパクト** / **全項目** の6つのプリセット
+- 個別列チェックボックスを4つのカテゴリ（基本情報、協業検討、投資検討、プロファイル）にグループ化
+
+### 5. 🤖 AI面談録要約＆シナジー分析
+- Gemini APIと連携した面談ログの自動要約と事業シナジー抽出
+
+### 6. 📁 CSV/Excel インポート・エクスポート
+- 協業・投資それぞれのステータスや理由を含む完全対応のCSV入出力
+
+---
+
+## 🛠️ 開発・デプロイルール
+1. **検証**: `npm run build` でビルド確認
+2. **GitHub Push**: `.git_tool/cmd/git.exe` 経由で `origin main` へPush
+3. **Vercel デプロイ**: GitHub Push をトリガーとして Vercel が全自動デプロイ
+
