@@ -36,7 +36,8 @@ import {
   REACHED_STAGE_OPTIONS,
   INVESTMENT_STATUS_OPTIONS,
   INVESTMENT_REACHED_STAGE_OPTIONS,
-  INVESTMENT_CLOSE_REASONS, 
+  INVESTMENT_CLOSE_REASONS,
+  COLLAB_CLOSE_REASONS, 
   REVIVAL_FEASIBILITY_OPTIONS, 
   getCollabStatusColor,
   getInvestmentStatusColor, 
@@ -432,6 +433,18 @@ export default function StartupDetailModal({
 
               {isCollabSectionOpen && (
                 <div className="p-4 space-y-4 border-t border-teal-200/60 dark:border-teal-900/40 animate-fade-in">
+                  {/* 事業開発メモ (協業パイプラインの一番始め) */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ</label>
+                    <textarea 
+                      rows="2"
+                      placeholder="PoC検証項目や事業部門の反応など..."
+                      value={editBizDevNotes}
+                      onChange={(e) => setEditBizDevNotes(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                    />
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業ステータス *</label>
@@ -455,33 +468,20 @@ export default function StartupDetailModal({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 到達ステージ</label>
-                      <select 
-                        value={editReachedStage}
-                        onChange={(e) => setEditReachedStage(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                      >
-                        {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活可能性</label>
-                      <select 
-                        value={editRevivalFeasibility}
-                        onChange={(e) => setEditRevivalFeasibility(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                      >
-                        <option value="">未設定</option>
-                        {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 到達ステージ</label>
+                    <select 
+                      value={editReachedStage}
+                      onChange={(e) => setEditReachedStage(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                    >
+                      {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                    </select>
                   </div>
 
+                  {/* 協業クローズ理由 (サジェスト付き) */}
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業クローズ理由 (自由記述)</label>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業クローズ理由 (自由記述 / クイック選択)</label>
                     <input 
                       type="text" 
                       placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
@@ -489,8 +489,21 @@ export default function StartupDetailModal({
                       onChange={(e) => setEditCloseReason(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
                     />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {COLLAB_CLOSE_REASONS.map(reason => (
+                        <button
+                          type="button"
+                          key={reason}
+                          onClick={() => setEditCloseReason(reason)}
+                          className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-teal-50 dark:hover:bg-teal-950/60 hover:text-teal-600 border border-slate-200 dark:border-slate-800 transition-colors"
+                        >
+                          + {reason}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
+                  {/* 協業 復活シナリオ */}
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活シナリオ (再アプローチ条件・トリガー)</label>
                     <input 
@@ -502,15 +515,17 @@ export default function StartupDetailModal({
                     />
                   </div>
 
+                  {/* 協業 復活可能性 (復活シナリオの次) */}
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ</label>
-                    <textarea 
-                      rows="2"
-                      placeholder="PoC検証項目や事業部門の反応など..."
-                      value={editBizDevNotes}
-                      onChange={(e) => setEditBizDevNotes(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                    />
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活可能性</label>
+                    <select 
+                      value={editRevivalFeasibility}
+                      onChange={(e) => setEditRevivalFeasibility(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                    >
+                      <option value="">未設定</option>
+                      {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
                   </div>
                 </div>
               )}
@@ -539,6 +554,18 @@ export default function StartupDetailModal({
 
               {isInvestmentSectionOpen && (
                 <div className="p-4 space-y-4 border-t border-blue-200/60 dark:border-blue-900/40 animate-fade-in">
+                  {/* 投資検討メモ (投資パイプラインの一番始め) */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ・所見</label>
+                    <textarea 
+                      rows="2"
+                      placeholder="投資判断のポイント、DD留意事項など..." 
+                      value={editInvestmentMemo}
+                      onChange={(e) => setEditInvestmentMemo(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                    />
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス *</label>
@@ -609,28 +636,6 @@ export default function StartupDetailModal({
                         {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
                     </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">資金調達履歴 (ラウンド / 評価額 / 引受先)</label>
-                    <textarea 
-                      rows="2"
-                      placeholder="例: Series A 5億円 (2024/01) リード: 〇〇キャピタル" 
-                      value={editFunding}
-                      onChange={(e) => setEditFunding(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ・所見</label>
-                    <textarea 
-                      rows="2"
-                      placeholder="投資判断のポイント、DD留意事項など..." 
-                      value={editInvestmentMemo}
-                      onChange={(e) => setEditInvestmentMemo(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                    />
                   </div>
                 </div>
               )}
@@ -718,6 +723,18 @@ export default function StartupDetailModal({
                   value={editTagline}
                   onChange={(e) => setEditTagline(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                />
+              </div>
+
+              {/* 資金調達状況 (詳細プロファイルへ移動) */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">資金調達履歴 (ラウンド / 評価額 / 引受先)</label>
+                <textarea 
+                  rows="2"
+                  placeholder="例: Series A 5億円 (2024/01) リード: 〇〇キャピタル" 
+                  value={editFunding}
+                  onChange={(e) => setEditFunding(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
                 />
               </div>
             </div>
@@ -814,6 +831,16 @@ export default function StartupDetailModal({
 
               {isCollabSectionOpen && (
                 <div className="p-4 space-y-3.5 border-t border-teal-200/60 dark:border-teal-900/40 animate-fade-in text-xs">
+                  {/* 事業開発・PoC協業メモ (協業パイプラインの一番始め) */}
+                  {startup.bizDevNotes && (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">事業開発・PoC協業メモ</span>
+                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
+                        {startup.bizDevNotes}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">協業部署</span>
@@ -829,17 +856,6 @@ export default function StartupDetailModal({
                       </p>
                     </div>
                   </div>
-
-                  {startup.revivalFeasibility && (
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">復活可能性</span>
-                      <div className="mt-0.5">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${getRevivalColor(startup.revivalFeasibility)}`}>
-                          {startup.revivalFeasibility}
-                        </span>
-                      </div>
-                    </div>
-                  )}
 
                   {startup.closeReason && (
                     <div>
@@ -859,12 +875,15 @@ export default function StartupDetailModal({
                     </div>
                   )}
 
-                  {startup.bizDevNotes && (
+                  {/* 復活可能性 (復活シナリオの次) */}
+                  {startup.revivalFeasibility && (
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">事業開発・PoC協業メモ</span>
-                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
-                        {startup.bizDevNotes}
-                      </p>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">協業 復活可能性</span>
+                      <div className="mt-0.5">
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${getRevivalColor(startup.revivalFeasibility)}`}>
+                          {startup.revivalFeasibility}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -894,6 +913,16 @@ export default function StartupDetailModal({
 
               {isInvestmentSectionOpen && (
                 <div className="p-4 space-y-3.5 border-t border-blue-200/60 dark:border-blue-900/40 animate-fade-in text-xs">
+                  {/* 投資検討メモ (投資パイプラインの一番始め) */}
+                  {startup.investmentMemo && (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">投資検討メモ・所見</span>
+                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
+                        {startup.investmentMemo}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">調達ステージ</span>
@@ -909,17 +938,6 @@ export default function StartupDetailModal({
                       </p>
                     </div>
                   </div>
-
-                  {(startup.investmentRevivalFeasibility || (!startup.isCollabOnly && startup.revivalFeasibility)) && (
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">投資 復活可能性</span>
-                      <div className="mt-0.5">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${getRevivalColor(startup.investmentRevivalFeasibility || startup.revivalFeasibility)}`}>
-                          {startup.investmentRevivalFeasibility || startup.revivalFeasibility}
-                        </span>
-                      </div>
-                    </div>
-                  )}
 
                   {startup.investmentCloseReason && (
                     <div>
@@ -939,21 +957,14 @@ export default function StartupDetailModal({
                     </div>
                   )}
 
-                  {startup.funding && (
+                  {(startup.investmentRevivalFeasibility || (!startup.isCollabOnly && startup.revivalFeasibility)) && (
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">資金調達履歴</span>
-                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
-                        {startup.funding}
-                      </p>
-                    </div>
-                  )}
-
-                  {startup.investmentMemo && (
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">投資検討メモ・所見</span>
-                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
-                        {startup.investmentMemo}
-                      </p>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">投資 復活可能性</span>
+                      <div className="mt-0.5">
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${getRevivalColor(startup.investmentRevivalFeasibility || startup.revivalFeasibility)}`}>
+                          {startup.investmentRevivalFeasibility || startup.revivalFeasibility}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1127,6 +1138,16 @@ export default function StartupDetailModal({
                   </div>
                 )}
               </div>
+
+              {/* 資金調達状況 (詳細プロファイルへ移動) */}
+              {startup.funding && (
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">資金調達履歴</span>
+                  <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-slate-50/60 dark:bg-slate-950/40 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/60 whitespace-pre-wrap">
+                    {startup.funding}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* 5. 📝 過去の面談ログ＆AI要約 Card */}

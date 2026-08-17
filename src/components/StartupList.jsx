@@ -104,6 +104,17 @@ export const INVESTMENT_CLOSE_REASONS = [
   "CVC投資テーマ・ファンド基準外"
 ];
 
+// 🌟 協業 見送り・クローズ理由 定番サジェスト
+export const COLLAB_CLOSE_REASONS = [
+  "事業部ニーズ/優先度不一致",
+  "オンプレ/セキュリティ要件不適合",
+  "価格帯/導入コストミスマッチ",
+  "競合他社製品を採用済",
+  "社内リソース/担当者不足",
+  "製品完成度/機能不足",
+  "時期尚早(将来再検討)"
+];
+
 // 🌟 復活可能性 (Revival Feasibility, A〜D) 定義
 export const REVIVAL_FEASIBILITY_OPTIONS = [
   "A 高い",
@@ -2323,13 +2334,25 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                 </div>
               </div>
 
-              {/* 2. 🤝 協業・パイプライン管理 (Collab Status & Partner Dept) */}
+              {/* 2. 🤝 協業・パイプライン管理 (Collaboration Pipeline) */}
               <div className="p-4 bg-teal-50/50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900/30 rounded-2xl space-y-4">
                 <div className="flex items-center space-x-2 border-b border-teal-200/50 dark:border-teal-900/50 pb-2">
                   <Handshake className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   <span className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300">
-                    🤝 協業・パイプライン管理 (Collaboration Pipeline)
+                    🤝 協業・事業連携パイプライン (BizDev Pipeline)
                   </span>
+                </div>
+
+                {/* 事業開発メモ (協業パイプラインの一番始め) */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ</label>
+                  <textarea 
+                    rows="2"
+                    placeholder="例: DX推進部とのPoC検討中。2026年Q3開始を目標に協議。"
+                    value={newBizDevNotes}
+                    onChange={(e) => setNewBizDevNotes(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2366,6 +2389,55 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                     {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
                   </select>
                 </div>
+
+                {/* 協業クローズ理由 (サジェスト付き) */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 クローズ理由 (自由記述 / クイック選択)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
+                    value={newCloseReason}
+                    onChange={(e) => setNewCloseReason(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  />
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {COLLAB_CLOSE_REASONS.map(reason => (
+                      <button
+                        type="button"
+                        key={reason}
+                        onClick={() => setNewCloseReason(reason)}
+                        className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-teal-50 dark:hover:bg-teal-950/60 hover:text-teal-600 border border-slate-200 dark:border-slate-800 transition-colors"
+                      >
+                        + {reason}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 協業 復活シナリオ */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活シナリオ (再アプローチ条件・トリガー)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例: 次世代SaaS版ローンチ時、シリーズB調達完了時" 
+                    value={newRevivalScenario}
+                    onChange={(e) => setNewRevivalScenario(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  />
+                </div>
+
+                {/* 協業 復活可能性 (復活シナリオの次) */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活可能性</label>
+                  <select 
+                    value={newRevivalFeasibility}
+                    onChange={(e) => setNewRevivalFeasibility(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                  >
+                    <option value="">未設定</option>
+                    {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
               </div>
 
               {/* 3. 💳 投資・出資パイプライン管理 (Investment Pipeline) */}
@@ -2373,8 +2445,20 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                 <div className="flex items-center space-x-2 border-b border-blue-200/50 dark:border-blue-900/50 pb-2">
                   <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                    💳 投資・出資パイプライン管理 (Investment Pipeline)
+                    💳 投資・出資パイプライン (Investment Pipeline)
                   </span>
+                </div>
+
+                {/* 投資検討メモ (投資パイプラインの一番始め) */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ・所見</label>
+                  <textarea 
+                    rows="2"
+                    placeholder="例: 独自のアルゴリズムに競合優位性あり。シリーズA以降での本格検討を推奨。"
+                    value={newInvestmentMemo}
+                    onChange={(e) => setNewInvestmentMemo(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2402,7 +2486,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資見送り理由 (自由記述 / クイック選択)</label>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 見送り理由 (自由記述 / クイック選択)</label>
                   <input 
                     type="text" 
                     placeholder="例: Valuation目線不一致、競合優位性不足" 
@@ -2411,63 +2495,42 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                     className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
                   />
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {INVESTMENT_CLOSE_REASONS.slice(0, 4).map(reason => (
+                    {INVESTMENT_CLOSE_REASONS.map(reason => (
                       <button
                         type="button"
                         key={reason}
                         onClick={() => setNewInvestmentCloseReason(reason)}
-                        className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 hover:text-blue-600 transition-colors"
+                        className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 hover:text-blue-600 border border-slate-200 dark:border-slate-800 transition-colors"
                       >
                         + {reason}
                       </button>
                     ))}
                   </div>
                 </div>
-              </div>
-
-              {/* 3. 🔄 ロスト・保留・復活分析 (Close & Revival Feasibility) */}
-              <div className="p-4 bg-slate-100/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl space-y-4">
-                <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-700 pb-2">
-                  <RotateCw className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    🔄 クローズ理由 ＆ 復活可能性・シナリオ
-                  </span>
-                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">復活可能性</label>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">次回検討トリガー・復活シナリオ</label>
+                    <input 
+                      type="text" 
+                      placeholder="例: シリーズB調達時、ARR 1億円達成時" 
+                      value={newInvestmentRevivalScenario}
+                      onChange={(e) => setNewInvestmentRevivalScenario(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 復活可能性</label>
                     <select 
-                      value={newRevivalFeasibility}
-                      onChange={(e) => setNewRevivalFeasibility(e.target.value)}
+                      value={newInvestmentRevivalFeasibility}
+                      onChange={(e) => setNewInvestmentRevivalFeasibility(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
                     >
                       <option value="">未設定</option>
                       {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
                   </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">クローズ理由 (自由記述)</label>
-                    <input 
-                      type="text" 
-                      placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
-                      value={newCloseReason}
-                      onChange={(e) => setNewCloseReason(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">復活シナリオ (再アプローチ条件・トリガー、自由記述)</label>
-                  <input 
-                    type="text" 
-                    placeholder="例: 次世代SaaS版ローンチ時、シリーズB調達完了時" 
-                    value={newRevivalScenario}
-                    onChange={(e) => setNewRevivalScenario(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                  />
                 </div>
               </div>
 
@@ -2574,35 +2637,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   </div>
                 </div>
 
+                {/* 資金調達状況 (詳細プロファイルへ移動) */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">資金調達履歴</label>
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">資金調達履歴 (ラウンド / 評価額 / 引受先)</label>
                   <textarea 
                     rows="2"
                     placeholder="例: シードラウンドで1,500万を調達。主要投資家：グローバル・ブレイン。"
                     value={newFunding}
                     onChange={(e) => setNewFunding(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">投資検討メモ</label>
-                  <textarea 
-                    rows="2"
-                    placeholder="例: 独自のアルゴリズムに競合優位性あり。シリーズA以降での本格検討を推奨。"
-                    value={newInvestmentMemo}
-                    onChange={(e) => setNewInvestmentMemo(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業開発・PoC協業メモ</label>
-                  <textarea 
-                    rows="2"
-                    placeholder="例: DX推進部とのPoC検討中。2026年Q3開始を目標に協議。"
-                    value={newBizDevNotes}
-                    onChange={(e) => setNewBizDevNotes(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
                   />
                 </div>
