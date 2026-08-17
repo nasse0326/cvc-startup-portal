@@ -176,37 +176,163 @@ export const COLUMN_PRESETS = {
     name: "標準 (総合)",
     icon: "🌟",
     desc: "Type・優先度・協業/投資ステータス・タスクを表示",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, investmentStatus: true, partnerDept: true, contactPerson: true, tasks: true, reachedStage: false, closeReason: false, revivalFeasibility: false, revivalScenario: false, investmentReachedStage: false, investmentCloseReason: false, sector: true, stage: true, dealSource: false, createdAtDate: true, location: false }
+    columns: { 
+      no: true, 
+      name: true, 
+      engagementType: true, 
+      score: true, 
+      collabStatus: true, 
+      investmentStatus: true, 
+      partnerDept: true, 
+      tasks: true, 
+      sector: true, 
+      stage: true, 
+      createdAtDate: true, 
+      contactPerson: false, 
+      reachedStage: false, 
+      closeReason: false, 
+      revivalScenario: false, 
+      revivalFeasibility: false, 
+      investmentReachedStage: false, 
+      investmentCloseReason: false, 
+      dealSource: false, 
+      location: false 
+    }
   },
   bizDev: {
     name: "🤝 協業・事業連携重視",
     icon: "🤝",
     desc: "協業ステータス・協業部署・到達ステージ・タスクに特化",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, partnerDept: true, reachedStage: true, tasks: true, contactPerson: true, closeReason: false, revivalFeasibility: false, revivalScenario: false, investmentStatus: false, investmentReachedStage: false, investmentCloseReason: false, sector: true, stage: false, dealSource: false, createdAtDate: false, location: true }
+    columns: { 
+      no: true, 
+      name: true, 
+      engagementType: true, 
+      score: true, 
+      collabStatus: true, 
+      partnerDept: true, 
+      reachedStage: true, 
+      tasks: true, 
+      contactPerson: true, 
+      sector: true, 
+      stage: false, 
+      closeReason: false, 
+      revivalScenario: false, 
+      revivalFeasibility: false, 
+      investmentStatus: false, 
+      investmentReachedStage: false, 
+      investmentCloseReason: false, 
+      dealSource: false, 
+      createdAtDate: false, 
+      location: false 
+    }
   },
   investment: {
     name: "💳 投資検討重視",
     icon: "💳",
     desc: "投資ステータス・到達ステージ・調達ステージ・流入元に特化",
-    columns: { no: true, name: true, engagementType: true, score: true, investmentStatus: true, investmentReachedStage: true, stage: true, sector: true, dealSource: true, contactPerson: true, investmentCloseReason: false, tasks: false, collabStatus: false, partnerDept: false, reachedStage: false, closeReason: false, revivalFeasibility: false, revivalScenario: false, createdAtDate: true, location: false }
+    columns: { 
+      no: true, 
+      name: true, 
+      engagementType: true, 
+      score: true, 
+      investmentStatus: true, 
+      investmentReachedStage: true, 
+      stage: true, 
+      dealSource: true, 
+      tasks: true, 
+      contactPerson: true, 
+      sector: true, 
+      collabStatus: false, 
+      partnerDept: false, 
+      reachedStage: false, 
+      closeReason: false, 
+      revivalScenario: false, 
+      revivalFeasibility: false, 
+      investmentCloseReason: false, 
+      createdAtDate: true, 
+      location: false 
+    }
   },
   lostRevival: {
     name: "🔄 クローズ・復活検討",
     icon: "🔄",
-    desc: "協業・投資それぞれの到達ステージ・クローズ理由・復活シナリオ",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, reachedStage: true, closeReason: true, investmentStatus: true, investmentReachedStage: true, investmentCloseReason: true, revivalFeasibility: true, revivalScenario: true, partnerDept: false, contactPerson: false, tasks: false, sector: false, stage: false, dealSource: false, createdAtDate: false, location: false }
+    desc: "協業・投資それぞれの到達ステージ・理由・復活シナリオ",
+    columns: { 
+      no: true, 
+      name: true, 
+      engagementType: true, 
+      score: true, 
+      collabStatus: true, 
+      reachedStage: true, 
+      closeReason: true, 
+      revivalScenario: true, 
+      revivalFeasibility: true, 
+      investmentStatus: true, 
+      investmentReachedStage: true, 
+      investmentCloseReason: true, 
+      partnerDept: false, 
+      contactPerson: false, 
+      tasks: false, 
+      sector: false, 
+      stage: false, 
+      dealSource: false, 
+      createdAtDate: false, 
+      location: false 
+    }
+  },
+  compact: {
+    name: "⚡ コンパクト",
+    icon: "⚡",
+    desc: "Type・優先度・主要ステータスのみの最小表示",
+    columns: { 
+      no: true, 
+      name: true, 
+      engagementType: true, 
+      score: true, 
+      collabStatus: true, 
+      investmentStatus: true, 
+      tasks: true, 
+      partnerDept: false, 
+      reachedStage: false, 
+      closeReason: false, 
+      revivalScenario: false, 
+      revivalFeasibility: false, 
+      investmentReachedStage: false, 
+      investmentCloseReason: false, 
+      contactPerson: false, 
+      sector: false, 
+      stage: false, 
+      dealSource: false, 
+      createdAtDate: false, 
+      location: false 
+    }
   },
   all: {
     name: "👁️ 全項目表示",
     icon: "👁️",
     desc: "すべての列をフル表示",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, investmentStatus: true, partnerDept: true, reachedStage: true, closeReason: true, investmentReachedStage: true, investmentCloseReason: true, revivalFeasibility: true, revivalScenario: true, contactPerson: true, tasks: true, sector: true, stage: true, dealSource: true, createdAtDate: true, location: true }
-  },
-  compact: {
-    name: "⚡ コンパクト",
-    icon: "⚡",
-    desc: "社名とType・優先度・主要ステータスのみの最小表示",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, investmentStatus: true, partnerDept: false, reachedStage: false, closeReason: false, investmentReachedStage: false, investmentCloseReason: false, revivalFeasibility: false, revivalScenario: false, contactPerson: false, tasks: false, sector: false, stage: false, dealSource: false, createdAtDate: false, location: false }
+    columns: { 
+      no: true, 
+      name: true, 
+      engagementType: true, 
+      score: true, 
+      collabStatus: true, 
+      investmentStatus: true, 
+      partnerDept: true, 
+      reachedStage: true, 
+      closeReason: true, 
+      revivalScenario: true, 
+      revivalFeasibility: true, 
+      investmentReachedStage: true, 
+      investmentCloseReason: true, 
+      contactPerson: true, 
+      tasks: true, 
+      sector: true, 
+      stage: true, 
+      dealSource: true, 
+      createdAtDate: true, 
+      location: true 
+    }
   }
 };
 
@@ -392,6 +518,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [newContactPerson, setNewContactPerson] = useState('');
   const [newDealSource, setNewDealSource] = useState('VC / アクセラレーター紹介');
   const [newDealSourceDetail, setNewDealSourceDetail] = useState('');
+  const [showNewCollabSuggestions, setShowNewCollabSuggestions] = useState(false);
+  const [showNewInvestSuggestions, setShowNewInvestSuggestions] = useState(false);
   const [newTagline, setNewTagline] = useState('');
   const [newWebsite, setNewWebsite] = useState('');
   const [newFoundedYear, setNewFoundedYear] = useState('');
@@ -791,54 +919,82 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   </div>
                 </div>
 
-                {/* 3. 個別列のチェックボックス */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 max-h-56 overflow-y-auto pr-1">
-                  <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">個別列の表示 / 非表示</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries({
-                      no: "No.",
-                      name: "企業名 (固定)",
-                      engagementType: "検討Type",
-                      score: "優先度評価",
-                      collabStatus: "協業ステータス",
-                      investmentStatus: "投資ステータス",
-                      partnerDept: "協業部署",
-                      reachedStage: "協業到達ステージ",
-                      investmentReachedStage: "投資到達ステージ",
-                      closeReason: "協業クローズ理由",
-                      investmentCloseReason: "投資見送り理由",
-                      revivalFeasibility: "復活可能性",
-                      revivalScenario: "復活シナリオ",
-                      contactPerson: "窓口担当者",
-                      tasks: "タスク・TODO",
-                      sector: "セクター",
-                      stage: "ステージ",
-                      dealSource: "案件流入元",
-                      createdAtDate: "登録日",
-                      location: "拠点 / Web"
-                    }).map(([key, label]) => {
-                      const isFixed = key === 'name';
-                      return (
-                        <label 
-                          key={key} 
-                          className={`flex items-center space-x-2 p-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
-                            visibleColumns[key] 
-                              ? 'bg-blue-50/50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200' 
-                              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            disabled={isFixed}
-                            checked={visibleColumns[key]}
-                            onChange={() => !isFixed && setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))}
-                            className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
-                          />
-                          <span className="truncate">{label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
+                {/* 3. 個別列のチェックボックス (カテゴリ別グループ) */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 max-h-64 overflow-y-auto pr-1 space-y-3">
+                  <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase">個別列の表示 / 非表示</div>
+                  
+                  {[
+                    {
+                      group: "🏢 基本項目",
+                      items: [
+                        { key: "no", label: "No." },
+                        { key: "name", label: "企業名 (固定)" },
+                        { key: "engagementType", label: "検討Type" },
+                        { key: "score", label: "優先度評価" },
+                        { key: "sector", label: "セクター" },
+                        { key: "stage", label: "調達ステージ" },
+                        { key: "createdAtDate", label: "登録日" },
+                      ]
+                    },
+                    {
+                      group: "🤝 協業・事業連携",
+                      items: [
+                        { key: "collabStatus", label: "協業ステータス" },
+                        { key: "partnerDept", label: "協業部署" },
+                        { key: "reachedStage", label: "協業到達ステージ" },
+                        { key: "closeReason", label: "協業クローズ理由" },
+                        { key: "revivalScenario", label: "協業復活シナリオ" },
+                        { key: "revivalFeasibility", label: "協業復活可能性" },
+                      ]
+                    },
+                    {
+                      group: "💳 投資・出資",
+                      items: [
+                        { key: "investmentStatus", label: "投資ステータス" },
+                        { key: "investmentReachedStage", label: "投資到達ステージ" },
+                        { key: "investmentCloseReason", label: "投資見送り理由" },
+                      ]
+                    },
+                    {
+                      group: "📋 プロファイル・アクション",
+                      items: [
+                        { key: "contactPerson", label: "窓口担当者" },
+                        { key: "tasks", label: "タスク・TODO" },
+                        { key: "dealSource", label: "案件流入元" },
+                        { key: "location", label: "拠点" },
+                      ]
+                    }
+                  ].map((category) => (
+                    <div key={category.group} className="space-y-1.5">
+                      <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-0.5">
+                        {category.group}
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {category.items.map(({ key, label }) => {
+                          const isFixed = key === 'name';
+                          return (
+                            <label 
+                              key={key} 
+                              className={`flex items-center space-x-2 p-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
+                                visibleColumns[key] 
+                                  ? 'bg-blue-50/50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200 font-semibold' 
+                                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                disabled={isFixed}
+                                checked={visibleColumns[key]}
+                                onChange={() => !isFixed && setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))}
+                                className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
+                              />
+                              <span className="truncate">{label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
@@ -2392,7 +2548,19 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
 
                 {/* 協業クローズ理由 (サジェスト付き) */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 クローズ理由 (自由記述 / クイック選択)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
+                      協業 クローズ理由 (自由記述)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewCollabSuggestions(prev => !prev)}
+                      className="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:text-teal-700 flex items-center gap-1 transition-colors"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>{showNewCollabSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
+                    </button>
+                  </div>
                   <input 
                     type="text" 
                     placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
@@ -2400,18 +2568,24 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                     onChange={(e) => setNewCloseReason(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
                   />
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {COLLAB_CLOSE_REASONS.map(reason => (
-                      <button
-                        type="button"
-                        key={reason}
-                        onClick={() => setNewCloseReason(reason)}
-                        className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-teal-50 dark:hover:bg-teal-950/60 hover:text-teal-600 border border-slate-200 dark:border-slate-800 transition-colors"
-                      >
-                        + {reason}
-                      </button>
-                    ))}
-                  </div>
+                  {showNewCollabSuggestions && (
+                    <div className="flex flex-wrap gap-1 p-2 bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 rounded-xl animate-fade-in">
+                      <span className="text-[10px] text-teal-700 dark:text-teal-300 font-bold w-full mb-0.5">クリックで入力:</span>
+                      {COLLAB_CLOSE_REASONS.map(reason => (
+                        <button
+                          type="button"
+                          key={reason}
+                          onClick={() => {
+                            setNewCloseReason(reason);
+                            setShowNewCollabSuggestions(false);
+                          }}
+                          className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white border border-teal-200 dark:border-teal-800 shadow-2xs transition-all"
+                        >
+                          {reason}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* 協業 復活シナリオ */}
@@ -2486,7 +2660,19 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 見送り理由 (自由記述 / クイック選択)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
+                      投資 見送り理由 (自由記述)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewInvestSuggestions(prev => !prev)}
+                      className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>{showNewInvestSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
+                    </button>
+                  </div>
                   <input 
                     type="text" 
                     placeholder="例: Valuation目線不一致、競合優位性不足" 
@@ -2494,18 +2680,24 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                     onChange={(e) => setNewInvestmentCloseReason(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
                   />
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {INVESTMENT_CLOSE_REASONS.map(reason => (
-                      <button
-                        type="button"
-                        key={reason}
-                        onClick={() => setNewInvestmentCloseReason(reason)}
-                        className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 hover:text-blue-600 border border-slate-200 dark:border-slate-800 transition-colors"
-                      >
-                        + {reason}
-                      </button>
-                    ))}
-                  </div>
+                  {showNewInvestSuggestions && (
+                    <div className="flex flex-wrap gap-1 p-2 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 rounded-xl animate-fade-in">
+                      <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold w-full mb-0.5">クリックで入力:</span>
+                      {INVESTMENT_CLOSE_REASONS.map(reason => (
+                        <button
+                          type="button"
+                          key={reason}
+                          onClick={() => {
+                            setNewInvestmentCloseReason(reason);
+                            setShowNewInvestSuggestions(false);
+                          }}
+                          className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-800 shadow-2xs transition-all"
+                        >
+                          {reason}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

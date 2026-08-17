@@ -93,6 +93,8 @@ export default function StartupDetailModal({
   const [editInvestmentRevivalScenario, setEditInvestmentRevivalScenario] = useState(startup.investmentRevivalScenario || startup.revivalScenario || '');
   const [editInvestmentMemo, setEditInvestmentMemo] = useState(startup.investmentMemo || '');
   const [editFunding, setEditFunding] = useState(startup.funding || '');
+  const [showEditCollabSuggestions, setShowEditCollabSuggestions] = useState(false);
+  const [showEditInvestSuggestions, setShowEditInvestSuggestions] = useState(false);
 
   // Profile & Contact fields
   const [editContactPerson, setEditContactPerson] = useState(startup.contactPerson || '');
@@ -481,7 +483,19 @@ export default function StartupDetailModal({
 
                   {/* 協業クローズ理由 (サジェスト付き) */}
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業クローズ理由 (自由記述 / クイック選択)</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
+                        協業 クローズ理由 (自由記述)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowEditCollabSuggestions(prev => !prev)}
+                        className="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:text-teal-700 flex items-center gap-1 transition-colors"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>{showEditCollabSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
+                      </button>
+                    </div>
                     <input 
                       type="text" 
                       placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
@@ -489,18 +503,24 @@ export default function StartupDetailModal({
                       onChange={(e) => setEditCloseReason(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
                     />
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {COLLAB_CLOSE_REASONS.map(reason => (
-                        <button
-                          type="button"
-                          key={reason}
-                          onClick={() => setEditCloseReason(reason)}
-                          className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-teal-50 dark:hover:bg-teal-950/60 hover:text-teal-600 border border-slate-200 dark:border-slate-800 transition-colors"
-                        >
-                          + {reason}
-                        </button>
-                      ))}
-                    </div>
+                    {showEditCollabSuggestions && (
+                      <div className="flex flex-wrap gap-1 p-2 bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 rounded-xl animate-fade-in">
+                        <span className="text-[10px] text-teal-700 dark:text-teal-300 font-bold w-full mb-0.5">クリックで入力:</span>
+                        {COLLAB_CLOSE_REASONS.map(reason => (
+                          <button
+                            type="button"
+                            key={reason}
+                            onClick={() => {
+                              setEditCloseReason(reason);
+                              setShowEditCollabSuggestions(false);
+                            }}
+                            className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white border border-teal-200 dark:border-teal-800 shadow-2xs transition-all"
+                          >
+                            {reason}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* 協業 復活シナリオ */}
@@ -591,7 +611,19 @@ export default function StartupDetailModal({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 見送り・クローズ理由 (自由記述 / クイック選択)</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
+                        投資 見送り・クローズ理由 (自由記述)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowEditInvestSuggestions(prev => !prev)}
+                        className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>{showEditInvestSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
+                      </button>
+                    </div>
                     <input 
                       type="text" 
                       placeholder="例: Valuation目線不一致、競合優位性不足" 
@@ -599,18 +631,24 @@ export default function StartupDetailModal({
                       onChange={(e) => setEditInvestmentCloseReason(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
                     />
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {INVESTMENT_CLOSE_REASONS.map(reason => (
-                        <button
-                          type="button"
-                          key={reason}
-                          onClick={() => setEditInvestmentCloseReason(reason)}
-                          className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 hover:text-blue-600 border border-slate-200 dark:border-slate-800 transition-colors"
-                        >
-                          + {reason}
-                        </button>
-                      ))}
-                    </div>
+                    {showEditInvestSuggestions && (
+                      <div className="flex flex-wrap gap-1 p-2 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 rounded-xl animate-fade-in">
+                        <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold w-full mb-0.5">クリックで入力:</span>
+                        {INVESTMENT_CLOSE_REASONS.map(reason => (
+                          <button
+                            type="button"
+                            key={reason}
+                            onClick={() => {
+                              setEditInvestmentCloseReason(reason);
+                              setShowEditInvestSuggestions(false);
+                            }}
+                            className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-800 shadow-2xs transition-all"
+                          >
+                            {reason}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
