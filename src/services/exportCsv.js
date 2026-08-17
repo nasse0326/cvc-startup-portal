@@ -9,6 +9,7 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
     "調達ステージ (Stage)",
     "登録日 (Registered Date)",
     "優先度評価 (Score)",
+    "窓口担当者 (Contact Person)",
     "設立年 (Founded Year)",
     "拠点 (Location)",
     "Webサイト (Website)",
@@ -20,7 +21,8 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
     "投資ステータス (Investment Status)",
     "投資検討メモ (Investment Memo)",
     "事業・PoCステータス (BizDev Status)",
-    "事業開発・PoC協業メモ (BizDev Notes)"
+    "事業開発・PoC協業メモ (BizDev Notes)",
+    "タスク (Tasks)"
   ];
 
   const rows = startups.map(s => [
@@ -31,6 +33,7 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
     s.stage || "",
     s.createdAtDate || "",
     s.score || "",
+    s.contactPerson || "",
     s.foundedYear || "",
     s.location || "",
     s.website || "",
@@ -42,7 +45,8 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
     s.status || "",
     s.investmentMemo || "",
     s.bizDevStatus || "",
-    s.bizDevNotes || ""
+    s.bizDevNotes || "",
+    s.tasks && Array.isArray(s.tasks) ? s.tasks.map(t => `[${t.completed ? '完了' : '未完'}] ${t.title}${t.dueDate ? ` (期日: ${t.dueDate})` : ''}`).join(" / ") : ""
   ]);
 
   downloadCSV([headers, ...rows], filename);

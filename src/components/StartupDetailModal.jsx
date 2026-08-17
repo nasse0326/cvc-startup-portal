@@ -7,16 +7,25 @@ import {
   Star, 
   Edit3, 
   Trash2, 
-  ExternalLink,
-  ChevronRight,
-  Sparkles,
-  Info,
-  Layers,
-  Save,
-  Briefcase,
-  Handshake
+  ExternalLink, 
+  ChevronRight, 
+  Sparkles, 
+  Info, 
+  Layers, 
+  Save, 
+  Briefcase, 
+  Handshake,
+  CheckSquare,
+  Square,
+  Plus,
+  Clock,
+  UserCheck,
+  ListTodo,
+  CheckCircle2,
+  HelpCircle
 } from 'lucide-react';
 import VoiceInputButton from './VoiceInputButton';
+import { PRIORITY_DEFINITIONS } from './StartupList';
 
 export default function StartupDetailModal({ 
   startup, 
@@ -27,6 +36,7 @@ export default function StartupDetailModal({
   showToast
 }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isPriorityGuideOpen, setIsPriorityGuideOpen] = useState(false);
 
   // Form State
   const [editCompanyType, setEditCompanyType] = useState(startup.companyType || 'startup');
@@ -42,6 +52,7 @@ export default function StartupDetailModal({
   const [editStatus, setEditStatus] = useState(startup.status);
   const [editBizDevStatus, setEditBizDevStatus] = useState(startup.bizDevStatus || 'Not Started / N/A (未着手 / 対象外)');
   const [editScore, setEditScore] = useState(startup.score);
+  const [editContactPerson, setEditContactPerson] = useState(startup.contactPerson || '');
   const [editTagline, setEditTagline] = useState(startup.tagline);
   const [editWebsite, setEditWebsite] = useState(startup.website);
   const [editFoundedYear, setEditFoundedYear] = useState(startup.foundedYear || '');
@@ -49,6 +60,12 @@ export default function StartupDetailModal({
   const [editFunding, setEditFunding] = useState(startup.funding || '');
   const [editInvestmentMemo, setEditInvestmentMemo] = useState(startup.investmentMemo || '');
   const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
+
+  // Inline Task Creation States
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
+  const [newTaskAssignedTo, setNewTaskAssignedTo] = useState('');
+  const [isAddingTask, setIsAddingTask] = useState(false);
 
   const dealSourceOptions = [
     "VC / アクセラレーター紹介",
@@ -88,6 +105,67 @@ export default function StartupDetailModal({
     .filter(m => m.startupId === startup.id)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  // Current tasks list
+  const currentTasks = startup.tasks || [];
+
+  // Task Actions
+  const handleToggleTask = (taskId) => {
+    const updatedTasks = currentTasks.map(t => 
+      t.id === taskId ? { ...t, completed: !t.completed, completedAt: !t.completed ? new Date().toISOString().split('T')[0] : null } : t
+    );
+    const updatedStartup = { ...startup, tasks: updatedTasks };
+    onUpdateStartup(startup.id, updatedStartup);
+    if (showToast) showToast("タスクの状態を更新しました", "info");
+  };
+
+  const handleAddTask = (e) => {
+    if (e) e.preventDefault();
+    if (!newTaskTitle.trim()) return;
+
+    const newTask = {
+      id: `task_${Date.now()}`,
+      title: newTaskTitle.trim(),
+      dueDate: newTaskDueDate || '',
+      assignedTo: newTaskAssignedTo.trim() || '',
+      completed: false,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    const updatedTasks = [...currentTasks, newTask];
+    const updatedStartup = { ...startup, tasks: updatedTasks };
+    onUpdateStartup(startup.id, updatedStartup);
+
+    // Reset task form
+    setNewTaskTitle('');
+    setNewTaskDueDate('');
+    setNewTaskAssignedTo('');
+    setIsAddingTask(false);
+    if (showToast) showToast("新しいタスクを追加しました", "success");
+  };
+
+  const handleDeleteTask = (taskId) => {
+    const updatedTasks = currentTasks.filter(t => t.id !== taskId);
+    const updatedStartup = { ...startup, tasks: updatedTasks };
+    onUpdateStartup(startup.id, updatedStartup);
+    if (showToast) showToast("タスクを削除しました", "info");
+  };
+
+  const handleCreateTaskFromNextStep = (nextStepText) => {
+    if (!nextStepText) return;
+    const newTask = {
+      id: `task_${Date.now()}`,
+      title: nextStepText,
+      dueDate: '',
+      assignedTo: '',
+      completed: false,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    const updatedTasks = [...currentTasks, newTask];
+    const updatedStartup = { ...startup, tasks: updatedTasks };
+    onUpdateStartup(startup.id, updatedStartup);
+    if (showToast) showToast("面談のNext Stepをタスクに追加しました", "success");
+  };
+
   // Save changes handler
   const handleSave = (e) => {
     e.preventDefault();
@@ -105,6 +183,7 @@ export default function StartupDetailModal({
       status: editStatus,
       bizDevStatus: editBizDevStatus,
       score: Number(editScore),
+      contactPerson: editContactPerson.trim(),
       tagline: editTagline.trim(),
       website: editWebsite.trim(),
       foundedYear: editFoundedYear.trim(),
@@ -116,7 +195,7 @@ export default function StartupDetailModal({
 
     onUpdateStartup(startup.id, updatedStartup);
     setIsEditing(false);
-    showToast("Profile updated successfully!", "success");
+    if (showToast) showToast("企業プロファイルを更新しました", "success");
   };
 
   // Delete handler
@@ -301,20 +380,53 @@ export default function StartupDetailModal({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">優先度評価 (1-5)</label>
-                <div className="flex items-center space-x-1.5 h-[44px]">
-                  {[1, 2, 3, 4, 5].map((val) => (
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">窓口担当者 (氏名・役職・連絡先)</label>
+                <input 
+                  type="text" 
+                  placeholder="例: 山田 太郎 (代表取締役 / yamada@example.com)" 
+                  value={editContactPerson}
+                  onChange={(e) => setEditContactPerson(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                />
+              </div>
+
+              <div className="space-y-1 md:col-span-2 p-3 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase flex items-center gap-1">
+                    <span>優先度評価 (1-5)</span>
                     <button
                       type="button"
-                      key={val}
-                      onClick={() => setEditScore(val)}
-                      className="p-1 rounded hover:scale-110 text-slate-300 dark:text-slate-700 transition-all focus:outline-none"
+                      onClick={() => setIsPriorityGuideOpen(true)}
+                      className="text-amber-500 hover:text-amber-600 ml-1"
+                      title="優先度の定義を見る"
                     >
-                      <Star 
-                        className={`h-6 w-6 ${val <= editScore ? 'text-amber-400 fill-amber-400' : 'text-slate-300 dark:text-slate-700'}`} 
-                      />
+                      <HelpCircle className="h-3.5 w-3.5" />
                     </button>
-                  ))}
+                  </label>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded ${PRIORITY_DEFINITIONS[editScore]?.bg}`}>
+                    ★{editScore}: {PRIORITY_DEFINITIONS[editScore]?.label}
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-2 mt-1">
+                  <div className="flex items-center space-x-1">
+                    {[1, 2, 3, 4, 5].map((val) => (
+                      <button
+                        type="button"
+                        key={val}
+                        onClick={() => setEditScore(val)}
+                        className="p-1 rounded hover:scale-110 text-slate-300 dark:text-slate-700 transition-all focus:outline-none"
+                        title={`★${val}: ${PRIORITY_DEFINITIONS[val]?.label}`}
+                      >
+                        <Star 
+                          className={`h-6 w-6 ${val <= editScore ? 'text-amber-400 fill-amber-400' : 'text-slate-300 dark:text-slate-700'}`} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">
+                    {PRIORITY_DEFINITIONS[editScore]?.desc}
+                  </span>
                 </div>
               </div>
 
@@ -505,14 +617,14 @@ export default function StartupDetailModal({
                 "{startup.tagline}"
               </p>
 
-              {/* Quick links & location */}
+              {/* Quick links & location & contact */}
               <div className="flex flex-wrap gap-y-2 gap-x-4 pt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                 {startup.website && (
                   <a 
                     href={startup.website} 
                     target="_blank" 
                     rel="noreferrer" 
-                    className="flex items-center space-x-1.5 text-blue-650 hover:underline dark:text-blue-400 min-h-[44px]"
+                    className="flex items-center space-x-1.5 text-blue-650 hover:underline dark:text-blue-400 min-h-[40px]"
                   >
                     <Globe className="h-4 w-4" />
                     <span>{startup.website}</span>
@@ -521,14 +633,167 @@ export default function StartupDetailModal({
                 )}
                 <div className="flex items-center space-x-1.5 py-2">
                   <MapPin className="h-4 w-4 text-slate-400" />
-                  <span>設立: {startup.foundedYear} / 拠点: {startup.location}</span>
+                  <span>設立: {startup.foundedYear || '未登録'} / 拠点: {startup.location}</span>
                 </div>
                 {startup.dealSource && (
                   <div className="flex items-center space-x-1.5 py-2 text-indigo-600 dark:text-indigo-400 font-semibold">
                     <span>💡 流入元: {startup.dealSource} {startup.dealSourceDetail ? `(${startup.dealSourceDetail})` : ''}</span>
                   </div>
                 )}
+                {startup.contactPerson && (
+                  <div className="flex items-center space-x-1.5 py-2 text-slate-700 dark:text-slate-300 font-semibold bg-slate-100/70 dark:bg-slate-800/60 px-2.5 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
+                    <UserCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span>窓口担当者: {startup.contactPerson}</span>
+                  </div>
+                )}
               </div>
+            </div>
+
+            {/* 📋 Tasks & Action Items Section (New Feature) */}
+            <div className="rounded-2xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/20 dark:bg-blue-950/10 p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <ListTodo className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                    タスク・アクションアイテム ({currentTasks.filter(t => !t.completed).length}件 未完了)
+                  </h3>
+                </div>
+
+                {!isAddingTask && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingTask(true)}
+                    className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm transition-all min-h-[36px]"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>タスク追加</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Add Task Inline Form */}
+              {isAddingTask && (
+                <form onSubmit={handleAddTask} className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800 shadow-sm space-y-3 animate-fade-in">
+                  <div className="text-xs font-bold text-blue-700 dark:text-blue-300">新しいタスクの登録</div>
+                  <input
+                    type="text"
+                    placeholder="タスク内容を入力 (例: NDAドラフト作成、事業部紹介アポ設定)"
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100"
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">期日</label>
+                      <input
+                        type="date"
+                        value={newTaskDueDate}
+                        onChange={(e) => setNewTaskDueDate(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-700 dark:text-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">担当者 (任意)</label>
+                      <input
+                        type="text"
+                        placeholder="例: 田中、法務部"
+                        value={newTaskAssignedTo}
+                        onChange={(e) => setNewTaskAssignedTo(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end space-x-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingTask(false)}
+                      className="px-3 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow-sm"
+                    >
+                      追加
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Task List */}
+              {currentTasks.length > 0 ? (
+                <div className="space-y-2">
+                  {currentTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className={`flex items-start justify-between p-3 rounded-xl border transition-all ${
+                        task.completed
+                          ? 'bg-slate-100/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 opacity-70'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-300 dark:hover:border-blue-700'
+                      }`}
+                    >
+                      <div className="flex items-start space-x-3 flex-1">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTask(task.id)}
+                          className="mt-0.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus:outline-none"
+                          title={task.completed ? "未完了に戻す" : "完了にする"}
+                        >
+                          {task.completed ? (
+                            <CheckSquare className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <Square className="h-4.5 w-4.5" />
+                          )}
+                        </button>
+
+                        <div className="space-y-1 flex-1">
+                          <p className={`text-xs font-semibold ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
+                            {task.title}
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
+                            {task.dueDate && (
+                              <span className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded font-medium ${
+                                !task.completed && new Date(task.dueDate) < new Date(new Date().toDateString())
+                                  ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                              }`}>
+                                <Clock className="h-3 w-3" />
+                                <span>期日: {task.dueDate}</span>
+                              </span>
+                            )}
+                            {task.assignedTo && (
+                              <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded font-medium text-slate-600 dark:text-slate-300">
+                                担当: {task.assignedTo}
+                              </span>
+                            )}
+                            {task.completed && (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
+                                <CheckCircle2 className="h-3 w-3" /> 完了済
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="text-slate-350 hover:text-rose-600 dark:text-slate-600 dark:hover:text-rose-400 p-1 rounded-lg transition-colors ml-2"
+                        title="タスク削除"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 rounded-xl border border-dashed border-blue-200/60 dark:border-blue-900/40 text-slate-400 text-xs">
+                  現在設定されているタスクはありません。「タスク追加」からTODOを登録できます。
+                </div>
+              )}
             </div>
 
             {/* Structured Stats & Details Grid */}
@@ -570,14 +835,29 @@ export default function StartupDetailModal({
                   )}
 
                   <div className="flex justify-between items-center pt-1 border-t border-slate-200/40 dark:border-slate-800">
-                    <span className="text-slate-500 dark:text-slate-400">優先度評価:</span>
-                    <div className="flex items-center space-x-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={`h-4 w-4 ${i < startup.score ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'}`} 
-                        />
-                      ))}
+                    <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                      <span>優先度評価:</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsPriorityGuideOpen(true)}
+                        className="text-amber-500 hover:text-amber-600"
+                        title="優先度の定義を見る"
+                      >
+                        <HelpCircle className="h-3.5 w-3.5" />
+                      </button>
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${PRIORITY_DEFINITIONS[startup.score]?.bg}`}>
+                        ★{startup.score} {PRIORITY_DEFINITIONS[startup.score]?.label}
+                      </span>
+                      <div className="flex items-center space-x-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`h-4 w-4 ${i < startup.score ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'}`} 
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -641,9 +921,20 @@ export default function StartupDetailModal({
                       </p>
 
                       {meeting.nextStep && (
-                        <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center">
-                          <ChevronRight className="h-3.5 w-3.5 text-blue-500 mr-1 shrink-0" />
-                          <span>Next: {meeting.nextStep}</span>
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30">
+                          <div className="text-[11px] font-medium text-slate-600 dark:text-slate-300 flex items-center">
+                            <ChevronRight className="h-3.5 w-3.5 text-blue-500 mr-1 shrink-0" />
+                            <span>Next: {meeting.nextStep}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCreateTaskFromNextStep(meeting.nextStep)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold shadow-xs transition-all shrink-0 ml-2"
+                            title="このNext Stepをタスク一覧に登録する"
+                          >
+                            <Plus className="h-3 w-3" />
+                            <span>タスクに追加</span>
+                          </button>
                         </div>
                       )}
 
@@ -708,6 +999,87 @@ export default function StartupDetailModal({
         )}
 
       </div>
+
+      {/* 🌟 優先度定義ガイドモーダル (Priority Guide Modal) */}
+      {isPriorityGuideOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col animate-scale-up">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-gradient-to-r from-amber-500/10 via-transparent to-transparent">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                  <HelpCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                    優先度評価（★1〜★5）の定義と判断基準
+                  </h2>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    案件検討・フォローの指針となる5段階優先度
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setIsPriorityGuideOpen(false)}
+                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body: Priority Cards */}
+            <div className="p-6 overflow-y-auto space-y-3 flex-1">
+              {[5, 4, 3, 2, 1].map((level) => {
+                const item = PRIORITY_DEFINITIONS[level];
+                return (
+                  <div 
+                    key={level} 
+                    className={`p-4 rounded-2xl border transition-all ${item.bg}`}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-1.5">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-mono text-sm font-black px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 shadow-2xs">
+                          ★ {level}
+                        </span>
+                        <h3 className="font-bold text-sm">
+                          {item.label}
+                        </h3>
+                      </div>
+                      <div className="flex items-center space-x-0.5 shrink-0">
+                        {[...Array(5)].map((_, i) => (
+                          <Star 
+                            key={i} 
+                            className={`h-4 w-4 ${i < level ? 'text-amber-400 fill-amber-400' : 'text-slate-300 dark:text-slate-700'}`} 
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="text-xs opacity-90 leading-relaxed font-medium">
+                      {item.desc}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 bg-slate-50/80 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setIsPriorityGuideOpen(false)}
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 transition-all shadow-xs"
+              >
+                閉じる
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

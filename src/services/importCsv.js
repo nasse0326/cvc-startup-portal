@@ -7,6 +7,7 @@ export const downloadImportTemplate = () => {
     "調達ステージ (Stage)",
     "登録日 (Registered Date)",
     "優先度評価 (Score)",
+    "窓口担当者 (Contact Person)",
     "設立年 (Founded Year)",
     "拠点 (Location)",
     "Webサイト (Website)",
@@ -18,7 +19,8 @@ export const downloadImportTemplate = () => {
     "投資ステータス (Investment Status)",
     "投資検討メモ (Investment Memo)",
     "事業・PoCステータス (BizDev Status)",
-    "事業開発・PoC協業メモ (BizDev Notes)"
+    "事業開発・PoC協業メモ (BizDev Notes)",
+    "タスク (Tasks)"
   ];
 
   const sampleRow1 = [
@@ -29,6 +31,7 @@ export const downloadImportTemplate = () => {
     "Series-A",
     "2026/08/01",
     "4",
+    "山田 太郎 (CEO / yamada@sample-ai.example.com)",
     "2022年",
     "東京",
     "https://example.com",
@@ -40,7 +43,8 @@ export const downloadImportTemplate = () => {
     "Deep Review (詳細検討中)",
     "技術力・チームともに優秀。知財周りの確認が必要。",
     "POC Consideration (POC検討中)",
-    "社内ナレッジ検索の実証実験に向け提案中。"
+    "社内ナレッジ検索の実証実験に向け提案中。",
+    "[未完] 知財レビューの実施 (期日: 2026-08-30)"
   ];
 
   const sampleRow2 = [
@@ -51,6 +55,7 @@ export const downloadImportTemplate = () => {
     "N/A (一般企業)",
     "2026/08/05",
     "5",
+    "佐藤 健 (アライアンス部長 / sato@example-enterprise.com)",
     "1998年",
     "東京",
     "https://example-enterprise.com",
@@ -62,7 +67,8 @@ export const downloadImportTemplate = () => {
     "Passed / On Hold (見送り / 保留)",
     "投資対象外だが、アセット連携・PoCパートナーとして非常に有力。",
     "POC Executing (POC実施中)",
-    "製造ラインデータ連携のPoCを共同推進中。"
+    "製造ラインデータ連携のPoCを共同推進中。",
+    "[未完] 次回PoC定例会の設定 (期日: 2026-08-25)"
   ];
 
   const csvContent = [headers, sampleRow1, sampleRow2]
@@ -99,6 +105,7 @@ export const parseStartupsCSV = (csvText) => {
   const stageIdx = getIndex(["調達ステージ", "ステージ", "stage"]);
   const createdAtDateIdx = getIndex(["登録日", "registered date", "createdat"]);
   const scoreIdx = getIndex(["優先度評価", "評価", "score"]);
+  const contactPersonIdx = getIndex(["窓口担当者", "担当者", "窓口", "contact", "contactperson", "pic"]);
   const foundedYearIdx = getIndex(["設立年", "founded year"]);
   const locationIdx = getIndex(["拠点", "location", "設立・拠点"]);
   const websiteIdx = getIndex(["webサイト", "ウェブサイト", "website", "url"]);
@@ -111,6 +118,7 @@ export const parseStartupsCSV = (csvText) => {
   const investmentMemoIdx = getIndex(["投資検討メモ", "投資メモ", "investment memo"]);
   const bizDevStatusIdx = getIndex(["事業・pocステータス", "pocステータス", "bizdev status"]);
   const bizDevNotesIdx = getIndex(["事業開発・poc協業メモ", "協業メモ", "bizdev notes"]);
+  const tasksIdx = getIndex(["タスク", "tasks", "task", "アクション", "todo"]);
 
   const parsedStartups = [];
 
@@ -129,6 +137,30 @@ export const parseStartupsCSV = (csvText) => {
 
     const parsedNo = noIdx !== -1 && row[noIdx] ? parseInt(row[noIdx], 10) : null;
     const createdAtDateStr = createdAtDateIdx !== -1 && row[createdAtDateIdx] ? row[createdAtDateIdx].trim() : "";
+    const rawTasksStr = tasksIdx !== -1 && row[tasksIdx] ? row[tasksIdx].trim() : "";
+    
+    // Parse tasks if present
+    const parsedTasks = [];
+    if (rawTasksStr) {
+      const taskItems = rawTasksStr.split(/[\/\n\r]+/).map(t => t.trim()).filter(Boolean);
+      taskItems.forEach((item, idx) => {
+        const isCompleted = item.includes('[完了]') || item.includes('完了:');
+        let cleanTitle = item.replace(/\[(完了|未完)\]/g, '').replace(/^(完了|未完):/g, '').trim();
+        let dueDate = '';
+        const dueMatch = cleanTitle.match(/\(期日:\s*([^\)]+)\)/);
+        if (dueMatch) {
+          dueDate = dueMatch[1].trim();
+          cleanTitle = cleanTitle.replace(/\(期日:\s*[^\)]+\)/, '').trim();
+        }
+        parsedTasks.push({
+          id: `task_import_${Date.now()}_${idx}`,
+          title: cleanTitle,
+          dueDate: dueDate,
+          completed: isCompleted,
+          createdAt: new Date().toISOString().split('T')[0]
+        });
+      });
+    }
 
     parsedStartups.push({
       no: !isNaN(parsedNo) && parsedNo ? parsedNo : null,
@@ -138,6 +170,7 @@ export const parseStartupsCSV = (csvText) => {
       stage: stageIdx !== -1 && row[stageIdx] ? row[stageIdx].trim() : (companyTypeVal === "enterprise" ? "N/A (一般企業)" : "Seed"),
       createdAtDate: createdAtDateStr || new Date().toISOString().split('T')[0].replace(/-/g, '/'),
       score: !isNaN(scoreVal) && scoreVal >= 1 && scoreVal <= 5 ? scoreVal : 3,
+      contactPerson: contactPersonIdx !== -1 && row[contactPersonIdx] ? row[contactPersonIdx].trim() : "",
       foundedYear: foundedYearIdx !== -1 && row[foundedYearIdx] ? row[foundedYearIdx].trim() : "",
       location: locationIdx !== -1 && row[locationIdx] ? row[locationIdx].trim() : "Unknown",
       website: websiteIdx !== -1 && row[websiteIdx] ? row[websiteIdx].trim() : "",
@@ -149,7 +182,8 @@ export const parseStartupsCSV = (csvText) => {
       status: statusIdx !== -1 && row[statusIdx] ? row[statusIdx].trim() : "Sourcing (ソーシング)",
       investmentMemo: investmentMemoIdx !== -1 && row[investmentMemoIdx] ? row[investmentMemoIdx].trim() : "",
       bizDevStatus: bizDevStatusIdx !== -1 && row[bizDevStatusIdx] ? row[bizDevStatusIdx].trim() : "Not Started / N/A (未着手 / 対象外)",
-      bizDevNotes: bizDevNotesIdx !== -1 && row[bizDevNotesIdx] ? row[bizDevNotesIdx].trim() : ""
+      bizDevNotes: bizDevNotesIdx !== -1 && row[bizDevNotesIdx] ? row[bizDevNotesIdx].trim() : "",
+      tasks: parsedTasks
     });
   }
 
