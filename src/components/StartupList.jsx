@@ -410,7 +410,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     selectedRevivalFeasibility || 
     hasIncompleteTasksOnly || 
     selectedSector || 
-    selectedBizDevStatus
+    selectedStage
   );
 
   // Sort Handler
