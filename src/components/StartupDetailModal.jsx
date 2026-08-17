@@ -8,7 +8,9 @@ import {
   Edit3, 
   Trash2, 
   ExternalLink, 
-  ChevronRight, 
+  ChevronRight,
+  ChevronDown,
+  ChevronUp, 
   Sparkles, 
   Info, 
   Layers, 
@@ -31,9 +33,13 @@ import {
   PRIORITY_DEFINITIONS, 
   ENGAGEMENT_TYPES, 
   COLLAB_STATUS_OPTIONS, 
-  REACHED_STAGE_OPTIONS, 
+  REACHED_STAGE_OPTIONS,
+  INVESTMENT_STATUS_OPTIONS,
+  INVESTMENT_REACHED_STAGE_OPTIONS,
+  INVESTMENT_CLOSE_REASONS, 
   REVIVAL_FEASIBILITY_OPTIONS, 
-  getCollabStatusColor, 
+  getCollabStatusColor,
+  getInvestmentStatusColor, 
   getEngagementTypeColor, 
   getRevivalColor 
 } from './StartupList';
@@ -49,6 +55,14 @@ export default function StartupDetailModal({
   const [isEditing, setIsEditing] = useState(false);
   const [isPriorityGuideOpen, setIsPriorityGuideOpen] = useState(false);
 
+  // Accordion Section States (Chevron toggle)
+  const [isCollabSectionOpen, setIsCollabSectionOpen] = useState(
+    startup.engagementType !== '投資検討'
+  );
+  const [isInvestmentSectionOpen, setIsInvestmentSectionOpen] = useState(
+    startup.engagementType !== '事業連携'
+  );
+
   // Form State (New Schema)
   const [editCompanyType, setEditCompanyType] = useState(startup.companyType || 'startup');
   const [editEngagementType, setEditEngagementType] = useState(startup.engagementType || '投資検討');
@@ -59,12 +73,27 @@ export default function StartupDetailModal({
   const [editSector, setEditSector] = useState(startup.sector || 'SaaS');
   const [editStage, setEditStage] = useState(startup.stage || 'Seed');
   const [editScore, setEditScore] = useState(Number(startup.score || 3));
+  
+  // Collab fields
   const [editPartnerDept, setEditPartnerDept] = useState(startup.partnerDept || startup.internalPartnerDept || '');
   const [editCollabStatus, setEditCollabStatus] = useState(startup.collabStatus || '1 発掘');
   const [editReachedStage, setEditReachedStage] = useState(startup.reachedStage || '1 発掘');
   const [editCloseReason, setEditCloseReason] = useState(startup.closeReason || '');
   const [editRevivalFeasibility, setEditRevivalFeasibility] = useState(startup.revivalFeasibility || '');
   const [editRevivalScenario, setEditRevivalScenario] = useState(startup.revivalScenario || '');
+  const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
+  const [editBizDevStatus, setEditBizDevStatus] = useState(startup.bizDevStatus || startup.collabStatus || '1 発掘');
+
+  // Investment fields
+  const [editInvestmentStatus, setEditInvestmentStatus] = useState(startup.status || startup.investmentStatus || '1 ソーシング');
+  const [editInvestmentReachedStage, setEditInvestmentReachedStage] = useState(startup.investmentReachedStage || '1 ソーシング');
+  const [editInvestmentCloseReason, setEditInvestmentCloseReason] = useState(startup.investmentCloseReason || '');
+  const [editInvestmentRevivalFeasibility, setEditInvestmentRevivalFeasibility] = useState(startup.investmentRevivalFeasibility || startup.revivalFeasibility || '');
+  const [editInvestmentRevivalScenario, setEditInvestmentRevivalScenario] = useState(startup.investmentRevivalScenario || startup.revivalScenario || '');
+  const [editInvestmentMemo, setEditInvestmentMemo] = useState(startup.investmentMemo || '');
+  const [editFunding, setEditFunding] = useState(startup.funding || '');
+
+  // Profile & Contact fields
   const [editContactPerson, setEditContactPerson] = useState(startup.contactPerson || '');
   const [editDealSource, setEditDealSource] = useState(startup.dealSource || 'VC / アクセラレーター紹介');
   const [editDealSourceDetail, setEditDealSourceDetail] = useState(startup.dealSourceDetail || '');
@@ -72,11 +101,6 @@ export default function StartupDetailModal({
   const [editWebsite, setEditWebsite] = useState(startup.website || '');
   const [editFoundedYear, setEditFoundedYear] = useState(startup.foundedYear || '');
   const [editLocation, setEditLocation] = useState(startup.location || '');
-  const [editFunding, setEditFunding] = useState(startup.funding || '');
-  const [editInvestmentMemo, setEditInvestmentMemo] = useState(startup.investmentMemo || '');
-  const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
-  const [editStatus, setEditStatus] = useState(startup.status || 'Sourcing (ソーシング)');
-  const [editBizDevStatus, setEditBizDevStatus] = useState(startup.bizDevStatus || 'Not Started / N/A (未着手 / 対象外)');
 
   // Inline Task Creation States
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -181,6 +205,12 @@ export default function StartupDetailModal({
       closeReason: editCloseReason,
       revivalFeasibility: editRevivalFeasibility,
       revivalScenario: editRevivalScenario,
+      status: editInvestmentStatus,
+      investmentStatus: editInvestmentStatus,
+      investmentReachedStage: editInvestmentReachedStage,
+      investmentCloseReason: editInvestmentCloseReason,
+      investmentRevivalFeasibility: editInvestmentRevivalFeasibility,
+      investmentRevivalScenario: editInvestmentRevivalScenario,
       contactPerson: editContactPerson,
       dealSource: editDealSource,
       dealSourceDetail: editDealSourceDetail,
@@ -191,8 +221,7 @@ export default function StartupDetailModal({
       funding: editFunding,
       investmentMemo: editInvestmentMemo,
       bizDevNotes: editBizDevNotes,
-      status: editStatus,
-      bizDevStatus: editBizDevStatus
+      bizDevStatus: editCollabStatus || editBizDevStatus
     };
 
     onUpdateStartup(startup.id, updatedData);
@@ -380,87 +409,231 @@ export default function StartupDetailModal({
               </div>
             </div>
 
-            <div className="p-4 bg-teal-50/50 dark:bg-teal-950/20 border border-teal-100 dark:border-teal-900/30 rounded-2xl space-y-4">
-              <div className="flex items-center space-x-2 border-b border-teal-200/50 dark:border-teal-900/50 pb-2">
-                <Handshake className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300">
-                  🤝 協業・パイプライン管理 (Collaboration Pipeline)
-                </span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業ステータス *</label>
-                  <select 
-                    value={editCollabStatus}
-                    onChange={(e) => setEditCollabStatus(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
-                  >
-                    {COLLAB_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-                  </select>
+            {/* 2. 🤝 協業・パイプライン管理 (Collapsible Accordion with Chevron) */}
+            <div className="rounded-2xl border border-teal-200 dark:border-teal-900/50 bg-teal-50/40 dark:bg-teal-950/20 overflow-hidden transition-all shadow-xs">
+              <button
+                type="button"
+                onClick={() => setIsCollabSectionOpen(prev => !prev)}
+                className="w-full flex items-center justify-between p-4 bg-teal-50/80 hover:bg-teal-100/70 dark:bg-teal-950/40 dark:hover:bg-teal-950/60 transition-colors text-left"
+              >
+                <div className="flex items-center space-x-2">
+                  <Handshake className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-teal-800 dark:text-teal-200">
+                    🤝 協業・事業連携パイプライン (BizDev Pipeline)
+                  </span>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業部署 (自由記述)</label>
-                  <input 
-                    type="text" 
-                    placeholder="例: DX推進部、物流事業本部第2課" 
-                    value={editPartnerDept}
-                    onChange={(e) => setEditPartnerDept(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                  />
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold shadow-2xs ${getCollabStatusColor(editCollabStatus)}`}>
+                    {editCollabStatus}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-teal-700 dark:text-teal-300 transition-transform duration-200 ${isCollabSectionOpen ? 'rotate-180' : ''}`} />
                 </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">到達ステージ (Reached Stage)</label>
-                <select 
-                  value={editReachedStage}
-                  onChange={(e) => setEditReachedStage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                >
-                  {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-                </select>
-              </div>
+              </button>
+
+              {isCollabSectionOpen && (
+                <div className="p-4 space-y-4 border-t border-teal-200/60 dark:border-teal-900/40 animate-fade-in">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業ステータス *</label>
+                      <select 
+                        value={editCollabStatus}
+                        onChange={(e) => setEditCollabStatus(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
+                      >
+                        {COLLAB_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業部署 (自由記述)</label>
+                      <input 
+                        type="text" 
+                        placeholder="例: DX推進部、物流事業本部第2課" 
+                        value={editPartnerDept}
+                        onChange={(e) => setEditPartnerDept(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 到達ステージ</label>
+                      <select 
+                        value={editReachedStage}
+                        onChange={(e) => setEditReachedStage(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                      >
+                        {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活可能性</label>
+                      <select 
+                        value={editRevivalFeasibility}
+                        onChange={(e) => setEditRevivalFeasibility(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                      >
+                        <option value="">未設定</option>
+                        {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業クローズ理由 (自由記述)</label>
+                    <input 
+                      type="text" 
+                      placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
+                      value={editCloseReason}
+                      onChange={(e) => setEditCloseReason(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活シナリオ (再アプローチ条件・トリガー)</label>
+                    <input 
+                      type="text" 
+                      placeholder="例: 次世代SaaS版ローンチ時、事業部ニーズ発生時" 
+                      value={editRevivalScenario}
+                      onChange={(e) => setEditRevivalScenario(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ</label>
+                    <textarea 
+                      rows="2"
+                      placeholder="PoC検証項目や事業部門の反応など..."
+                      value={editBizDevNotes}
+                      onChange={(e) => setEditBizDevNotes(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="p-4 bg-slate-100/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl space-y-4">
-              <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-700 pb-2">
-                <RotateCw className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  🔄 クローズ理由 ＆ 復活可能性・シナリオ
-                </span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">復活可能性</label>
-                  <select 
-                    value={editRevivalFeasibility}
-                    onChange={(e) => setEditRevivalFeasibility(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                  >
-                    <option value="">未設定</option>
-                    {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
+            {/* 3. 💳 投資・出資パイプライン管理 (Collapsible Accordion with Chevron) */}
+            <div className="rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20 overflow-hidden transition-all shadow-xs">
+              <button
+                type="button"
+                onClick={() => setIsInvestmentSectionOpen(prev => !prev)}
+                className="w-full flex items-center justify-between p-4 bg-blue-50/80 hover:bg-blue-100/70 dark:bg-blue-950/40 dark:hover:bg-blue-950/60 transition-colors text-left"
+              >
+                <div className="flex items-center space-x-2">
+                  <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-800 dark:text-blue-200">
+                    💳 投資・出資パイプライン (Investment Pipeline)
+                  </span>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">クローズ理由 (自由記述)</label>
-                  <input 
-                    type="text" 
-                    placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
-                    value={editCloseReason}
-                    onChange={(e) => setEditCloseReason(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                  />
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold shadow-2xs ${getInvestmentStatusColor(editInvestmentStatus)}`}>
+                    {editInvestmentStatus}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-blue-700 dark:text-blue-300 transition-transform duration-200 ${isInvestmentSectionOpen ? 'rotate-180' : ''}`} />
                 </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">復活シナリオ (再アプローチ条件・トリガー、自由記述)</label>
-                <input 
-                  type="text" 
-                  placeholder="例: 次世代SaaS版ローンチ時、シリーズB調達完了時" 
-                  value={editRevivalScenario}
-                  onChange={(e) => setEditRevivalScenario(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                />
-              </div>
+              </button>
+
+              {isInvestmentSectionOpen && (
+                <div className="p-4 space-y-4 border-t border-blue-200/60 dark:border-blue-900/40 animate-fade-in">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス *</label>
+                      <select 
+                        value={editInvestmentStatus}
+                        onChange={(e) => setEditInvestmentStatus(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
+                      >
+                        {INVESTMENT_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 到達ステージ</label>
+                      <select 
+                        value={editInvestmentReachedStage}
+                        onChange={(e) => setEditInvestmentReachedStage(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                      >
+                        {INVESTMENT_REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 見送り・クローズ理由 (自由記述 / クイック選択)</label>
+                    <input 
+                      type="text" 
+                      placeholder="例: Valuation目線不一致、競合優位性不足" 
+                      value={editInvestmentCloseReason}
+                      onChange={(e) => setEditInvestmentCloseReason(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                    />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {INVESTMENT_CLOSE_REASONS.map(reason => (
+                        <button
+                          type="button"
+                          key={reason}
+                          onClick={() => setEditInvestmentCloseReason(reason)}
+                          className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 hover:text-blue-600 border border-slate-200 dark:border-slate-800 transition-colors"
+                        >
+                          + {reason}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">次回検討トリガー・復活シナリオ</label>
+                      <input 
+                        type="text" 
+                        placeholder="例: シリーズB調達時、ARR 1億円達成時" 
+                        value={editInvestmentRevivalScenario}
+                        onChange={(e) => setEditInvestmentRevivalScenario(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 復活可能性</label>
+                      <select 
+                        value={editInvestmentRevivalFeasibility}
+                        onChange={(e) => setEditInvestmentRevivalFeasibility(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                      >
+                        <option value="">未設定</option>
+                        {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">資金調達履歴 (ラウンド / 評価額 / 引受先)</label>
+                    <textarea 
+                      rows="2"
+                      placeholder="例: Series A 5億円 (2024/01) リード: 〇〇キャピタル" 
+                      value={editFunding}
+                      onChange={(e) => setEditFunding(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ・所見</label>
+                    <textarea 
+                      rows="2"
+                      placeholder="投資判断のポイント、DD留意事項など..." 
+                      value={editInvestmentMemo}
+                      onChange={(e) => setEditInvestmentMemo(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -547,33 +720,6 @@ export default function StartupDetailModal({
                   className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">資金調達履歴</label>
-                <textarea 
-                  rows="2"
-                  value={editFunding}
-                  onChange={(e) => setEditFunding(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">投資検討メモ</label>
-                <textarea 
-                  rows="2"
-                  value={editInvestmentMemo}
-                  onChange={(e) => setEditInvestmentMemo(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業開発・PoC協業メモ</label>
-                <textarea 
-                  rows="2"
-                  value={editBizDevNotes}
-                  onChange={(e) => setEditBizDevNotes(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                />
-              </div>
             </div>
 
             <div className="pt-4 flex items-center justify-end space-x-3 border-t border-slate-200 dark:border-slate-800">
@@ -645,55 +791,60 @@ export default function StartupDetailModal({
               </div>
             </div>
 
-            {/* 1. 🤝 協業・パイプライン管理 Card */}
-            <div className="rounded-2xl border border-teal-200 dark:border-teal-900/50 bg-teal-50/40 dark:bg-teal-950/20 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300 flex items-center gap-1.5">
-                  <Handshake className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                  協業・パイプライン進捗
-                </span>
-                <span className={`px-3 py-1 rounded-lg text-xs font-bold shadow-2xs ${getCollabStatusColor(startup.collabStatus || '1 発掘')}`}>
-                  {startup.collabStatus || '1 発掘'}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-teal-200/50 dark:border-teal-900/40 text-xs">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">協業部署</span>
-                  <p className="font-bold text-teal-800 dark:text-teal-300 text-sm mt-0.5">
-                    {startup.partnerDept || startup.internalPartnerDept || '未設定'}
-                  </p>
-                </div>
-
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">最高到達ステージ (Reached Stage)</span>
-                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5">
-                    {startup.reachedStage || '未設定'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 2. 🔄 ロスト・クローズ分析 ＆ 復活検討 Card */}
-            {(startup.closeReason || startup.revivalFeasibility || startup.revivalScenario || startup.collabStatus?.includes("クローズ") || startup.collabStatus?.includes("保留")) && (
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <RotateCw className="h-4 w-4 text-slate-500" />
-                    ロスト・クローズ分析 ＆ 復活検討
+            {/* 1. 🤝 協業・パイプライン進捗 Card (Collapsible Accordion with Chevron) */}
+            <div className="rounded-2xl border border-teal-200 dark:border-teal-900/50 bg-teal-50/40 dark:bg-teal-950/20 overflow-hidden shadow-xs transition-all">
+              <button
+                type="button"
+                onClick={() => setIsCollabSectionOpen(prev => !prev)}
+                className="w-full flex items-center justify-between p-4 bg-teal-50/80 hover:bg-teal-100/70 dark:bg-teal-950/40 dark:hover:bg-teal-950/60 transition-colors text-left"
+              >
+                <div className="flex items-center space-x-2">
+                  <Handshake className="h-4.5 w-4.5 text-teal-600 dark:text-teal-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-teal-800 dark:text-teal-200">
+                    🤝 協業・事業連携進捗 (BizDev Pipeline)
                   </span>
-                  {startup.revivalFeasibility && (
-                    <span className={`px-2.5 py-1 rounded-lg text-xs ${getRevivalColor(startup.revivalFeasibility)}`}>
-                      復活可能性: {startup.revivalFeasibility}
-                    </span>
-                  )}
                 </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold shadow-2xs ${getCollabStatusColor(startup.collabStatus || '1 発掘')}`}>
+                    {startup.collabStatus || '1 発掘'}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-teal-700 dark:text-teal-300 transition-transform duration-200 ${isCollabSectionOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
 
-                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800 text-xs">
+              {isCollabSectionOpen && (
+                <div className="p-4 space-y-3.5 border-t border-teal-200/60 dark:border-teal-900/40 animate-fade-in text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">協業部署</span>
+                      <p className="font-bold text-teal-800 dark:text-teal-300 text-sm mt-0.5">
+                        {startup.partnerDept || startup.internalPartnerDept || '未設定'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">最高到達ステージ (Reached Stage)</span>
+                      <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5">
+                        {startup.reachedStage || '未設定'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {startup.revivalFeasibility && (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">復活可能性</span>
+                      <div className="mt-0.5">
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${getRevivalColor(startup.revivalFeasibility)}`}>
+                          {startup.revivalFeasibility}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {startup.closeReason && (
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">クローズ / 見送り理由</span>
-                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">協業クローズ / 見送り理由</span>
+                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium">
                         {startup.closeReason}
                       </p>
                     </div>
@@ -701,15 +852,113 @@ export default function StartupDetailModal({
 
                   {startup.revivalScenario && (
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">復活シナリオ（再アプローチ条件・トリガー）</span>
-                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">協業 復活シナリオ（再アプローチ条件・トリガー）</span>
+                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium">
                         {startup.revivalScenario}
                       </p>
                     </div>
                   )}
+
+                  {startup.bizDevNotes && (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">事業開発・PoC協業メモ</span>
+                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
+                        {startup.bizDevNotes}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* 2. 💳 投資・出資パイプライン進捗 Card (Collapsible Accordion with Chevron) */}
+            <div className="rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20 overflow-hidden shadow-xs transition-all">
+              <button
+                type="button"
+                onClick={() => setIsInvestmentSectionOpen(prev => !prev)}
+                className="w-full flex items-center justify-between p-4 bg-blue-50/80 hover:bg-blue-100/70 dark:bg-blue-950/40 dark:hover:bg-blue-950/60 transition-colors text-left"
+              >
+                <div className="flex items-center space-x-2">
+                  <Briefcase className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-800 dark:text-blue-200">
+                    💳 投資・出資パイプライン進捗 (Investment Pipeline)
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold shadow-2xs ${getInvestmentStatusColor(startup.status || startup.investmentStatus || '1 ソーシング')}`}>
+                    {startup.status || startup.investmentStatus || '1 ソーシング'}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-blue-700 dark:text-blue-300 transition-transform duration-200 ${isInvestmentSectionOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+
+              {isInvestmentSectionOpen && (
+                <div className="p-4 space-y-3.5 border-t border-blue-200/60 dark:border-blue-900/40 animate-fade-in text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">調達ステージ</span>
+                      <p className="font-bold text-blue-800 dark:text-blue-300 text-sm mt-0.5">
+                        {startup.stage || '未設定'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">投資 到達ステージ</span>
+                      <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5">
+                        {startup.investmentReachedStage || '未設定'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {(startup.investmentRevivalFeasibility || (!startup.isCollabOnly && startup.revivalFeasibility)) && (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">投資 復活可能性</span>
+                      <div className="mt-0.5">
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${getRevivalColor(startup.investmentRevivalFeasibility || startup.revivalFeasibility)}`}>
+                          {startup.investmentRevivalFeasibility || startup.revivalFeasibility}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {startup.investmentCloseReason && (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">投資 見送り・クローズ理由</span>
+                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium">
+                        {startup.investmentCloseReason}
+                      </p>
+                    </div>
+                  )}
+
+                  {startup.investmentRevivalScenario && (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">次回検討トリガー・復活シナリオ</span>
+                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium">
+                        {startup.investmentRevivalScenario}
+                      </p>
+                    </div>
+                  )}
+
+                  {startup.funding && (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">資金調達履歴</span>
+                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
+                        {startup.funding}
+                      </p>
+                    </div>
+                  )}
+
+                  {startup.investmentMemo && (
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">投資検討メモ・所見</span>
+                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
+                        {startup.investmentMemo}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* 3. 📋 タスク・TODO管理 Card */}
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-4 space-y-3">
@@ -878,33 +1127,6 @@ export default function StartupDetailModal({
                   </div>
                 )}
               </div>
-
-              {startup.funding && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">資金調達履歴</span>
-                  <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed">
-                    {startup.funding}
-                  </p>
-                </div>
-              )}
-
-              {startup.investmentMemo && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">投資検討メモ</span>
-                  <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed">
-                    {startup.investmentMemo}
-                  </p>
-                </div>
-              )}
-
-              {startup.bizDevNotes && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">事業開発・PoC協業メモ</span>
-                  <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed">
-                    {startup.bizDevNotes}
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* 5. 📝 過去の面談ログ＆AI要約 Card */}

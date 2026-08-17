@@ -60,7 +60,7 @@ export const COLLAB_STATUS_OPTIONS = [
   "10 クローズ"
 ];
 
-// 🌟 到達ステージ (Reached Stage, 1〜7) 定義
+// 🌟 協業 到達ステージ (Reached Stage, 1〜7) 定義
 export const REACHED_STAGE_OPTIONS = [
   "1 発掘",
   "2 面談",
@@ -71,6 +71,39 @@ export const REACHED_STAGE_OPTIONS = [
   "7 事業化"
 ];
 
+// 🌟 投資ステータス (1〜8) 定義
+export const INVESTMENT_STATUS_OPTIONS = [
+  "1 ソーシング",
+  "2 初回面談済",
+  "3 詳細検討中",
+  "4 DD中",
+  "5 IC承認",
+  "6 投資実行済",
+  "7 保留",
+  "8 見送り"
+];
+
+// 🌟 投資 到達ステージ (1〜6) 定義
+export const INVESTMENT_REACHED_STAGE_OPTIONS = [
+  "1 ソーシング",
+  "2 初回面談",
+  "3 詳細検討",
+  "4 DD",
+  "5 投資委員会",
+  "6 投資実行"
+];
+
+// 🌟 投資 見送り・クローズ理由 定番サジェスト
+export const INVESTMENT_CLOSE_REASONS = [
+  "Valuation/株価目線不一致",
+  "市場規模(TAM)・成長性懸念",
+  "競合優位性・Moat不足",
+  "Unit Economics/収益化モデル懸念",
+  "チーム・経営陣体制の懸念",
+  "リード投資家不在/調達枠終了",
+  "CVC投資テーマ・ファンド基準外"
+];
+
 // 🌟 復活可能性 (Revival Feasibility, A〜D) 定義
 export const REVIVAL_FEASIBILITY_OPTIONS = [
   "A 高い",
@@ -79,7 +112,7 @@ export const REVIVAL_FEASIBILITY_OPTIONS = [
   "D ほぼ無し"
 ];
 
-// ステータスカラーヘルパー
+// 協業ステータスカラーヘルパー
 export const getCollabStatusColor = (status) => {
   if (!status) return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
   if (status.includes("8 事業化済")) return "bg-emerald-600 text-white font-bold";
@@ -92,6 +125,21 @@ export const getCollabStatusColor = (status) => {
   if (status.includes("1 発掘")) return "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700";
   if (status.includes("9 保留")) return "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-bold";
   if (status.includes("10 クローズ")) return "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400";
+  return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
+};
+
+// 投資ステータスカラーヘルパー
+export const getInvestmentStatusColor = (status) => {
+  if (!status) return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
+  const s = String(status);
+  if (s.includes("6 投資実行済") || s.includes("Invested") || s.includes("Portfolio")) return "bg-emerald-600 text-white font-bold";
+  if (s.includes("5 IC承認") || s.includes("Committee") || s.includes("投資委員会")) return "bg-indigo-600 text-white font-bold";
+  if (s.includes("4 DD中") || s.includes("DD") || s.includes("Diligence")) return "bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold";
+  if (s.includes("3 詳細検討中") || s.includes("Review") || s.includes("詳細検討")) return "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold";
+  if (s.includes("2 初回面談済") || s.includes("Initial")) return "bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800";
+  if (s.includes("1 ソーシング") || s.includes("Sourcing")) return "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700";
+  if (s.includes("7 保留")) return "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-bold";
+  if (s.includes("8 見送り") || s.includes("Passed") || s.includes("クローズ")) return "bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400";
   return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
 };
 
@@ -116,38 +164,38 @@ export const COLUMN_PRESETS = {
   default: {
     name: "標準 (総合)",
     icon: "🌟",
-    desc: "Type・優先度・協業ステータス・協業部署・タスクを表示",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, partnerDept: true, contactPerson: true, tasks: true, reachedStage: false, closeReason: false, revivalFeasibility: false, revivalScenario: false, sector: true, stage: true, dealSource: false, createdAtDate: true, location: false }
+    desc: "Type・優先度・協業/投資ステータス・タスクを表示",
+    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, investmentStatus: true, partnerDept: true, contactPerson: true, tasks: true, reachedStage: false, closeReason: false, revivalFeasibility: false, revivalScenario: false, investmentReachedStage: false, investmentCloseReason: false, sector: true, stage: true, dealSource: false, createdAtDate: true, location: false }
   },
   bizDev: {
     name: "🤝 協業・事業連携重視",
     icon: "🤝",
     desc: "協業ステータス・協業部署・到達ステージ・タスクに特化",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, partnerDept: true, reachedStage: true, tasks: true, contactPerson: true, closeReason: false, revivalFeasibility: false, revivalScenario: false, sector: true, stage: false, dealSource: false, createdAtDate: false, location: true }
+    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, partnerDept: true, reachedStage: true, tasks: true, contactPerson: true, closeReason: false, revivalFeasibility: false, revivalScenario: false, investmentStatus: false, investmentReachedStage: false, investmentCloseReason: false, sector: true, stage: false, dealSource: false, createdAtDate: false, location: true }
   },
   investment: {
     name: "💳 投資検討重視",
     icon: "💳",
-    desc: "調達ステージや優先度・案件流入元・投資メモに特化",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, stage: true, sector: true, dealSource: true, contactPerson: true, tasks: false, partnerDept: false, reachedStage: false, closeReason: false, revivalFeasibility: false, revivalScenario: false, createdAtDate: true, location: false }
+    desc: "投資ステータス・到達ステージ・調達ステージ・流入元に特化",
+    columns: { no: true, name: true, engagementType: true, score: true, investmentStatus: true, investmentReachedStage: true, stage: true, sector: true, dealSource: true, contactPerson: true, investmentCloseReason: false, tasks: false, collabStatus: false, partnerDept: false, reachedStage: false, closeReason: false, revivalFeasibility: false, revivalScenario: false, createdAtDate: true, location: false }
   },
   lostRevival: {
     name: "🔄 クローズ・復活検討",
     icon: "🔄",
-    desc: "到達ステージ・クローズ理由・復活可能性・復活シナリオを表示",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, reachedStage: true, closeReason: true, revivalFeasibility: true, revivalScenario: true, partnerDept: true, contactPerson: false, tasks: false, sector: false, stage: false, dealSource: false, createdAtDate: false, location: false }
+    desc: "協業・投資それぞれの到達ステージ・クローズ理由・復活シナリオ",
+    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, reachedStage: true, closeReason: true, investmentStatus: true, investmentReachedStage: true, investmentCloseReason: true, revivalFeasibility: true, revivalScenario: true, partnerDept: false, contactPerson: false, tasks: false, sector: false, stage: false, dealSource: false, createdAtDate: false, location: false }
   },
   all: {
     name: "👁️ 全項目表示",
     icon: "👁️",
     desc: "すべての列をフル表示",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, partnerDept: true, reachedStage: true, closeReason: true, revivalFeasibility: true, revivalScenario: true, contactPerson: true, tasks: true, sector: true, stage: true, dealSource: true, createdAtDate: true, location: true }
+    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, investmentStatus: true, partnerDept: true, reachedStage: true, closeReason: true, investmentReachedStage: true, investmentCloseReason: true, revivalFeasibility: true, revivalScenario: true, contactPerson: true, tasks: true, sector: true, stage: true, dealSource: true, createdAtDate: true, location: true }
   },
   compact: {
     name: "⚡ コンパクト",
     icon: "⚡",
-    desc: "社名とType・優先度・協業ステータスのみの最小表示",
-    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, partnerDept: true, reachedStage: false, closeReason: false, revivalFeasibility: false, revivalScenario: false, contactPerson: false, tasks: false, sector: false, stage: false, dealSource: false, createdAtDate: false, location: false }
+    desc: "社名とType・優先度・主要ステータスのみの最小表示",
+    columns: { no: true, name: true, engagementType: true, score: true, collabStatus: true, investmentStatus: true, partnerDept: false, reachedStage: false, closeReason: false, investmentReachedStage: false, investmentCloseReason: false, revivalFeasibility: false, revivalScenario: false, contactPerson: false, tasks: false, sector: false, stage: false, dealSource: false, createdAtDate: false, location: false }
   }
 };
 
@@ -158,9 +206,12 @@ const DEFAULT_COLUMN_WIDTHS = {
   engagementType: 110,
   score: 110,
   collabStatus: 140,
+  investmentStatus: 140,
   partnerDept: 170,
   reachedStage: 130,
+  investmentReachedStage: 130,
   closeReason: 220,
+  investmentCloseReason: 220,
   revivalFeasibility: 120,
   revivalScenario: 220,
   contactPerson: 170,
@@ -184,6 +235,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [selectedEngagementType, setSelectedEngagementType] = useState('');
   const [selectedPriority, setSelectedPriority] = useState(''); // '' | '5' | '4+' | '3+' | '2' | '1'
   const [selectedCollabStatus, setSelectedCollabStatus] = useState('');
+  const [selectedInvestmentStatus, setSelectedInvestmentStatus] = useState('');
   const [selectedRevivalFeasibility, setSelectedRevivalFeasibility] = useState('');
   const [hasIncompleteTasksOnly, setHasIncompleteTasksOnly] = useState(false);
   const [selectedSector, setSelectedSector] = useState('');
@@ -321,6 +373,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [newCollabStatus, setNewCollabStatus] = useState('1 発掘');
   const [newReachedStage, setNewReachedStage] = useState('1 発掘');
   const [newCloseReason, setNewCloseReason] = useState('');
+  const [newInvestmentStatus, setNewInvestmentStatus] = useState('1 ソーシング');
+  const [newInvestmentReachedStage, setNewInvestmentReachedStage] = useState('1 ソーシング');
+  const [newInvestmentCloseReason, setNewInvestmentCloseReason] = useState('');
   const [newRevivalFeasibility, setNewRevivalFeasibility] = useState('');
   const [newRevivalScenario, setNewRevivalScenario] = useState('');
   const [newContactPerson, setNewContactPerson] = useState('');
@@ -354,7 +409,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
       (startup.partnerDept && String(startup.partnerDept).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.internalPartnerDept && String(startup.internalPartnerDept).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.closeReason && String(startup.closeReason).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (startup.revivalScenario && String(startup.revivalScenario).toLowerCase().includes(searchTerm.toLowerCase()));
+      (startup.investmentCloseReason && String(startup.investmentCloseReason).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (startup.revivalScenario && String(startup.revivalScenario).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (startup.investmentRevivalScenario && String(startup.investmentRevivalScenario).toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Type Filter (Engagement Type)
     const matchesEngagement = selectedEngagementType 
@@ -375,9 +432,15 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
       ? (startup.collabStatus === selectedCollabStatus || (typeof startup.collabStatus === 'string' && startup.collabStatus.includes(selectedCollabStatus)))
       : true;
 
+    // Investment Status Filter
+    const matchesInvestmentStatus = selectedInvestmentStatus
+      ? (startup.status === selectedInvestmentStatus || startup.investmentStatus === selectedInvestmentStatus || (typeof startup.status === 'string' && startup.status.includes(selectedInvestmentStatus)))
+      : true;
+
     // Revival Feasibility Filter
     const matchesRevival = selectedRevivalFeasibility
-      ? (startup.revivalFeasibility === selectedRevivalFeasibility || (typeof startup.revivalFeasibility === 'string' && startup.revivalFeasibility.includes(selectedRevivalFeasibility)))
+      ? (startup.revivalFeasibility === selectedRevivalFeasibility || (typeof startup.revivalFeasibility === 'string' && startup.revivalFeasibility.includes(selectedRevivalFeasibility)) ||
+         startup.investmentRevivalFeasibility === selectedRevivalFeasibility || (typeof startup.investmentRevivalFeasibility === 'string' && startup.investmentRevivalFeasibility.includes(selectedRevivalFeasibility)))
       : true;
 
     // Incomplete tasks filter logic
@@ -388,7 +451,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     const matchesSector = selectedSector ? startup.sector === selectedSector : true;
     const matchesStage = selectedStage ? startup.stage === selectedStage : true;
     
-    return matchesType && matchesSearch && matchesEngagement && matchesPriority && matchesCollabStatus && matchesRevival && matchesTasks && matchesSector && matchesStage;
+    return matchesType && matchesSearch && matchesEngagement && matchesPriority && matchesCollabStatus && matchesInvestmentStatus && matchesRevival && matchesTasks && matchesSector && matchesStage;
   });
 
   // Clear all filters helper
@@ -397,6 +460,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     setSelectedEngagementType('');
     setSelectedPriority('');
     setSelectedCollabStatus('');
+    setSelectedInvestmentStatus('');
     setSelectedRevivalFeasibility('');
     setHasIncompleteTasksOnly(false);
     setSelectedSector('');
@@ -408,6 +472,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     selectedEngagementType || 
     selectedPriority || 
     selectedCollabStatus || 
+    selectedInvestmentStatus || 
     selectedRevivalFeasibility || 
     hasIncompleteTasksOnly || 
     selectedSector || 
@@ -505,8 +570,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
       collabStatus: newCollabStatus,
       reachedStage: newReachedStage,
       closeReason: newCloseReason,
+      status: newInvestmentStatus || '1 ソーシング',
+      investmentStatus: newInvestmentStatus || '1 ソーシング',
+      investmentReachedStage: newInvestmentReachedStage || '1 ソーシング',
+      investmentCloseReason: newInvestmentCloseReason || '',
       revivalFeasibility: newRevivalFeasibility,
       revivalScenario: newRevivalScenario,
+      investmentRevivalFeasibility: newRevivalFeasibility,
+      investmentRevivalScenario: newRevivalScenario,
       contactPerson: newContactPerson,
       dealSource: newDealSource,
       dealSourceDetail: newDealSourceDetail,
@@ -517,8 +588,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
       funding: newFunding,
       investmentMemo: newInvestmentMemo,
       bizDevNotes: newBizDevNotes,
-      status: 'Sourcing (ソーシング)',
-      bizDevStatus: 'Not Started / N/A (未着手 / 対象外)',
+      bizDevStatus: newCollabStatus || '1 発掘',
       tasks: []
     };
 
@@ -534,6 +604,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     setNewCollabStatus('1 発掘');
     setNewReachedStage('1 発掘');
     setNewCloseReason('');
+    setNewInvestmentStatus('1 ソーシング');
+    setNewInvestmentReachedStage('1 ソーシング');
+    setNewInvestmentCloseReason('');
     setNewRevivalFeasibility('');
     setNewRevivalScenario('');
     setNewContactPerson('');
@@ -717,9 +790,12 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       engagementType: "検討Type",
                       score: "優先度評価",
                       collabStatus: "協業ステータス",
+                      investmentStatus: "投資ステータス",
                       partnerDept: "協業部署",
-                      reachedStage: "到達ステージ",
-                      closeReason: "クローズ理由",
+                      reachedStage: "協業到達ステージ",
+                      investmentReachedStage: "投資到達ステージ",
+                      closeReason: "協業クローズ理由",
+                      investmentCloseReason: "投資見送り理由",
                       revivalFeasibility: "復活可能性",
                       revivalScenario: "復活シナリオ",
                       contactPerson: "窓口担当者",
@@ -784,10 +860,10 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
               setNewCompanyType(companyType);
               setIsAddModalOpen(true);
             }}
-            className="inline-flex items-center justify-center space-x-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold shadow-md shadow-blue-500/10 hover:shadow-lg transition-all min-h-[44px]"
+            className="inline-flex items-center justify-center space-x-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-md shadow-blue-500/20 transition-all active:scale-[0.98] min-h-[44px]"
           >
-            <Plus className="h-5 w-5" />
-            <span>{companyType === 'enterprise' ? '一般企業を登録' : 'スタートアップ登録'}</span>
+            <Plus className="h-4.5 w-4.5" />
+            <span>{companyType === 'enterprise' ? '一般企業を追加' : '企業を追加'}</span>
           </button>
         </div>
       </div>
@@ -893,7 +969,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
             <select
               value={selectedCollabStatus}
               onChange={(e) => setSelectedCollabStatus(e.target.value)}
-              className={`w-full sm:w-44 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-bold transition-all ${
+              className={`w-full sm:w-40 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-bold transition-all ${
                 selectedCollabStatus 
                   ? 'border-teal-400 text-teal-800 dark:text-teal-300 bg-teal-50/50 dark:bg-teal-950/40 ring-1 ring-teal-400/50' 
                   : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
@@ -1254,6 +1330,27 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       </th>
                     )}
 
+                    {/* 投資ステータス col */}
+                    {visibleColumns.investmentStatus && (
+                      <th 
+                        style={{ width: `${columnWidths.investmentStatus}px`, minWidth: `${columnWidths.investmentStatus}px` }} 
+                        onClick={() => handleSort('status')} 
+                        className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>投資ステータス</span>
+                          <SortIcon field="status" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('investmentStatus', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
                     {/* 協業部署 col */}
                     {visibleColumns.partnerDept && (
                       <th 
@@ -1275,7 +1372,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       </th>
                     )}
 
-                    {/* Reached Stage col */}
+                    {/* 協業 到達ステージ col */}
                     {visibleColumns.reachedStage && (
                       <th 
                         style={{ width: `${columnWidths.reachedStage}px`, minWidth: `${columnWidths.reachedStage}px` }} 
@@ -1283,7 +1380,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                         className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
                       >
                         <div className="flex items-center space-x-1">
-                          <span>到達ステージ</span>
+                          <span>協業 到達ステージ</span>
                           <SortIcon field="reachedStage" />
                         </div>
                         <div 
@@ -1296,15 +1393,53 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       </th>
                     )}
 
-                    {/* Close Reason col */}
+                    {/* 投資 到達ステージ col */}
+                    {visibleColumns.investmentReachedStage && (
+                      <th 
+                        style={{ width: `${columnWidths.investmentReachedStage}px`, minWidth: `${columnWidths.investmentReachedStage}px` }} 
+                        onClick={() => handleSort('investmentReachedStage')} 
+                        className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>投資 到達ステージ</span>
+                          <SortIcon field="investmentReachedStage" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('investmentReachedStage', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* 協業 Close Reason col */}
                     {visibleColumns.closeReason && (
                       <th 
                         style={{ width: `${columnWidths.closeReason}px`, minWidth: `${columnWidths.closeReason}px` }} 
                         className="py-3.5 px-4 relative group"
                       >
-                        <span>クローズ理由</span>
+                        <span>協業クローズ理由</span>
                         <div 
                           onMouseDown={(e) => startResizing('closeReason', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* 投資 Close Reason col */}
+                    {visibleColumns.investmentCloseReason && (
+                      <th 
+                        style={{ width: `${columnWidths.investmentCloseReason}px`, minWidth: `${columnWidths.investmentCloseReason}px` }} 
+                        className="py-3.5 px-4 relative group"
+                      >
+                        <span>投資見送り理由</span>
+                        <div 
+                          onMouseDown={(e) => startResizing('investmentCloseReason', e)} 
                           className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
                           title="左右にドラッグして列幅を変更" 
                         >
@@ -1608,6 +1743,15 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           </td>
                         )}
 
+                        {/* 投資ステータス cell */}
+                        {visibleColumns.investmentStatus && (
+                          <td style={{ width: `${columnWidths.investmentStatus}px`, minWidth: `${columnWidths.investmentStatus}px` }} className="py-3 px-3">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-bold shadow-2xs ${getInvestmentStatusColor(startup.status || startup.investmentStatus || '1 ソーシング')}`}>
+                              {startup.status || startup.investmentStatus || '1 ソーシング'}
+                            </span>
+                          </td>
+                        )}
+
                         {/* 協業部署 cell */}
                         {visibleColumns.partnerDept && (
                           <td style={{ width: `${columnWidths.partnerDept}px`, minWidth: `${columnWidths.partnerDept}px` }} className="py-3 px-4">
@@ -1624,11 +1768,11 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           </td>
                         )}
 
-                        {/* 到達ステージ cell */}
+                        {/* 協業 到達ステージ cell */}
                         {visibleColumns.reachedStage && (
                           <td style={{ width: `${columnWidths.reachedStage}px`, minWidth: `${columnWidths.reachedStage}px` }} className="py-3 px-3 font-medium text-slate-600 dark:text-slate-350 text-[11px]">
                             {startup.reachedStage ? (
-                              <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[10px] font-bold">
+                              <span className="px-2 py-0.5 rounded bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-900 font-mono text-[10px] font-bold">
                                 {startup.reachedStage}
                               </span>
                             ) : (
@@ -1637,11 +1781,33 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           </td>
                         )}
 
-                        {/* Close Reason cell */}
+                        {/* 投資 到達ステージ cell */}
+                        {visibleColumns.investmentReachedStage && (
+                          <td style={{ width: `${columnWidths.investmentReachedStage}px`, minWidth: `${columnWidths.investmentReachedStage}px` }} className="py-3 px-3 font-medium text-slate-600 dark:text-slate-350 text-[11px]">
+                            {startup.investmentReachedStage ? (
+                              <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 font-mono text-[10px] font-bold">
+                                {startup.investmentReachedStage}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>
+                            )}
+                          </td>
+                        )}
+
+                        {/* 協業 Close Reason cell */}
                         {visibleColumns.closeReason && (
                           <td style={{ width: `${columnWidths.closeReason}px`, minWidth: `${columnWidths.closeReason}px` }} className="py-3 px-4">
                             <div className="text-[11px] text-slate-600 dark:text-slate-350 max-h-16 overflow-y-auto break-words whitespace-normal leading-relaxed pr-1" title={startup.closeReason}>
                               {startup.closeReason || <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>}
+                            </div>
+                          </td>
+                        )}
+
+                        {/* 投資 Close Reason cell */}
+                        {visibleColumns.investmentCloseReason && (
+                          <td style={{ width: `${columnWidths.investmentCloseReason}px`, minWidth: `${columnWidths.investmentCloseReason}px` }} className="py-3 px-4">
+                            <div className="text-[11px] text-slate-600 dark:text-slate-350 max-h-16 overflow-y-auto break-words whitespace-normal leading-relaxed pr-1" title={startup.investmentCloseReason}>
+                              {startup.investmentCloseReason || <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>}
                             </div>
                           </td>
                         )}
@@ -2191,7 +2357,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">到達ステージ (Reached Stage)</label>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 到達ステージ</label>
                   <select 
                     value={newReachedStage}
                     onChange={(e) => setNewReachedStage(e.target.value)}
@@ -2199,6 +2365,63 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   >
                     {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
                   </select>
+                </div>
+              </div>
+
+              {/* 3. 💳 投資・出資パイプライン管理 (Investment Pipeline) */}
+              <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl space-y-4">
+                <div className="flex items-center space-x-2 border-b border-blue-200/50 dark:border-blue-900/50 pb-2">
+                  <Briefcase className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                    💳 投資・出資パイプライン管理 (Investment Pipeline)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス *</label>
+                    <select 
+                      value={newInvestmentStatus}
+                      onChange={(e) => setNewInvestmentStatus(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
+                    >
+                      {INVESTMENT_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 到達ステージ</label>
+                    <select 
+                      value={newInvestmentReachedStage}
+                      onChange={(e) => setNewInvestmentReachedStage(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                    >
+                      {INVESTMENT_REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資見送り理由 (自由記述 / クイック選択)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例: Valuation目線不一致、競合優位性不足" 
+                    value={newInvestmentCloseReason}
+                    onChange={(e) => setNewInvestmentCloseReason(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  />
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {INVESTMENT_CLOSE_REASONS.slice(0, 4).map(reason => (
+                      <button
+                        type="button"
+                        key={reason}
+                        onClick={() => setNewInvestmentCloseReason(reason)}
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 hover:text-blue-600 transition-colors"
+                      >
+                        + {reason}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

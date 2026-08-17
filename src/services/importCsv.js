@@ -11,10 +11,13 @@ export const downloadImportTemplate = () => {
     "窓口担当者 (Contact Person)",
     "協業部署 (Partner Dept)",
     "協業ステータス (Collab Status)",
-    "到達ステージ (Reached Stage)",
-    "クローズ理由 (Close Reason)",
+    "協業 到達ステージ (Collab Reached Stage)",
+    "協業 クローズ理由 (Collab Close Reason)",
+    "投資ステータス (Investment Status)",
+    "投資 到達ステージ (Investment Reached Stage)",
+    "投資 見送り理由 (Investment Close Reason)",
     "復活可能性 (Revival Feasibility)",
-    "復活シナリオ (Revival Scenario)",
+    "復活シナリオ / 次回検討トリガー (Revival Scenario)",
     "設立年 (Founded Year)",
     "拠点 (Location)",
     "Webサイト (Website)",
@@ -22,9 +25,7 @@ export const downloadImportTemplate = () => {
     "資金調達履歴 (Funding History)",
     "案件流入元 (Deal Source)",
     "案件流入元・詳細 (Deal Source Detail)",
-    "投資ステータス (Investment Status)",
     "投資検討メモ (Investment Memo)",
-    "事業・PoCステータス (BizDev Status)",
     "事業開発・PoC協業メモ (BizDev Notes)",
     "タスク (Tasks)"
   ];
@@ -43,18 +44,19 @@ export const downloadImportTemplate = () => {
     "6 PoC",
     "6 PoC",
     "",
-    "A 高い",
+    "4 DD中",
+    "4 DD",
     "",
+    "A 高い",
+    "シリーズB調達時、ARR 1億円達成時に再確認",
     "2024年",
     "東京",
     "https://example.com",
     "エンタープライズ向け生成AIソリューションの開発",
-    "Series A 5億円 (2024/01)",
+    "Series A 5億円 (2024/01) リード: 〇〇キャピタル",
     "VC / アクセラレーター紹介",
     "〇〇キャピタルの田中様からの紹介",
-    "Due Diligence (デューデリジェンス)",
     "技術力・チームともに優秀。知財周りの確認が必要。",
-    "POC Executing (POC実施・実証実験中)",
     "社内ナレッジ検索の実証実験に向け提案中。",
     "[未完] 知財レビューの実施 (期日: 2026-08-30)"
   ];
@@ -73,6 +75,9 @@ export const downloadImportTemplate = () => {
     "8 事業化済",
     "7 事業化",
     "",
+    "6 投資実行済",
+    "6 投資実行",
+    "",
     "A 高い",
     "",
     "1998年",
@@ -82,9 +87,7 @@ export const downloadImportTemplate = () => {
     "資本金 10億円",
     "直接コンタクト・Web応募",
     "",
-    "Invested / Portfolio (投資済・LP出資)",
     "投資対象外だが、アセット連携・PoCパートナーとして非常に有力。",
-    "Commercialized / Partnered (事業化・本導入・業務提携)",
     "製造ラインデータ連携のPoCを共同推進中。",
     "[未完] 次回PoC定例会の設定 (期日: 2026-08-25)"
   ];
@@ -108,41 +111,45 @@ export const parseStartupsCSV = (csvText) => {
   if (!csvText || !csvText.trim()) return [];
 
   const lines = parseCSVToRows(csvText);
-  if (lines.length < 2) return [];
+  if (lines.length <= 1) return [];
 
   const headers = lines[0].map(h => h.trim().toLowerCase());
-
-  const getIndex = (possibleNames) => {
-    return headers.findIndex(h => possibleNames.some(name => h.includes(name.toLowerCase())));
+  
+  // Dynamic header resolution
+  const getIdx = (keywords) => {
+    return headers.findIndex(h => keywords.some(k => h.includes(k.toLowerCase())));
   };
 
-  const noIdx = getIndex(["no.", "no", "番号"]);
-  const nameIdx = getIndex(["企業名", "name"]);
-  const engagementTypeIdx = getIndex(["検討type", "type", "検討種別", "engagement"]);
-  const typeIdx = getIndex(["企業種別", "種別", "companytype"]);
-  const sectorIdx = getIndex(["セクター", "sector"]);
-  const stageIdx = getIndex(["調達ステージ", "ステージ", "stage"]);
-  const createdAtDateIdx = getIndex(["登録日", "registered date", "createdat"]);
-  const scoreIdx = getIndex(["優先度評価", "優先度", "評価", "score", "priority"]);
-  const contactPersonIdx = getIndex(["窓口担当者", "担当者", "窓口", "contact", "contactperson", "pic"]);
-  const partnerDeptIdx = getIndex(["協業部署", "社内連携先", "連携先", "partnerdept", "department"]);
-  const collabStatusIdx = getIndex(["協業ステータス", "ステータス", "collabstatus", "collab_status"]);
-  const reachedStageIdx = getIndex(["到達ステージ", "reached stage", "reachedstage"]);
-  const closeReasonIdx = getIndex(["クローズ理由", "close reason", "closereason", "見送り理由"]);
-  const revivalFeasibilityIdx = getIndex(["復活可能性", "revival feasibility", "revivalfeasibility"]);
-  const revivalScenarioIdx = getIndex(["復活シナリオ", "revival scenario", "revivalscenario"]);
-  const foundedYearIdx = getIndex(["設立年", "founded year"]);
-  const locationIdx = getIndex(["拠点", "location", "設立・拠点"]);
-  const websiteIdx = getIndex(["webサイト", "ウェブサイト", "website", "url"]);
-  const taglineIdx = getIndex(["事業概要", "概要", "tagline", "description"]);
-  const fundingIdx = getIndex(["資金調達履歴", "調達履歴", "funding"]);
-  const dealSourceIdx = getIndex(["案件流入元", "流入元", "dealsource", "source"]);
-  const dealSourceDetailIdx = getIndex(["案件流入元・詳細", "流入元詳細", "dealsourcedetail"]);
-  const statusIdx = getIndex(["投資ステータス", "investment status"]);
-  const investmentMemoIdx = getIndex(["投資検討メモ", "投資メモ", "investment memo"]);
-  const bizDevStatusIdx = getIndex(["事業・pocステータス", "pocステータス", "bizdev status"]);
-  const bizDevNotesIdx = getIndex(["事業開発・poc協業メモ", "協業メモ", "bizdev notes"]);
-  const tasksIdx = getIndex(["タスク", "tasks", "task", "アクション", "todo"]);
+  const nameIdx = getIdx(["企業名", "name", "会社名", "スタートアップ名"]);
+  const typeIdx = getIdx(["企業種別", "企業区分", "type"]);
+  const engagementTypeIdx = getIdx(["検討type", "engagement type", "検討タイプ", "区分"]);
+  const scoreIdx = getIdx(["優先度", "score", "rank", "重要度"]);
+  const sectorIdx = getIdx(["セクター", "sector", "業種", "業界"]);
+  const stageIdx = getIdx(["調達ステージ", "stage", "フェーズ"]);
+  const noIdx = getIdx(["no.", "no", "番号", "id"]);
+  const createdAtDateIdx = getIdx(["登録日", "登録年月日", "createdatdate", "date"]);
+  const contactPersonIdx = getIdx(["担当者", "窓口", "contact"]);
+  const partnerDeptIdx = getIdx(["協業部署", "連携部署", "partner dept", "partnerdept", "社内連携"]);
+  const collabStatusIdx = getIdx(["協業ステータス", "collab status", "collabstatus", "協業進捗"]);
+  const reachedStageIdx = getIdx(["協業 到達ステージ", "到達ステージ", "reached stage", "最高到達"]);
+  const closeReasonIdx = getIdx(["協業 クローズ理由", "クローズ理由", "close reason", "ロスト理由"]);
+  const investmentStatusIdx = getIdx(["投資ステータス", "investment status", "investmentstatus"]);
+  const investmentReachedStageIdx = getIdx(["投資 到達ステージ", "投資到達ステージ", "investment reached stage"]);
+  const investmentCloseReasonIdx = getIdx(["投資 見送り理由", "投資見送り理由", "投資クローズ理由", "investment close reason"]);
+  const revivalFeasibilityIdx = getIdx(["復活可能性", "revival feasibility", "復活見込み"]);
+  const revivalScenarioIdx = getIdx(["復活シナリオ", "次回検討トリガー", "revival scenario", "再打診"]);
+  const foundedYearIdx = getIdx(["設立年", "founded", "設立"]);
+  const locationIdx = getIdx(["拠点", "location", "所在地", "住所"]);
+  const websiteIdx = getIdx(["web", "サイト", "url", "hp"]);
+  const taglineIdx = getIdx(["事業概要", "tagline", "概要", "詳細"]);
+  const fundingIdx = getIdx(["資金調達", "funding", "調達額"]);
+  const dealSourceIdx = getIdx(["流入元", "deal source", "経由"]);
+  const dealSourceDetailIdx = getIdx(["流入元・詳細", "流入詳細", "紹介者"]);
+  const statusIdx = getIdx(["投資ステータス", "status", "パイプライン"]);
+  const investmentMemoIdx = getIdx(["投資検討メモ", "investment memo", "投資メモ"]);
+  const bizDevStatusIdx = getIdx(["事業・pocステータス", "bizdev status"]);
+  const bizDevNotesIdx = getIdx(["事業開発・poc協業メモ", "bizdev notes", "協業メモ"]);
+  const tasksIdx = getIdx(["タスク", "tasks", "todo"]);
 
   const parsedStartups = [];
 
@@ -169,7 +176,6 @@ export const parseStartupsCSV = (csvText) => {
     const createdAtDateStr = createdAtDateIdx !== -1 && row[createdAtDateIdx] ? row[createdAtDateIdx].trim() : "";
     const rawTasksStr = tasksIdx !== -1 && row[tasksIdx] ? row[tasksIdx].trim() : "";
     
-    // Parse tasks if present
     const parsedTasks = [];
     if (rawTasksStr) {
       const taskItems = rawTasksStr.split(/[\/\n\r]+/).map(t => t.trim()).filter(Boolean);
@@ -196,6 +202,11 @@ export const parseStartupsCSV = (csvText) => {
     const collabStatusVal = collabStatusIdx !== -1 && row[collabStatusIdx] ? row[collabStatusIdx].trim() : "1 発掘";
     const reachedStageVal = reachedStageIdx !== -1 && row[reachedStageIdx] ? row[reachedStageIdx].trim() : "";
     const closeReasonVal = closeReasonIdx !== -1 && row[closeReasonIdx] ? row[closeReasonIdx].trim() : "";
+    
+    const investmentStatusVal = investmentStatusIdx !== -1 && row[investmentStatusIdx] ? row[investmentStatusIdx].trim() : (statusIdx !== -1 && row[statusIdx] ? row[statusIdx].trim() : "1 ソーシング");
+    const investmentReachedStageVal = investmentReachedStageIdx !== -1 && row[investmentReachedStageIdx] ? row[investmentReachedStageIdx].trim() : "";
+    const investmentCloseReasonVal = investmentCloseReasonIdx !== -1 && row[investmentCloseReasonIdx] ? row[investmentCloseReasonIdx].trim() : "";
+
     const revivalFeasibilityVal = revivalFeasibilityIdx !== -1 && row[revivalFeasibilityIdx] ? row[revivalFeasibilityIdx].trim() : "";
     const revivalScenarioVal = revivalScenarioIdx !== -1 && row[revivalScenarioIdx] ? row[revivalScenarioIdx].trim() : "";
 
@@ -214,8 +225,14 @@ export const parseStartupsCSV = (csvText) => {
       collabStatus: collabStatusVal,
       reachedStage: reachedStageVal,
       closeReason: closeReasonVal,
+      status: investmentStatusVal,
+      investmentStatus: investmentStatusVal,
+      investmentReachedStage: investmentReachedStageVal,
+      investmentCloseReason: investmentCloseReasonVal,
       revivalFeasibility: revivalFeasibilityVal,
       revivalScenario: revivalScenarioVal,
+      investmentRevivalFeasibility: revivalFeasibilityVal,
+      investmentRevivalScenario: revivalScenarioVal,
       foundedYear: foundedYearIdx !== -1 && row[foundedYearIdx] ? row[foundedYearIdx].trim() : "",
       location: locationIdx !== -1 && row[locationIdx] ? row[locationIdx].trim() : "Unknown",
       website: websiteIdx !== -1 && row[websiteIdx] ? row[websiteIdx].trim() : "",
