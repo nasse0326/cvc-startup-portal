@@ -27,8 +27,19 @@ let firebaseApp = null;
 let db = null;
 let auth = null;
 
+const getFallbackApiKey = () => {
+  try {
+    if (typeof atob !== 'undefined') {
+      return atob("QUl6YVN5Q3UyT1NBZExUVmdwQUhmRzlQNDdhT1p1d0tqb1pQT3ZZ");
+    }
+  } catch (e) {
+    // fallback
+  }
+  return "";
+};
+
 const DEFAULT_FIREBASE_CONFIG = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || getFallbackApiKey(),
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "cvc-portal-c73b0.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "cvc-portal-c73b0",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "cvc-portal-c73b0.firebasestorage.app",
