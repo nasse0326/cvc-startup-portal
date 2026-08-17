@@ -336,8 +336,29 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     const matchesStage = selectedStage ? startup.stage === selectedStage : true;
     const matchesInvestStatus = selectedInvestStatus ? (startup.status === selectedInvestStatus || (typeof startup.status === 'string' && startup.status.includes(selectedInvestStatus))) : true;
     const matchesBizDevStatus = selectedBizDevStatus ? (startup.bizDevStatus === selectedBizDevStatus || (typeof startup.bizDevStatus === 'string' && startup.bizDevStatus.includes(selectedBizDevStatus))) : true;
-    return matchesType && matchesSearch && matchesSector && matchesStage && matchesInvestStatus && matchesBizDevStatus;
+    return matchesType && matchesSearch && matchesPriority && matchesTasks && matchesSector && matchesStage && matchesInvestStatus && matchesBizDevStatus;
   });
+
+  // Clear all filters helper
+  const clearAllFilters = () => {
+    setSearchTerm('');
+    setSelectedPriority('');
+    setHasIncompleteTasksOnly(false);
+    setSelectedSector('');
+    setSelectedStage('');
+    setSelectedInvestStatus('');
+    setSelectedBizDevStatus('');
+  };
+
+  const hasActiveFilters = Boolean(
+    searchTerm || 
+    selectedPriority || 
+    hasIncompleteTasksOnly || 
+    selectedSector || 
+    selectedStage || 
+    selectedInvestStatus || 
+    selectedBizDevStatus
+  );
 
   // Sort Handler
   const handleSort = (field) => {
