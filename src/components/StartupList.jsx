@@ -102,6 +102,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [sortField, setSortField] = useState('score');
   const [sortDirection, setSortDirection] = useState('desc'); // 'asc' | 'desc'
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPriority, setSelectedPriority] = useState(''); // '' | '5' | '4+' | '3+' | '2' | '1'
+  const [hasIncompleteTasksOnly, setHasIncompleteTasksOnly] = useState(false);
   const [selectedSector, setSelectedSector] = useState('');
   const [selectedStage, setSelectedStage] = useState('');
   const [selectedInvestStatus, setSelectedInvestStatus] = useState('');
@@ -181,7 +183,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     const handleMouseMove = (moveEvent) => {
       if (!resizingCol.current) return;
       const deltaX = moveEvent.clientX - startX.current;
-      const newWidth = Math.max(50, startWidth.current + deltaX);
+      const newWidth = Math.max(60, startWidth.current + deltaX);
       setColumnWidths(prev => ({
         ...prev,
         [resizingCol.current]: newWidth
@@ -265,38 +267,27 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [newInvestmentMemo, setNewInvestmentMemo] = useState('');
   const [newBizDevNotes, setNewBizDevNotes] = useState('');
 
-  const dealSourceOptions = [
-    "VC / アクセラレーター紹介",
-    "展示会・ピッチイベント",
-    "社内事業部からの推薦",
-    "直アプローチ (Outbound)",
-    "Web問合せ / 自主応募",
-    "その他"
-  ];
+  const sectors = ['SaaS', 'AI / ML', 'Fintech', 'CleanTech', 'HealthTech', 'Robotics', 'IoT', 'Logistics', 'Mobility', 'Other'];
+  const stages = ['Pre-Seed', 'Seed', 'Early', 'Series A', 'Series B', 'Series C+', 'Growth', 'N/A (一般企業)'];
+  const dealSourceOptions = ['VC / アクセラレーター紹介', '銀行・証券会社紹介', 'ピッチイベント・展示会', '直接コンタクト・Web応募', '社内事業部・役員紹介', 'その他'];
 
-  // Dropdown lists
-  const sectors = ["AI", "SaaS / Enterprise", "Fintech", "Healthtech", "ClimateTech", "Logistics / Mobility", "Retail / Commerce", "HRTech", "Web3 / Crypto", "Others"];
-  const stages = ["Seed", "Pre-A", "Series-A", "Series-B", "Series-C+", "N/A (一般企業)"];
-  
   const investmentStatuses = [
-    "Sourcing (ソーシング)",
-    "Initial Meeting (初回面談済)",
-    "Deep Review (詳細検討中)",
-    "Due Diligence (DD実施中)",
-    "Investment Committee (投資委員会)",
-    "Invested (Portfolio) (投資実行済 / ポートフォリオ)",
-    "Passed / On Hold (見送り / 保留)"
+    'Sourcing (ソーシング)',
+    'Initial Contact (初回面談)',
+    'Review / Detailed Screening (詳細検討・定例)',
+    'Due Diligence (デューデリジェンス)',
+    'Investment Committee (投資委員会)',
+    'Invested / Portfolio (投資済・LP出資)',
+    'Passed / Archived (見送り・終了)'
   ];
 
   const bizDevStatuses = [
-    "Not Started / N/A (未着手 / 対象外)",
-    "Sourcing (ソーシング)",
-    "Initial Meeting (初回面談済)",
-    "Collaboration Review (協業検討中)",
-    "POC Consideration (POC検討中)",
-    "POC Executing (POC実施中)",
-    "POC Completed (POC実施済)",
-    "Commercialized (事業化・提携済)"
+    'Not Started / N/A (未着手 / 対象外)',
+    'Collaboration Review (協業検討中・ニーズ調査)',
+    'POC Consideration (POC検討・要件定義)',
+    'POC Executing (POC実施・実証実験中)',
+    'POC Completed (POC実施済・効果検証中)',
+    'Commercialized / Partnered (事業化・本導入・業務提携)'
   ];
 
   // Company Type Counts
@@ -316,14 +307,31 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     }
   };
 
-  // Filtering Logic
+  // Filtered List
   const filteredStartups = startups.filter(startup => {
     const isEnterprise = startup.companyType === 'enterprise';
     const matchesType = companyType === 'enterprise' ? isEnterprise : !isEnterprise;
 
     const matchesSearch = 
       String(startup.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (startup.tagline && String(startup.tagline).toLowerCase().includes(searchTerm.toLowerCase()));
+      (startup.tagline && String(startup.tagline).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (startup.contactPerson && String(startup.contactPerson).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (startup.internalPartnerDept && String(startup.internalPartnerDept).toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    // Priority filter logic
+    let matchesPriority = true;
+    const scoreVal = Number(startup.score || 0);
+    if (selectedPriority === '5') matchesPriority = scoreVal === 5;
+    else if (selectedPriority === '4+') matchesPriority = scoreVal >= 4;
+    else if (selectedPriority === '3+') matchesPriority = scoreVal >= 3;
+    else if (selectedPriority === '2') matchesPriority = scoreVal === 2;
+    else if (selectedPriority === '1') matchesPriority = scoreVal === 1;
+
+    // Incomplete tasks filter logic
+    const matchesTasks = hasIncompleteTasksOnly 
+      ? (startup.tasks || []).some(t => !t.completed) 
+      : true;
+
     const matchesSector = selectedSector ? startup.sector === selectedSector : true;
     const matchesStage = selectedStage ? startup.stage === selectedStage : true;
     const matchesInvestStatus = selectedInvestStatus ? (startup.status === selectedInvestStatus || (typeof startup.status === 'string' && startup.status.includes(selectedInvestStatus))) : true;
@@ -748,67 +756,201 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
         </button>
       </div>
 
-      {/* Filters Bar */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/85 p-4 shadow-sm backdrop-blur flex flex-col lg:flex-row items-center gap-3">
+      {/* Filters Bar & Quick Filter Badges */}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/85 p-4 shadow-sm backdrop-blur space-y-3">
         
-        {/* Search Bar */}
-        <div className="relative w-full lg:flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 dark:text-slate-500" />
-          <input 
-            type="text" 
-            placeholder="企業名や事業概要、担当者名で検索..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition-all text-sm"
-          />
+        {/* Row 1: Search & Main Dropdowns */}
+        <div className="flex flex-col lg:flex-row items-center gap-3">
+          {/* Search Bar */}
+          <div className="relative w-full lg:flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 dark:text-slate-500" />
+            <input 
+              type="text" 
+              placeholder="企業名や事業概要、担当者名、社内連携先で検索..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition-all text-sm"
+            />
+          </div>
+
+          {/* Priority (★) Filter Dropdown (🌟 Recommended) */}
+          <div className="w-full sm:w-auto">
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              className={`w-full sm:w-44 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-bold transition-all ${
+                selectedPriority 
+                  ? 'border-amber-400 text-amber-800 dark:text-amber-300 bg-amber-50/50 dark:bg-amber-950/40 ring-1 ring-amber-400/50' 
+                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
+              }`}
+            >
+              <option value="">全 優先度 (★1〜5)</option>
+              <option value="5">🔥 ★5: 絶対追う (最重要)</option>
+              <option value="4+">⭐ ★4以上 (積極フォロー以上)</option>
+              <option value="3+">👀 ★3以上 (継続Watch以上)</option>
+              <option value="2">📄 ★2: 情報収集のみ</option>
+              <option value="1">📁 ★1: (実質)見送り</option>
+            </select>
+          </div>
+
+          {/* BizDev Status Filter */}
+          <div className="w-full sm:w-auto">
+            <select
+              value={selectedBizDevStatus}
+              onChange={(e) => setSelectedBizDevStatus(e.target.value)}
+              className={`w-full sm:w-44 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-medium transition-all ${
+                selectedBizDevStatus 
+                  ? 'border-teal-400 text-teal-800 dark:text-teal-300 bg-teal-50/50 dark:bg-teal-950/40 ring-1 ring-teal-400/50' 
+                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
+              }`}
+            >
+              <option value="">全 事業・PoCステータス</option>
+              {bizDevStatuses.map(st => <option key={st} value={st}>{st.split(" (")[0]}</option>)}
+            </select>
+          </div>
+
+          {/* Investment Status Filter */}
+          <div className="w-full sm:w-auto">
+            <select
+              value={selectedInvestStatus}
+              onChange={(e) => setSelectedInvestStatus(e.target.value)}
+              className={`w-full sm:w-40 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-medium transition-all ${
+                selectedInvestStatus 
+                  ? 'border-blue-400 text-blue-800 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-950/40 ring-1 ring-blue-400/50' 
+                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
+              }`}
+            >
+              <option value="">全 投資ステータス</option>
+              {investmentStatuses.map(st => <option key={st} value={st}>{st.split(" (")[0]}</option>)}
+            </select>
+          </div>
+
+          {/* Sector Filter Dropdown */}
+          <div className="w-full sm:w-auto">
+            <select
+              value={selectedSector}
+              onChange={(e) => setSelectedSector(e.target.value)}
+              className={`w-full sm:w-36 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-medium transition-all ${
+                selectedSector 
+                  ? 'border-indigo-400 text-indigo-800 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-950/40' 
+                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
+              }`}
+            >
+              <option value="">全セクター</option>
+              {sectors.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+            </select>
+          </div>
+
+          {/* Stage Filter Dropdown */}
+          <div className="w-full sm:w-auto">
+            <select
+              value={selectedStage}
+              onChange={(e) => setSelectedStage(e.target.value)}
+              className={`w-full sm:w-32 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-medium transition-all ${
+                selectedStage 
+                  ? 'border-indigo-400 text-indigo-800 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-950/40' 
+                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
+              }`}
+            >
+              <option value="">全ステージ</option>
+              {stages.map(stg => <option key={stg} value={stg}>{stg}</option>)}
+            </select>
+          </div>
         </div>
 
-        {/* Sector Filter Dropdown */}
-        <div className="w-full sm:w-auto">
-          <select
-            value={selectedSector}
-            onChange={(e) => setSelectedSector(e.target.value)}
-            className="w-full sm:w-40 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-350 text-xs font-medium transition-all"
-          >
-            <option value="">全セクター</option>
-            {sectors.map(sec => <option key={sec} value={sec}>{sec}</option>)}
-          </select>
-        </div>
+        {/* Row 2: ⚡ Quick Filter Badges (ワンクリック絞り込みタグ) */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mr-1 flex items-center gap-1">
+              <span>クイック絞込:</span>
+            </span>
 
-        {/* Stage Filter Dropdown */}
-        <div className="w-full sm:w-auto">
-          <select
-            value={selectedStage}
-            onChange={(e) => setSelectedStage(e.target.value)}
-            className="w-full sm:w-36 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-350 text-xs font-medium transition-all"
-          >
-            <option value="">全ステージ</option>
-            {stages.map(stg => <option key={stg} value={stg}>{stg}</option>)}
-          </select>
-        </div>
+            {/* Quick Badge: ★5 最重要 */}
+            <button
+              type="button"
+              onClick={() => setSelectedPriority(prev => prev === '5' ? '' : '5')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                selectedPriority === '5'
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100'
+              }`}
+            >
+              <span>🔥 ★5 最重要</span>
+            </button>
 
-        {/* Investment Status Filter */}
-        <div className="w-full sm:w-auto">
-          <select
-            value={selectedInvestStatus}
-            onChange={(e) => setSelectedInvestStatus(e.target.value)}
-            className="w-full sm:w-44 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-350 text-xs font-medium transition-all"
-          >
-            <option value="">全 投資ステータス</option>
-            {investmentStatuses.map(st => <option key={st} value={st}>{st.split(" (")[0]}</option>)}
-          </select>
-        </div>
+            {/* Quick Badge: ★4以上 積極フォロー */}
+            <button
+              type="button"
+              onClick={() => setSelectedPriority(prev => prev === '4+' ? '' : '4+')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                selectedPriority === '4+'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50 hover:bg-blue-100'
+              }`}
+            >
+              <span>⭐ ★4以上</span>
+            </button>
 
-        {/* BizDev Status Filter */}
-        <div className="w-full sm:w-auto">
-          <select
-            value={selectedBizDevStatus}
-            onChange={(e) => setSelectedBizDevStatus(e.target.value)}
-            className="w-full sm:w-44 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-700 dark:text-slate-350 text-xs font-medium transition-all"
-          >
-            <option value="">全 事業・PoCステータス</option>
-            {bizDevStatuses.map(st => <option key={st} value={st}>{st.split(" (")[0]}</option>)}
-          </select>
+            {/* Quick Badge: 未完了タスクあり */}
+            <button
+              type="button"
+              onClick={() => setHasIncompleteTasksOnly(prev => !prev)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                hasIncompleteTasksOnly
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-100'
+              }`}
+            >
+              <ListTodo className="h-3.5 w-3.5" />
+              <span>📋 要タスク対応</span>
+            </button>
+
+            {/* Quick Badge: PoC進行中 */}
+            <button
+              type="button"
+              onClick={() => setSelectedBizDevStatus(prev => prev ? '' : 'POC Executing (POC実施・実証実験中)')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                selectedBizDevStatus.includes("POC")
+                  ? 'bg-teal-600 text-white shadow-xs'
+                  : 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-900/50 hover:bg-teal-100'
+              }`}
+            >
+              <Handshake className="h-3.5 w-3.5" />
+              <span>🤝 PoC実施・検討中</span>
+            </button>
+
+            {/* Quick Badge: 投資DD・投資済 */}
+            <button
+              type="button"
+              onClick={() => setSelectedInvestStatus(prev => prev ? '' : 'Due Diligence (デューデリジェンス)')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                selectedInvestStatus.includes("DD") || selectedInvestStatus.includes("Invested")
+                  ? 'bg-purple-600 text-white shadow-xs'
+                  : 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50 hover:bg-purple-100'
+              }`}
+            >
+              <Briefcase className="h-3.5 w-3.5" />
+              <span>💳 DD・投資中</span>
+            </button>
+          </div>
+
+          {/* Active Filter Clear & Hit Count */}
+          <div className="flex items-center space-x-2">
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              表示: <strong className="text-slate-800 dark:text-slate-200">{filteredStartups.length}</strong> 件
+            </span>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 transition-all flex items-center gap-1"
+                title="すべての検索・フィルター条件をリセット"
+              >
+                <X className="h-3 w-3" />
+                <span>条件クリア</span>
+              </button>
+            )}
+          </div>
         </div>
 
       </div>
@@ -825,7 +967,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                 <MoveHorizontal className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span>横スクロール移動カーソル:</span>
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
-                  （ヘッダー境界ドラッグで列幅変更）
+                  （ヘッダー右端の縦線バー <span className="font-mono text-blue-600 dark:text-blue-400 font-bold">❙</span> ドラッグで列幅変更）
                 </span>
               </div>
 
@@ -915,11 +1057,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>No.</span>
                           <SortIcon field="no" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('no', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -938,11 +1083,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>企業名</span>
                           <SortIcon field="name" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('name', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -957,11 +1105,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>セクター</span>
                           <SortIcon field="sector" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('sector', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -976,11 +1127,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>ステージ</span>
                           <SortIcon field="stage" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('stage', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -995,11 +1149,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>案件流入元</span>
                           <SortIcon field="dealSource" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('dealSource', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -1015,11 +1172,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>窓口担当者</span>
                           <SortIcon field="contactPerson" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('contactPerson', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -1033,11 +1193,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <ListTodo className="h-3.5 w-3.5 mr-0.5 text-indigo-500" />
                           <span>タスク・TODO</span>
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('tasks', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -1063,11 +1226,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           </button>
                           <SortIcon field="score" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('score', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -1082,11 +1248,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>投資ステータス</span>
                           <SortIcon field="status" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('status', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -1101,11 +1270,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>投資検討メモ</span>
                           <SortIcon field="investmentMemo" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('investmentMemo', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -1120,11 +1292,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>事業・PoC / 連携先</span>
                           <SortIcon field="bizDevStatus" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('bizDevStatus', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -1139,11 +1314,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>事業開発メモ</span>
                           <SortIcon field="bizDevNotes" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('bizDevNotes', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -1158,11 +1336,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           <span>登録日</span>
                           <SortIcon field="createdAtDate" />
                         </div>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('createdAtDate', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
@@ -1173,11 +1354,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                         className="py-3.5 px-4 relative group"
                       >
                         <span>設立 / 拠点 / Web</span>
+                        {/* 🌟 視認性の高いリサイズハンドル */}
                         <div 
                           onMouseDown={(e) => startResizing('location', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-1.5 hover:w-2 hover:bg-blue-500 cursor-col-resize z-30 transition-all" 
-                          title="ドラッグして列幅を変更" 
-                        />
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
                       </th>
                     )}
 
