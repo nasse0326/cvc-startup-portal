@@ -7,19 +7,17 @@ import {
   Sun, 
   Moon,
   Sparkles,
+  X,
+  Users,
   CheckCircle,
   XCircle,
-  X,
-  Plus,
-  Users,
-  LogOut,
-  ChevronDown,
-  Building,
-  User,
-  Copy,
-  Info,
-  FileSpreadsheet,
   Upload,
+  User,
+  LogOut,
+  Building,
+  ChevronDown,
+  Copy,
+  FileSpreadsheet,
   Download
 } from 'lucide-react';
 
@@ -107,7 +105,6 @@ export default function App() {
   const [fbAppId, setFbAppId] = useState('');
 
   // CSV Import States
-  const [csvImportFile, setCsvImportFile] = useState(null);
   const [csvParsedData, setCsvParsedData] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
 
@@ -518,10 +515,7 @@ export default function App() {
     return <Login onLoginSuccess={setCurrentUser} showToast={showToast} />;
   }
 
-  // Find active workspace details
-  const activeWorkspace = activeWorkspaceId?.startsWith('personal_') 
-    ? { name: "Personal Workspace", isPersonal: true }
-    : myTeams.find(t => t.id === activeWorkspaceId) || { name: "Loading workspace...", id: activeWorkspaceId };
+
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300 pb-16">

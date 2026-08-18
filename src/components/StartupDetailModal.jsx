@@ -2,17 +2,13 @@ import React, { useState } from 'react';
 import { 
   X, 
   Globe, 
-  MapPin, 
   Calendar, 
   Star, 
   Edit3, 
   Trash2, 
   ExternalLink, 
-  ChevronRight,
   ChevronDown,
-  ChevronUp, 
   Sparkles, 
-  Info, 
   Layers, 
   Save, 
   Briefcase, 
@@ -23,12 +19,8 @@ import {
   Clock,
   UserCheck,
   ListTodo,
-  CheckCircle2,
-  HelpCircle,
-  RotateCw,
-  AlertCircle
+  HelpCircle
 } from 'lucide-react';
-import VoiceInputButton from './VoiceInputButton';
 import { 
   PRIORITY_DEFINITIONS, 
   ENGAGEMENT_TYPES, 
@@ -40,7 +32,6 @@ import {
   COLLAB_CLOSE_REASONS, 
   REVIVAL_FEASIBILITY_OPTIONS, 
   getCollabStatusColor,
-  getInvestmentStatusColor, 
   getEngagementTypeColor, 
   getRevivalColor 
 } from './StartupList';
@@ -83,7 +74,7 @@ export default function StartupDetailModal({
   const [editRevivalFeasibility, setEditRevivalFeasibility] = useState(startup.revivalFeasibility || '');
   const [editRevivalScenario, setEditRevivalScenario] = useState(startup.revivalScenario || '');
   const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
-  const [editBizDevStatus, setEditBizDevStatus] = useState(startup.bizDevStatus || startup.collabStatus || '1 発掘');
+  const [editBizDevStatus] = useState(startup.bizDevStatus || startup.collabStatus || '1 発掘');
 
   // Investment fields
   const [editInvestmentStatus, setEditInvestmentStatus] = useState(startup.status || startup.investmentStatus || '1 ソーシング');

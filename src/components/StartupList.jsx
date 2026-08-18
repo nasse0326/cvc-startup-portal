@@ -6,13 +6,10 @@ import {
   ArrowUp, 
   ArrowDown, 
   Star, 
-  MapPin, 
   Globe, 
   LayoutGrid, 
-  Table as TableIcon,
   X,
   SlidersHorizontal,
-  Check,
   ChevronLeft,
   ChevronRight,
   RotateCcw,
@@ -29,7 +26,8 @@ import {
   RotateCw,
   AlertCircle,
   Table,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react';
 import { exportStartupsToCSV } from '../services/exportCsv';
 import VoiceInputButton from './VoiceInputButton';
@@ -391,7 +389,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
           ...COLUMN_PRESETS.default.columns,
           ...JSON.parse(saved)
         };
-      } catch (e) {}
+      } catch {
+        // Handle error silently
+      }
     }
     return COLUMN_PRESETS.default.columns;
   });
@@ -406,7 +406,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     if (saved) {
       try {
         return { ...DEFAULT_COLUMN_WIDTHS, ...JSON.parse(saved) };
-      } catch (e) {}
+      } catch {
+        // Handle error silently
+      }
     }
     return DEFAULT_COLUMN_WIDTHS;
   });
@@ -515,6 +517,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [newInvestmentCloseReason, setNewInvestmentCloseReason] = useState('');
   const [newRevivalFeasibility, setNewRevivalFeasibility] = useState('');
   const [newRevivalScenario, setNewRevivalScenario] = useState('');
+  const [newInvestmentRevivalFeasibility, setNewInvestmentRevivalFeasibility] = useState('');
+  const [newInvestmentRevivalScenario, setNewInvestmentRevivalScenario] = useState('');
   const [newContactPerson, setNewContactPerson] = useState('');
   const [newDealSource, setNewDealSource] = useState('VC / アクセラレーター紹介');
   const [newDealSourceDetail, setNewDealSourceDetail] = useState('');
@@ -715,8 +719,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
       investmentCloseReason: newInvestmentCloseReason || '',
       revivalFeasibility: newRevivalFeasibility,
       revivalScenario: newRevivalScenario,
-      investmentRevivalFeasibility: newRevivalFeasibility,
-      investmentRevivalScenario: newRevivalScenario,
+      investmentRevivalFeasibility: newInvestmentRevivalFeasibility,
+      investmentRevivalScenario: newInvestmentRevivalScenario,
       contactPerson: newContactPerson,
       dealSource: newDealSource,
       dealSourceDetail: newDealSourceDetail,
@@ -748,6 +752,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     setNewInvestmentCloseReason('');
     setNewRevivalFeasibility('');
     setNewRevivalScenario('');
+    setNewInvestmentRevivalFeasibility('');
+    setNewInvestmentRevivalScenario('');
     setNewContactPerson('');
     setNewDealSource('VC / アクセラレーター紹介');
     setNewDealSourceDetail('');

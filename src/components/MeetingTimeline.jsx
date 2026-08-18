@@ -7,7 +7,6 @@ import {
   Sparkles, 
   Loader2, 
   AlertCircle,
-  FileText,
   Filter,
   Search,
   Download,
@@ -39,9 +38,6 @@ export default function MeetingTimeline({
   const [editNotes, setEditNotes] = useState('');
   const [editNextStep, setEditNextStep] = useState('');
 
-  // Gemini loading states mapping meetingId -> boolean
-  const [aiLoadingState, setAiLoadingState] = useState({});
-  const [aiErrorState, setAiErrorState] = useState({});
 
   // Form State
   const [formStartupId, setFormStartupId] = useState('');
@@ -156,36 +152,6 @@ export default function MeetingTimeline({
     if (showToast) showToast("面談ログを更新しました！", "success");
   };
 
-  // Trigger Gemini Analysis
-  const handleTriggerAI = async (meeting) => {
-    const startup = startups.find(s => s.id === meeting.startupId);
-    if (!startup) {
-      showToast("Linked startup profile not found.", "error");
-      return;
-    }
-
-    setAiLoadingState(prev => ({ ...prev, [meeting.id]: true }));
-    setAiErrorState(prev => ({ ...prev, [meeting.id]: null }));
-
-    try {
-      showToast(`Generating AI Brief for ${startup.name}...`, "info");
-      const aiResponse = await analyzeMeetingNotes(meeting.notes, startup);
-      
-      const updatedMeeting = {
-        ...meeting,
-        aiBrief: aiResponse
-      };
-
-      await onUpdateMeeting(meeting.id, updatedMeeting);
-      showToast(`Synergy Brief generated for ${startup.name}!`, "success");
-    } catch (err) {
-      console.error(err);
-      setAiErrorState(prev => ({ ...prev, [meeting.id]: err.message }));
-      showToast(err.message || "Failed to generate Synergy Brief.", "error");
-    } finally {
-      setAiLoadingState(prev => ({ ...prev, [meeting.id]: false }));
-    }
-  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -276,8 +242,6 @@ export default function MeetingTimeline({
         <div className="relative border-l border-slate-200 dark:border-slate-800 ml-4 md:ml-6 pl-6 md:pl-8 space-y-8 py-2">
           {filteredMeetings.map(meeting => {
             const startup = startups.find(s => s.id === meeting.startupId);
-            const isAnalyzing = aiLoadingState[meeting.id];
-            const aiError = aiErrorState[meeting.id];
 
             return (
               <div key={meeting.id} className="relative group">

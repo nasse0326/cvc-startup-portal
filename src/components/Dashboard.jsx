@@ -105,16 +105,6 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
 
   const sectorData = allSectorData.map(d => ({ name: d.name, value: d.count }));
 
-  const COLORS = [
-    '#3b82f6', // blue
-    '#6366f1', // indigo
-    '#8b5cf6', // violet
-    '#ec4899', // pink
-    '#10b981', // emerald
-    '#f59e0b', // amber
-    '#64748b'  // slate
-  ];
-
   // 5. Intelligence Feed (last 4 meetings)
   const sortedMeetings = [...meetings].sort((a, b) => new Date(b.date) - new Date(a.date));
   

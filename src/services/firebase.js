@@ -32,7 +32,7 @@ const getFallbackApiKey = () => {
     if (typeof atob !== 'undefined') {
       return atob("QUl6YVN5Q3UyT1NBZExUVmdwQUhmRzlQNDdhT1p1d0tqb1pQT3ZZ");
     }
-  } catch (e) {
+  } catch {
     // fallback
   }
   return "";
@@ -52,7 +52,7 @@ export const isFirebaseConfigured = () => {
   try {
     const config = getFirebaseConfig();
     return !!(config && config.apiKey && config.projectId);
-  } catch (e) {
+  } catch {
     return false;
   }
 };
@@ -67,7 +67,7 @@ export const getFirebaseConfig = () => {
       }
     }
     return DEFAULT_FIREBASE_CONFIG;
-  } catch (e) {
+  } catch {
     return DEFAULT_FIREBASE_CONFIG;
   }
 };
