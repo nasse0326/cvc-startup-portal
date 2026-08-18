@@ -93,6 +93,9 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
     { name: "Others", count: othersCount }
   ].filter(d => d.count > 0);
 
+  // 5. Intelligence Feed (last 4 meetings)
+  const sortedMeetings = [...(meetings || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
+
   const filteredMeetings = sortedMeetings.filter(m => {
     const startup = startups.find(s => s.id === m.startupId);
     const searchString = `${startup?.name || ''} ${m.purpose || ''} ${m.notes || ''} ${Array.isArray(m.attendees) ? m.attendees.join(' ') : ''}`.toLowerCase();
