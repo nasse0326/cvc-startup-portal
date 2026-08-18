@@ -7,21 +7,11 @@ import {
   ChevronRight, 
   Search, 
   Calendar,
-  Layers,
   Handshake
 } from 'lucide-react';
-import { 
-  PieChart, 
-  Pie, 
-  Cell, 
-  ResponsiveContainer, 
-  Tooltip, 
-  Legend 
-} from 'recharts';
 
 export default function Dashboard({ startups, meetings, onSelectStartup, setActiveTab }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeFunnelTab, setActiveFunnelTab] = useState('investment'); // 'investment' | 'bizdev'
 
   // 1. Calculate Metrics
   const totalPipeline = startups.length;
@@ -103,14 +93,9 @@ export default function Dashboard({ startups, meetings, onSelectStartup, setActi
     { name: "Others", count: othersCount }
   ].filter(d => d.count > 0);
 
-  const sectorData = allSectorData.map(d => ({ name: d.name, value: d.count }));
-
-  // 5. Intelligence Feed (last 4 meetings)
-  const sortedMeetings = [...meetings].sort((a, b) => new Date(b.date) - new Date(a.date));
-  
   const filteredMeetings = sortedMeetings.filter(m => {
     const startup = startups.find(s => s.id === m.startupId);
-    const searchString = `${startup?.name || ''} ${m.purpose} ${m.notes} ${m.attendees?.join(' ')}`.toLowerCase();
+    const searchString = `${startup?.name || ''} ${m.purpose || ''} ${m.notes || ''} ${Array.isArray(m.attendees) ? m.attendees.join(' ') : ''}`.toLowerCase();
     return searchString.includes(searchTerm.toLowerCase());
   }).slice(0, 4);
 

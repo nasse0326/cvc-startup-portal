@@ -178,15 +178,15 @@ export const parseStartupsCSV = (csvText) => {
     
     const parsedTasks = [];
     if (rawTasksStr) {
-      const taskItems = rawTasksStr.split(/[\/\n\r]+/).map(t => t.trim()).filter(Boolean);
+      const taskItems = rawTasksStr.split(/[/\n\r]+/).map(t => t.trim()).filter(Boolean);
       taskItems.forEach((item, idx) => {
         const isCompleted = item.includes('[完了]') || item.includes('完了:');
         let cleanTitle = item.replace(/\[(完了|未完)\]/g, '').replace(/^(完了|未完):/g, '').trim();
         let dueDate = '';
-        const dueMatch = cleanTitle.match(/\(期日:\s*([^\)]+)\)/);
+        const dueMatch = cleanTitle.match(/\(期日:\s*([^)]+)\)/);
         if (dueMatch) {
           dueDate = dueMatch[1].trim();
-          cleanTitle = cleanTitle.replace(/\(期日:\s*[^\)]+\)/, '').trim();
+          cleanTitle = cleanTitle.replace(/\(期日:\s*[^)]+\)/, '').trim();
         }
         parsedTasks.push({
           id: `task_import_${Date.now()}_${idx}`,

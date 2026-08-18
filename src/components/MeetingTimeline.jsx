@@ -3,17 +3,13 @@ import {
   Plus, 
   Calendar, 
   Users, 
-  ArrowRight, 
-  Sparkles, 
-  Loader2, 
-  AlertCircle,
+  ArrowRight,
   Filter,
   Search,
   Download,
   X,
   Edit3
 } from 'lucide-react';
-import { analyzeMeetingNotes } from '../services/gemini';
 import { exportMeetingsToCSV } from '../services/exportCsv';
 import VoiceInputButton from './VoiceInputButton';
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
 
 export default function VoiceInputButton({ onTranscript, className = "", size = "sm" }) {
   const [isListening, setIsListening] = useState(false);

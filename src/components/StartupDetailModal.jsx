@@ -32,6 +32,7 @@ import {
   COLLAB_CLOSE_REASONS, 
   REVIVAL_FEASIBILITY_OPTIONS, 
   getCollabStatusColor,
+  getInvestmentStatusColor,
   getEngagementTypeColor, 
   getRevivalColor 
 } from './StartupList';
@@ -115,7 +116,7 @@ export default function StartupDetailModal({
   const stages = ['Pre-Seed', 'Seed', 'Early', 'Series A', 'Series B', 'Series C+', 'Growth', 'N/A (一般企業)'];
 
   // Get historical meetings for this startup
-  const startupMeetings = meetings
+  const startupMeetings = (meetings || [])
     .filter(m => m.startupId === startup.id)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -232,15 +233,6 @@ export default function StartupDetailModal({
     }
   };
 
-  const getInvestmentStatusColor = (status) => {
-    const s = String(status || '');
-    if (s.includes("Sourcing")) return "bg-slate-100 text-slate-700 dark:bg-slate-800/80 dark:text-slate-350";
-    if (s.includes("Initial")) return "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30";
-    if (s.includes("Review") || s.includes("詳細検討")) return "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/30";
-    if (s.includes("DD") || s.includes("Diligence")) return "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-100/50 dark:border-purple-900/30";
-    if (s.includes("Committee")) return "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30";
-    if (s.includes("Invested") || s.includes("Portfolio")) return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100/50 dark:border-emerald-900/30";
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/60 backdrop-blur-sm">

@@ -105,6 +105,7 @@ export default function App() {
   const [fbAppId, setFbAppId] = useState('');
 
   // CSV Import States
+  const [csvImportFile, setCsvImportFile] = useState(null);
   const [csvParsedData, setCsvParsedData] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
 
@@ -852,6 +853,9 @@ export default function App() {
                     onChange={handleCSVFileChange}
                     className="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-950 dark:file:text-blue-300 hover:file:bg-blue-100 cursor-pointer"
                   />
+                  {csvImportFile && (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">選択中: <span className="font-semibold text-slate-700 dark:text-slate-300">{csvImportFile.name}</span></p>
+                  )}
                 </div>
 
                 {/* Parsed Preview */}

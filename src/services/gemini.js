@@ -140,7 +140,7 @@ The JSON MUST follow this exact structure:
         if (parsedBrief && parsedBrief.summary && parsedBrief.cvc_synergy) {
           return parsedBrief;
         }
-      } catch (parseError) {
+      } catch {
         console.error("Failed to parse Gemini JSON output:", rawText);
         lastError = new Error("Gemini出力のJSONパースに失敗しました。");
         continue;
