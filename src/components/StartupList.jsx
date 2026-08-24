@@ -27,7 +27,8 @@ import {
   AlertCircle,
   Table,
   Download,
-  Trash2
+  Trash2,
+  FileText
 } from 'lucide-react';
 import { exportStartupsToCSV } from '../services/exportCsv';
 import VoiceInputButton from './VoiceInputButton';
@@ -182,6 +183,8 @@ export const COLUMN_PRESETS = {
       collabStatus: true, 
       investmentStatus: true, 
       partnerDept: true, 
+      bizDevNotes: false,
+      investmentMemo: false,
       tasks: true, 
       sector: true, 
       stage: true, 
@@ -200,7 +203,7 @@ export const COLUMN_PRESETS = {
   bizDev: {
     name: "🤝 協業・事業連携重視",
     icon: "🤝",
-    desc: "協業ステータス・協業部署・到達ステージ・タスクに特化",
+    desc: "協業ステータス・協業部署・事業検討メモ・到達ステージに特化",
     columns: { 
       no: true, 
       name: true, 
@@ -208,6 +211,7 @@ export const COLUMN_PRESETS = {
       score: true, 
       collabStatus: true, 
       partnerDept: true, 
+      bizDevNotes: true,
       reachedStage: true, 
       tasks: true, 
       contactPerson: true, 
@@ -217,6 +221,7 @@ export const COLUMN_PRESETS = {
       revivalScenario: false, 
       revivalFeasibility: false, 
       investmentStatus: false, 
+      investmentMemo: false,
       investmentReachedStage: false, 
       investmentCloseReason: false, 
       dealSource: false, 
@@ -227,13 +232,14 @@ export const COLUMN_PRESETS = {
   investment: {
     name: "💳 投資検討重視",
     icon: "💳",
-    desc: "投資ステータス・到達ステージ・調達ステージ・流入元に特化",
+    desc: "投資ステータス・投資検討メモ・到達ステージ・調達ステージに特化",
     columns: { 
       no: true, 
       name: true, 
       engagementType: true, 
       score: true, 
       investmentStatus: true, 
+      investmentMemo: true,
       investmentReachedStage: true, 
       stage: true, 
       dealSource: true, 
@@ -242,6 +248,7 @@ export const COLUMN_PRESETS = {
       sector: true, 
       collabStatus: false, 
       partnerDept: false, 
+      bizDevNotes: false,
       reachedStage: false, 
       closeReason: false, 
       revivalScenario: false, 
@@ -269,6 +276,8 @@ export const COLUMN_PRESETS = {
       investmentReachedStage: true, 
       investmentCloseReason: true, 
       partnerDept: false, 
+      bizDevNotes: false,
+      investmentMemo: false,
       contactPerson: false, 
       tasks: false, 
       sector: false, 
@@ -291,6 +300,8 @@ export const COLUMN_PRESETS = {
       investmentStatus: true, 
       tasks: true, 
       partnerDept: false, 
+      bizDevNotes: false,
+      investmentMemo: false,
       reachedStage: false, 
       closeReason: false, 
       revivalScenario: false, 
@@ -317,10 +328,12 @@ export const COLUMN_PRESETS = {
       collabStatus: true, 
       investmentStatus: true, 
       partnerDept: true, 
+      bizDevNotes: true,
       reachedStage: true, 
       closeReason: true, 
       revivalScenario: true, 
       revivalFeasibility: true, 
+      investmentMemo: true,
       investmentReachedStage: true, 
       investmentCloseReason: true, 
       contactPerson: true, 
@@ -343,7 +356,9 @@ const DEFAULT_COLUMN_WIDTHS = {
   collabStatus: 140,
   investmentStatus: 140,
   partnerDept: 170,
+  bizDevNotes: 220,
   reachedStage: 130,
+  investmentMemo: 220,
   investmentReachedStage: 130,
   closeReason: 220,
   investmentCloseReason: 220,
@@ -554,7 +569,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
       (startup.closeReason && String(startup.closeReason).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.investmentCloseReason && String(startup.investmentCloseReason).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.revivalScenario && String(startup.revivalScenario).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (startup.investmentRevivalScenario && String(startup.investmentRevivalScenario).toLowerCase().includes(searchTerm.toLowerCase()));
+      (startup.investmentRevivalScenario && String(startup.investmentRevivalScenario).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (startup.bizDevNotes && String(startup.bizDevNotes).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (startup.investmentMemo && String(startup.investmentMemo).toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Type Filter (Engagement Type)
     const matchesEngagement = selectedEngagementType 
@@ -947,6 +964,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       items: [
                         { key: "collabStatus", label: "協業ステータス" },
                         { key: "partnerDept", label: "協業部署" },
+                        { key: "bizDevNotes", label: "事業検討メモ" },
                         { key: "reachedStage", label: "協業到達ステージ" },
                         { key: "closeReason", label: "協業クローズ理由" },
                         { key: "revivalScenario", label: "協業復活シナリオ" },
@@ -957,6 +975,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       group: "💳 投資・出資",
                       items: [
                         { key: "investmentStatus", label: "投資ステータス" },
+                        { key: "investmentMemo", label: "投資検討メモ" },
                         { key: "investmentReachedStage", label: "投資到達ステージ" },
                         { key: "investmentCloseReason", label: "投資見送り理由" },
                       ]
@@ -1545,6 +1564,50 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       </th>
                     )}
 
+                    {/* 事業検討メモ col */}
+                    {visibleColumns.bizDevNotes && (
+                      <th 
+                        style={{ width: `${columnWidths.bizDevNotes}px`, minWidth: `${columnWidths.bizDevNotes}px` }} 
+                        onClick={() => handleSort('bizDevNotes')} 
+                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <FileText className="h-3.5 w-3.5 mr-0.5 text-teal-500" />
+                          <span>事業検討メモ</span>
+                          <SortIcon field="bizDevNotes" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('bizDevNotes', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* 投資検討メモ col */}
+                    {visibleColumns.investmentMemo && (
+                      <th 
+                        style={{ width: `${columnWidths.investmentMemo}px`, minWidth: `${columnWidths.investmentMemo}px` }} 
+                        onClick={() => handleSort('investmentMemo')} 
+                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <FileText className="h-3.5 w-3.5 mr-0.5 text-blue-500" />
+                          <span>投資検討メモ</span>
+                          <SortIcon field="investmentMemo" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('investmentMemo', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
                     {/* 協業 到達ステージ col */}
                     {visibleColumns.reachedStage && (
                       <th 
@@ -1936,6 +1999,38 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                                 </div>
                               ) : (
                                 <span className="text-slate-400 dark:text-slate-600 text-[10px]">未設定</span>
+                              )}
+                            </div>
+                          </td>
+                        )}
+
+                        {/* 事業検討メモ cell */}
+                        {visibleColumns.bizDevNotes && (
+                          <td style={{ width: `${columnWidths.bizDevNotes}px`, minWidth: `${columnWidths.bizDevNotes}px` }} className="py-3 px-4">
+                            <div className="text-[11px] text-slate-700 dark:text-slate-300 max-h-16 overflow-y-auto break-words whitespace-normal leading-relaxed pr-1" title={startup.bizDevNotes || '未入力'}>
+                              {startup.bizDevNotes ? (
+                                <div className="flex items-start space-x-1">
+                                  <span className="text-teal-600 dark:text-teal-400 shrink-0 text-xs mt-0.5">🤝</span>
+                                  <span>{startup.bizDevNotes}</span>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>
+                              )}
+                            </div>
+                          </td>
+                        )}
+
+                        {/* 投資検討メモ cell */}
+                        {visibleColumns.investmentMemo && (
+                          <td style={{ width: `${columnWidths.investmentMemo}px`, minWidth: `${columnWidths.investmentMemo}px` }} className="py-3 px-4">
+                            <div className="text-[11px] text-slate-700 dark:text-slate-300 max-h-16 overflow-y-auto break-words whitespace-normal leading-relaxed pr-1" title={startup.investmentMemo || '未入力'}>
+                              {startup.investmentMemo ? (
+                                <div className="flex items-start space-x-1">
+                                  <span className="text-blue-600 dark:text-blue-400 shrink-0 text-xs mt-0.5">💳</span>
+                                  <span>{startup.investmentMemo}</span>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>
                               )}
                             </div>
                           </td>

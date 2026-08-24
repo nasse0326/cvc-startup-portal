@@ -148,7 +148,7 @@ export const parseStartupsCSV = (csvText) => {
   const statusIdx = getIdx(["投資ステータス", "status", "パイプライン"]);
   const investmentMemoIdx = getIdx(["投資検討メモ", "investment memo", "投資メモ"]);
   const bizDevStatusIdx = getIdx(["事業・pocステータス", "bizdev status"]);
-  const bizDevNotesIdx = getIdx(["事業開発・poc協業メモ", "bizdev notes", "協業メモ"]);
+  const bizDevNotesIdx = getIdx(["事業開発・poc協業メモ", "bizdev notes", "協業メモ", "事業検討メモ", "事業メモ"]);
   const tasksIdx = getIdx(["タスク", "tasks", "todo"]);
 
   const parsedStartups = [];
