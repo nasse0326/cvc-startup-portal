@@ -370,6 +370,8 @@ const DEFAULT_COLUMN_WIDTHS = {
   revivalFeasibility: 120,
   revivalScenario: 220,
   contactPerson: 170,
+  bizDevNotes: 280,
+  investmentMemo: 280,
   tasks: 200,
   sector: 120,
   stage: 110,
@@ -2156,9 +2158,9 @@ export default function StartupList({
                                           {logs.length}件 💬
                                         </span>
                                       </div>
-                                      <p className="text-[11px] text-slate-700 dark:text-slate-200 line-clamp-2 leading-relaxed" title={latest.text}>
+                                      <div className="text-[11px] text-slate-700 dark:text-slate-200 max-h-[160px] overflow-y-auto whitespace-pre-wrap break-words leading-relaxed pr-1" title={latest.text}>
                                         {latest.text}
-                                      </p>
+                                      </div>
                                     </div>
                                   ) : (
                                     <div className="text-[11px] text-teal-600 dark:text-teal-400 font-bold flex items-center justify-center gap-1 py-1">
@@ -2209,9 +2211,9 @@ export default function StartupList({
                                           {logs.length}件 💬
                                         </span>
                                       </div>
-                                      <p className="text-[11px] text-slate-700 dark:text-slate-200 line-clamp-2 leading-relaxed" title={latest.text}>
+                                      <div className="text-[11px] text-slate-700 dark:text-slate-200 max-h-[160px] overflow-y-auto whitespace-pre-wrap break-words leading-relaxed pr-1" title={latest.text}>
                                         {latest.text}
-                                      </p>
+                                      </div>
                                     </div>
                                   ) : (
                                     <div className="text-[11px] text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center gap-1 py-1">
@@ -2576,9 +2578,40 @@ export default function StartupList({
                               {bizDevLogs.length}件 💬
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-700 dark:text-slate-200 line-clamp-2 leading-relaxed">
+                          <div className="text-[11px] text-slate-700 dark:text-slate-200 max-h-[160px] overflow-y-auto whitespace-pre-wrap break-words leading-relaxed">
                             {latestBizDev.text}
-                          </p>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+
+                    {/* 投資検討進捗 クイックバッジ */}
+                    {(() => {
+                      const investmentLogs = Array.isArray(startup.investmentLogs) && startup.investmentLogs.length > 0
+                        ? startup.investmentLogs
+                        : (startup.investmentMemo ? [{ date: startup.createdAtDate, text: startup.investmentMemo }] : []);
+                      const latestInvest = investmentLogs[0];
+
+                      return latestInvest ? (
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveTimelineModal({ isOpen: true, startup, type: 'investment' });
+                          }}
+                          className="mb-3 p-2.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/60 dark:border-purple-900/40 text-xs hover:bg-purple-100/70 dark:hover:bg-purple-950/50 transition-colors cursor-pointer group/prog shadow-2xs"
+                        >
+                          <div className="flex items-center justify-between text-[10px] font-bold text-purple-800 dark:text-purple-300 mb-1">
+                            <span className="flex items-center gap-1">
+                              <span>💳</span>
+                              <span>投資検討進捗 ({latestInvest.date || '最新'})</span>
+                            </span>
+                            <span className="text-[10px] text-purple-700 dark:text-purple-300 font-bold px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-900/60 group-hover/prog:bg-purple-600 group-hover/prog:text-white transition-colors">
+                              {investmentLogs.length}件 💬
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-700 dark:text-slate-200 max-h-[160px] overflow-y-auto whitespace-pre-wrap break-words leading-relaxed">
+                            {latestInvest.text}
+                          </div>
                         </div>
                       ) : null;
                     })()}
