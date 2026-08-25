@@ -379,7 +379,15 @@ const DEFAULT_COLUMN_WIDTHS = {
   actions: 80
 };
 
-export default function StartupList({ startups, onSelectStartup, onAddStartup, onBulkDeleteStartups, showToast }) {
+export default function StartupList({ 
+  startups, 
+  onSelectStartup, 
+  onAddStartup, 
+  onUpdateStartup,
+  onBulkDeleteStartups, 
+  currentUser,
+  showToast 
+}) {
   const [companyType, setCompanyType] = useState('startup'); // 'startup' | 'enterprise'
   const [viewMode, setViewMode] = useState('table'); // 'grid' | 'table'
   const [sortField, setSortField] = useState('score');
@@ -400,6 +408,34 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isColumnDropdownOpen, setIsColumnDropdownOpen] = useState(false);
   const [isPriorityGuideOpen, setIsPriorityGuideOpen] = useState(false);
+
+  // Timeline Popover State
+  const [activeTimelineModal, setActiveTimelineModal] = useState({
+    isOpen: false,
+    startup: null,
+    type: 'bizDev'
+  });
+
+  const handleUpdateLogs = (startupId, type, updatedLogs) => {
+    const isBizDev = type === 'bizDev';
+    const latestText = updatedLogs.length > 0 ? updatedLogs[0].text : '';
+    const updatedFields = isBizDev 
+      ? { bizDevLogs: updatedLogs, bizDevNotes: latestText }
+      : { investmentLogs: updatedLogs, investmentMemo: latestText };
+    
+    if (onUpdateStartup) {
+      onUpdateStartup(startupId, updatedFields);
+    }
+    
+    setActiveTimelineModal(prev => prev.isOpen && prev.startup?.id === startupId ? {
+      ...prev,
+      startup: { ...prev.startup, ...updatedFields }
+    } : prev);
+
+    if (showToast) {
+      showToast(`${isBizDev ? '事業開発進捗' : '投資検討進捗'}を更新しました`, 'success');
+    }
+  };
 
   // Column Visibility
   const [visibleColumns, setVisibleColumns] = useState(() => {
