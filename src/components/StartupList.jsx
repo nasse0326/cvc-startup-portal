@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { exportStartupsToCSV } from '../services/exportCsv';
 import VoiceInputButton from './VoiceInputButton';
+import ProgressTimelinePopover from './ProgressTimelinePopover';
 
 // 🌟 検討Type (Engagement Type) 定義
 export const ENGAGEMENT_TYPES = ['投資検討', '事業連携', '両方', '情報収集'];
