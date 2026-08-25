@@ -49,6 +49,17 @@ export default function StartupDetailModal({
   const [isEditing, setIsEditing] = useState(false);
   const [isPriorityGuideOpen, setIsPriorityGuideOpen] = useState(false);
 
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   // Accordion Section States (Chevron toggle)
   const [isCollabSectionOpen, setIsCollabSectionOpen] = useState(
     startup.engagementType !== '投資検討'
@@ -330,8 +341,14 @@ export default function StartupDetailModal({
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/60 backdrop-blur-sm">
-      <div className="w-full max-w-2xl h-full bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col animate-slide-in-right">
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/15 dark:bg-black/40 transition-colors"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-2xl h-full bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col animate-slide-in-right"
+      >
         
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
           <div className="flex items-center space-x-2.5">
