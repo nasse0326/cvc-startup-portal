@@ -13,54 +13,64 @@ import {
 export default function Dashboard({ startups, meetings, onSelectStartup, setActiveTab }) {
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Helper to extract clean status strings
+  const getStartupInvestmentStatus = (s) => String(s.investmentStatus || s.status || '');
+  const getStartupCollabStatus = (s) => String(s.collabStatus || s.bizDevStatus || '');
+
   // 1. Calculate Metrics
   const totalPipeline = startups.length;
   const totalMeetings = meetings.length;
   
-  const activeDD = startups.filter(s => 
-    s.status === "Due Diligence (DD実施中)" || s.status?.includes("DD")
-  ).length;
+  const activeDD = startups.filter(s => {
+    const st = getStartupInvestmentStatus(s);
+    return st.includes("4 DD") || st.includes("DD") || st.includes("Due Diligence");
+  }).length;
 
-  const activeBizDev = startups.filter(s => 
-    s.bizDevStatus && !s.bizDevStatus.includes("Not Started") && !s.bizDevStatus.includes("未着手")
-  ).length;
+  const activeBizDev = startups.filter(s => {
+    const st = getStartupCollabStatus(s);
+    return st.includes("PoC") || st.includes("POC") || st.includes("事業化") || st.includes("協議") || st.includes("NDA");
+  }).length;
 
-  const portfolioInvestments = startups.filter(s => 
-    s.status === "Invested (Portfolio) (投資実行済 / ポートフォリオ)" || s.status?.includes("Invested") || s.status?.includes("ポートフォリオ")
-  ).length;
+  const portfolioInvestments = startups.filter(s => {
+    const st = getStartupInvestmentStatus(s);
+    return st.includes("6 投資実行") || st.includes("投資実行") || st.includes("Invested") || st.includes("ポートフォリオ");
+  }).length;
 
-  // 2. Investment Funnel Progress Data
+  // 2. Investment Funnel Progress Data (matches 1 ソーシング 〜 6 投資実行済)
   const investmentStages = [
-    { label: "Sourcing", jp: "ソーシング", match: ["Sourcing", "ソーシング"] },
-    { label: "Initial Meeting", jp: "初回面談済", match: ["Initial Meeting", "初回面談済"] },
-    { label: "Deep Review", jp: "詳細検討中", match: ["Deep Review", "詳細検討中"] },
-    { label: "Due Diligence", jp: "DD実施中", match: ["Due Diligence (DD実施中)", "DD実施中"] },
-    { label: "Investment Committee", jp: "投資委員会", match: ["Investment Committee", "投資委員会"] },
-    { label: "Invested", jp: "投資実行済", match: ["Invested (Portfolio) (投資実行済 / ポートフォリオ)", "投資実行済"] }
+    { label: "1 ソーシング", jp: "1 ソーシング", match: ["1 ソーシング", "ソーシング", "Sourcing"] },
+    { label: "2 初回面談済", jp: "2 初回面談済", match: ["2 初回面談済", "初回面談", "Initial Meeting"] },
+    { label: "3 詳細検討中", jp: "3 詳細検討中", match: ["3 詳細検討中", "詳細検討", "Deep Review"] },
+    { label: "4 DD中", jp: "4 DD中", match: ["4 DD中", "DD", "Due Diligence"] },
+    { label: "5 IC承認", jp: "5 IC承認", match: ["5 IC承認", "IC", "投資委員会", "Committee"] },
+    { label: "6 投資実行済", jp: "6 投資実行済", match: ["6 投資実行済", "投資実行", "Invested", "ポートフォリオ"] }
   ];
 
   const investmentCounts = investmentStages.map(stage => {
-    const count = startups.filter(s => 
-      stage.match.some(m => s.status === m || (typeof s.status === 'string' && s.status.includes(m)))
-    ).length;
+    const count = startups.filter(s => {
+      const st = getStartupInvestmentStatus(s);
+      return stage.match.some(m => st.includes(m));
+    }).length;
     return { ...stage, count };
   });
 
-  // 3. BizDev Funnel Progress Data
+  // 3. BizDev Funnel Progress Data (matches 1 発掘 〜 8 事業化済)
   const bizDevStages = [
-    { label: "Sourcing", jp: "ソーシング", match: ["Sourcing", "ソーシング"] },
-    { label: "Initial Meeting", jp: "初回面談済", match: ["Initial Meeting", "初回面談済"] },
-    { label: "Collaboration Review", jp: "協業検討中", match: ["Collaboration Review", "協業検討中"] },
-    { label: "POC Consideration", jp: "POC検討中", match: ["POC Consideration", "POC検討中"] },
-    { label: "POC Executing", jp: "POC実施中", match: ["POC Executing", "POC実施中"] },
-    { label: "POC Completed", jp: "POC実施済", match: ["POC Completed", "POC実施済"] },
-    { label: "Commercialized", jp: "事業化・提携済", match: ["Commercialized", "事業化"] }
+    { label: "1 発掘", jp: "1 発掘", match: ["1 発掘", "発掘", "Sourcing"] },
+    { label: "2 面談済", jp: "2 面談済", match: ["2 面談済", "面談", "Initial Meeting"] },
+    { label: "3 評価中", jp: "3 評価中", match: ["3 評価中", "評価", "Review"] },
+    { label: "4 事業部協議", jp: "4 事業部協議", match: ["4 事業部協議", "事業部協議", "事業部紹介"] },
+    { label: "5 NDA", jp: "5 NDA", match: ["5 NDA", "NDA"] },
+    { label: "6 PoC", jp: "6 PoC", match: ["6 PoC", "PoC", "POC"] },
+    { label: "7 事業化検討", jp: "7 事業化検討", match: ["7 事業化検討", "事業化検討"] },
+    { label: "8 事業化済", jp: "8 事業化済", match: ["8 事業化済", "事業化済", "提携済", "Commercialized"] }
   ];
 
   const bizDevCounts = bizDevStages.map(stage => {
-    const count = startups.filter(s => 
-      stage.match.some(m => s.bizDevStatus === m || (typeof s.bizDevStatus === 'string' && s.bizDevStatus.includes(m)))
-    ).length;
+    const count = startups.filter(s => {
+      const st = getStartupCollabStatus(s);
+      return stage.match.some(m => st.includes(m));
+    }).length;
     return { ...stage, count };
   });
 

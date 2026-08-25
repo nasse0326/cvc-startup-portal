@@ -27,6 +27,7 @@ export const downloadImportTemplate = () => {
     "案件流入元・詳細 (Deal Source Detail)",
     "投資検討メモ (Investment Memo)",
     "事業開発・PoC協業メモ (BizDev Notes)",
+    "担当者 (自社) (Assigned Member)",
     "タスク (Tasks)"
   ];
 
@@ -58,6 +59,7 @@ export const downloadImportTemplate = () => {
     "〇〇キャピタルの田中様からの紹介",
     "技術力・チームともに優秀。知財周りの確認が必要。",
     "社内ナレッジ検索の実証実験に向け提案中。",
+    "田中 健二",
     "[未完] 知財レビューの実施 (期日: 2026-08-30)"
   ];
 
@@ -89,6 +91,7 @@ export const downloadImportTemplate = () => {
     "",
     "投資対象外だが、アセット連携・PoCパートナーとして非常に有力。",
     "製造ラインデータ連携のPoCを共同推進中。",
+    "佐藤 美咲",
     "[未完] 次回PoC定例会の設定 (期日: 2026-08-25)"
   ];
 
@@ -128,7 +131,8 @@ export const parseStartupsCSV = (csvText) => {
   const stageIdx = getIdx(["調達ステージ", "stage", "フェーズ"]);
   const noIdx = getIdx(["no.", "no", "番号", "id"]);
   const createdAtDateIdx = getIdx(["登録日", "登録年月日", "createdatdate", "date"]);
-  const contactPersonIdx = getIdx(["担当者", "窓口", "contact"]);
+  const assignedMemberIdx = getIdx(["担当者 (自社)", "自社担当", "assignedmember", "社内担当", "担当"]);
+  const contactPersonIdx = getIdx(["窓口担当者", "窓口", "contact", "相手方担当"]);
   const partnerDeptIdx = getIdx(["協業部署", "連携部署", "partner dept", "partnerdept", "社内連携"]);
   const collabStatusIdx = getIdx(["協業ステータス", "collab status", "collabstatus", "協業進捗"]);
   const reachedStageIdx = getIdx(["協業 到達ステージ", "到達ステージ", "reached stage", "最高到達"]);
@@ -148,7 +152,7 @@ export const parseStartupsCSV = (csvText) => {
   const statusIdx = getIdx(["投資ステータス", "status", "パイプライン"]);
   const investmentMemoIdx = getIdx(["投資検討メモ", "investment memo", "投資メモ"]);
   const bizDevStatusIdx = getIdx(["事業・pocステータス", "bizdev status"]);
-  const bizDevNotesIdx = getIdx(["事業開発・poc協業メモ", "bizdev notes", "協業メモ", "事業検討メモ", "事業メモ"]);
+  const bizDevNotesIdx = getIdx(["事業開発・poc協業メモ", "bizdev notes", "協業メモ"]);
   const tasksIdx = getIdx(["タスク", "tasks", "todo"]);
 
   const parsedStartups = [];
@@ -243,6 +247,7 @@ export const parseStartupsCSV = (csvText) => {
       investmentMemo: investmentMemoIdx !== -1 && row[investmentMemoIdx] ? row[investmentMemoIdx].trim() : "",
       bizDevStatus: bizDevStatusIdx !== -1 && row[bizDevStatusIdx] ? row[bizDevStatusIdx].trim() : "Not Started / N/A (未着手 / 対象外)",
       bizDevNotes: bizDevNotesIdx !== -1 && row[bizDevNotesIdx] ? row[bizDevNotesIdx].trim() : "",
+      assignedMember: assignedMemberIdx !== -1 && row[assignedMemberIdx] ? row[assignedMemberIdx].trim() : "",
       tasks: parsedTasks
     });
   }

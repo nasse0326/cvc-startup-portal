@@ -29,6 +29,7 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
     "案件流入元・詳細 (Deal Source Detail)",
     "投資検討メモ (Investment Memo)",
     "事業開発・PoC協業メモ (BizDev Notes)",
+    "担当者 (自社) (Assigned Member)",
     "タスク (Tasks)"
   ];
 
@@ -60,6 +61,7 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
     s.dealSourceDetail || "",
     s.investmentMemo || "",
     s.bizDevNotes || "",
+    s.assignedMember || s.pic || "",
     s.tasks && Array.isArray(s.tasks) ? s.tasks.map(t => `[${t.completed ? '完了' : '未完'}] ${t.title}${t.dueDate ? ` (期日: ${t.dueDate})` : ''}`).join(" / ") : ""
   ]);
 

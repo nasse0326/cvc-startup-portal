@@ -72,7 +72,10 @@ export default function App() {
 
   // Workspace & Team States
   const [myTeams, setMyTeams] = useState([]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState('');
+  const [isTeamsLoaded, setIsTeamsLoaded] = useState(false);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(() => {
+    return localStorage.getItem('cvc_active_workspace') || '';
+  });
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -157,30 +160,42 @@ export default function App() {
   useEffect(() => {
     if (!currentUser) {
       setMyTeams([]);
+      setIsTeamsLoaded(false);
       return;
     }
     const unsubscribe = subscribeToUserTeams(currentUser.uid, (teams) => {
       setMyTeams(teams);
+      setIsTeamsLoaded(true);
     });
     return unsubscribe;
   }, [currentUser, configReloadTrigger]);
 
-  // 5. Select default workspace (personal workspace id based on user uid)
+  // 5. Select default workspace (persists last selected personal or team workspace)
   useEffect(() => {
     if (!currentUser) return;
     const personalId = `personal_${currentUser.uid}`;
-    
     const savedWorkspace = localStorage.getItem('cvc_active_workspace');
-    // Verify saved workspace is valid (either personal or user belongs to that team)
+    
+    // While teams are still loading, retain existing savedWorkspace if present
+    if (!isTeamsLoaded) {
+      if (savedWorkspace) {
+        setActiveWorkspaceId(savedWorkspace);
+      } else {
+        setActiveWorkspaceId(personalId);
+      }
+      return;
+    }
+
+    // Once teams are loaded, verify validity
     const isValid = savedWorkspace === personalId || myTeams.some(t => t.id === savedWorkspace);
     
-    if (isValid) {
+    if (isValid && savedWorkspace) {
       setActiveWorkspaceId(savedWorkspace);
     } else {
       setActiveWorkspaceId(personalId);
       localStorage.setItem('cvc_active_workspace', personalId);
     }
-  }, [currentUser, myTeams]);
+  }, [currentUser, myTeams, isTeamsLoaded]);
 
   // 6. Real-time Subscription to Startups and Meetings (filtered by workspaceId)
   useEffect(() => {
@@ -1072,7 +1087,19 @@ export default function App() {
                 
                 <div className="space-y-2">
                   {/* Personal space */}
-                  <div className="flex justify-between items-center p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30">
+                  <div 
+                    onClick={() => {
+                      const pId = `personal_${currentUser.uid}`;
+                      setActiveWorkspaceId(pId);
+                      localStorage.setItem('cvc_active_workspace', pId);
+                      showToast("Personal Workspace に切り替えました", "info");
+                    }}
+                    className={`flex justify-between items-center p-3 rounded-xl border transition-all cursor-pointer ${
+                      activeWorkspaceId.startsWith('personal_')
+                        ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-1 ring-blue-500 shadow-xs'
+                        : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:bg-slate-100 dark:hover:bg-slate-900'
+                    }`}
+                  >
                     <div className="flex items-center space-x-2">
                       <User className="h-4.5 w-4.5 text-slate-450" />
                       <div>
@@ -1080,8 +1107,10 @@ export default function App() {
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">Private data only visible to you</span>
                       </div>
                     </div>
-                    {activeWorkspaceId.startsWith('personal_') && (
+                    {activeWorkspaceId.startsWith('personal_') ? (
                       <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded">Active</span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-slate-400 opacity-0 hover:opacity-100 transition-opacity">クリックして切替</span>
                     )}
                   </div>
 
@@ -1089,7 +1118,16 @@ export default function App() {
                   {myTeams.map(t => (
                     <div 
                       key={t.id}
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 gap-2"
+                      onClick={() => {
+                        setActiveWorkspaceId(t.id);
+                        localStorage.setItem('cvc_active_workspace', t.id);
+                        showToast(`${t.name} に切り替えました`, "info");
+                      }}
+                      className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl border transition-all cursor-pointer gap-2 ${
+                        activeWorkspaceId === t.id
+                          ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 ring-1 ring-blue-500 shadow-xs'
+                          : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 hover:bg-slate-100 dark:hover:bg-slate-900'
+                      }`}
                     >
                       <div className="flex items-center space-x-2">
                         <Users className="h-4.5 w-4.5 text-blue-500" />
@@ -1101,7 +1139,11 @@ export default function App() {
 
                       <div className="flex items-center space-x-2 self-end sm:self-center">
                         <button
-                          onClick={() => handleCopyInvite(t.inviteCode)}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyInvite(t.inviteCode);
+                          }}
                           className="flex items-center space-x-1 text-[10px] font-bold text-indigo-650 dark:text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded hover:scale-105 transition-all"
                           title="Click to copy invite code"
                         >
@@ -1109,8 +1151,10 @@ export default function App() {
                           <span>Code: {t.inviteCode}</span>
                         </button>
 
-                        {activeWorkspaceId === t.id && (
+                        {activeWorkspaceId === t.id ? (
                           <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-1 rounded">Active</span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-400 opacity-0 hover:opacity-100 transition-opacity">クリックして切替</span>
                         )}
                       </div>
                     </div>

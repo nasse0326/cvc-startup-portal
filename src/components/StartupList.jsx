@@ -27,8 +27,7 @@ import {
   AlertCircle,
   Table,
   Download,
-  Trash2,
-  FileText
+  Trash2
 } from 'lucide-react';
 import { exportStartupsToCSV } from '../services/exportCsv';
 import VoiceInputButton from './VoiceInputButton';
@@ -174,7 +173,7 @@ export const COLUMN_PRESETS = {
   default: {
     name: "標準 (総合)",
     icon: "🌟",
-    desc: "Type・優先度・協業/投資ステータス・タスクを表示",
+    desc: "Type・優先度・協業/投資ステータス・担当者・タスクを表示",
     columns: { 
       no: true, 
       name: true, 
@@ -182,9 +181,8 @@ export const COLUMN_PRESETS = {
       score: true, 
       collabStatus: true, 
       investmentStatus: true, 
+      assignedMember: true,
       partnerDept: true, 
-      bizDevNotes: false,
-      investmentMemo: false,
       tasks: true, 
       sector: true, 
       stage: true, 
@@ -203,15 +201,15 @@ export const COLUMN_PRESETS = {
   bizDev: {
     name: "🤝 協業・事業連携重視",
     icon: "🤝",
-    desc: "協業ステータス・協業部署・事業検討メモ・到達ステージに特化",
+    desc: "協業ステータス・協業部署・担当者・到達ステージ・タスクに特化",
     columns: { 
       no: true, 
       name: true, 
       engagementType: true, 
       score: true, 
       collabStatus: true, 
+      assignedMember: true,
       partnerDept: true, 
-      bizDevNotes: true,
       reachedStage: true, 
       tasks: true, 
       contactPerson: true, 
@@ -221,7 +219,6 @@ export const COLUMN_PRESETS = {
       revivalScenario: false, 
       revivalFeasibility: false, 
       investmentStatus: false, 
-      investmentMemo: false,
       investmentReachedStage: false, 
       investmentCloseReason: false, 
       dealSource: false, 
@@ -232,14 +229,14 @@ export const COLUMN_PRESETS = {
   investment: {
     name: "💳 投資検討重視",
     icon: "💳",
-    desc: "投資ステータス・投資検討メモ・到達ステージ・調達ステージに特化",
+    desc: "投資ステータス・担当者・到達ステージ・調達ステージ・流入元に特化",
     columns: { 
       no: true, 
       name: true, 
       engagementType: true, 
       score: true, 
       investmentStatus: true, 
-      investmentMemo: true,
+      assignedMember: true,
       investmentReachedStage: true, 
       stage: true, 
       dealSource: true, 
@@ -248,7 +245,6 @@ export const COLUMN_PRESETS = {
       sector: true, 
       collabStatus: false, 
       partnerDept: false, 
-      bizDevNotes: false,
       reachedStage: false, 
       closeReason: false, 
       revivalScenario: false, 
@@ -275,9 +271,8 @@ export const COLUMN_PRESETS = {
       investmentStatus: true, 
       investmentReachedStage: true, 
       investmentCloseReason: true, 
+      assignedMember: false,
       partnerDept: false, 
-      bizDevNotes: false,
-      investmentMemo: false,
       contactPerson: false, 
       tasks: false, 
       sector: false, 
@@ -298,10 +293,9 @@ export const COLUMN_PRESETS = {
       score: true, 
       collabStatus: true, 
       investmentStatus: true, 
+      assignedMember: false,
       tasks: true, 
       partnerDept: false, 
-      bizDevNotes: false,
-      investmentMemo: false,
       reachedStage: false, 
       closeReason: false, 
       revivalScenario: false, 
@@ -327,13 +321,12 @@ export const COLUMN_PRESETS = {
       score: true, 
       collabStatus: true, 
       investmentStatus: true, 
+      assignedMember: true,
       partnerDept: true, 
-      bizDevNotes: true,
       reachedStage: true, 
       closeReason: true, 
       revivalScenario: true, 
       revivalFeasibility: true, 
-      investmentMemo: true,
       investmentReachedStage: true, 
       investmentCloseReason: true, 
       contactPerson: true, 
@@ -355,10 +348,9 @@ const DEFAULT_COLUMN_WIDTHS = {
   score: 110,
   collabStatus: 140,
   investmentStatus: 140,
+  assignedMember: 130,
   partnerDept: 170,
-  bizDevNotes: 220,
   reachedStage: 130,
-  investmentMemo: 220,
   investmentReachedStage: 130,
   closeReason: 220,
   investmentCloseReason: 220,
@@ -391,6 +383,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [selectedSector, setSelectedSector] = useState('');
   const [selectedStage, setSelectedStage] = useState('');
 
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isColumnDropdownOpen, setIsColumnDropdownOpen] = useState(false);
   const [isPriorityGuideOpen, setIsPriorityGuideOpen] = useState(false);
@@ -546,6 +539,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
   const [newFunding, setNewFunding] = useState('');
   const [newInvestmentMemo, setNewInvestmentMemo] = useState('');
   const [newBizDevNotes, setNewBizDevNotes] = useState('');
+  const [newAssignedMember, setNewAssignedMember] = useState('');
 
   const sectors = ['SaaS', 'AI / ML', 'Fintech', 'CleanTech', 'HealthTech', 'Robotics', 'IoT', 'Logistics', 'Mobility', 'Other'];
   const stages = ['Pre-Seed', 'Seed', 'Early', 'Series A', 'Series B', 'Series C+', 'Growth', 'N/A (一般企業)'];
@@ -563,15 +557,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     const matchesSearch = 
       String(startup.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
       (startup.tagline && String(startup.tagline).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (startup.assignedMember && String(startup.assignedMember).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.contactPerson && String(startup.contactPerson).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.partnerDept && String(startup.partnerDept).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.internalPartnerDept && String(startup.internalPartnerDept).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.closeReason && String(startup.closeReason).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.investmentCloseReason && String(startup.investmentCloseReason).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (startup.revivalScenario && String(startup.revivalScenario).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (startup.investmentRevivalScenario && String(startup.investmentRevivalScenario).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (startup.bizDevNotes && String(startup.bizDevNotes).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (startup.investmentMemo && String(startup.investmentMemo).toLowerCase().includes(searchTerm.toLowerCase()));
+      (startup.investmentRevivalScenario && String(startup.investmentRevivalScenario).toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Type Filter (Engagement Type)
     const matchesEngagement = selectedEngagementType 
@@ -748,6 +741,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
       funding: newFunding,
       investmentMemo: newInvestmentMemo,
       bizDevNotes: newBizDevNotes,
+      assignedMember: newAssignedMember,
       bizDevStatus: newCollabStatus || '1 発掘',
       tasks: []
     };
@@ -781,6 +775,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
     setNewFunding('');
     setNewInvestmentMemo('');
     setNewBizDevNotes('');
+    setNewAssignedMember('');
     setIsAddModalOpen(false);
   };
 
@@ -963,8 +958,8 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       group: "🤝 協業・事業連携",
                       items: [
                         { key: "collabStatus", label: "協業ステータス" },
+                        { key: "assignedMember", label: "担当者 (自社)" },
                         { key: "partnerDept", label: "協業部署" },
-                        { key: "bizDevNotes", label: "事業検討メモ" },
                         { key: "reachedStage", label: "協業到達ステージ" },
                         { key: "closeReason", label: "協業クローズ理由" },
                         { key: "revivalScenario", label: "協業復活シナリオ" },
@@ -975,7 +970,6 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       group: "💳 投資・出資",
                       items: [
                         { key: "investmentStatus", label: "投資ステータス" },
-                        { key: "investmentMemo", label: "投資検討メモ" },
                         { key: "investmentReachedStage", label: "投資到達ステージ" },
                         { key: "investmentCloseReason", label: "投資見送り理由" },
                       ]
@@ -1103,212 +1097,276 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
         </button>
       </div>
 
-      {/* Filters Bar & Quick Filter Badges (新スキーマ対応) */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/85 p-4 shadow-sm backdrop-blur space-y-3">
+      {/* Filters Bar & Quick Filter Badges (スマート・モダン化UI) */}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/85 p-3.5 shadow-sm backdrop-blur space-y-3">
         
-        {/* Row 1: Search & Main Dropdowns */}
-        <div className="flex flex-col lg:flex-row items-center gap-3">
+        {/* Row 1: Search Bar + Quick Badges + Filter Toggle */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
           {/* Search Bar */}
-          <div className="relative w-full lg:flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 dark:text-slate-500" />
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
             <input 
               type="text" 
-              placeholder="企業名、概要、担当者、協業部署、クローズ理由、復活シナリオ等で検索..." 
+              placeholder="企業名、概要、担当者、協業部署、クローズ理由等で検索..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition-all text-sm"
+              className="w-full pl-10 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 transition-all text-xs sm:text-sm"
             />
+            {searchTerm && (
+              <button 
+                type="button" 
+                onClick={() => setSearchTerm('')} 
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* 検討Type Filter */}
-          <div className="w-full sm:w-auto">
-            <select
-              value={selectedEngagementType}
-              onChange={(e) => setSelectedEngagementType(e.target.value)}
-              className={`w-full sm:w-36 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-bold transition-all ${
-                selectedEngagementType 
-                  ? 'border-purple-400 text-purple-800 dark:text-purple-300 bg-purple-50/50 dark:bg-purple-950/40 ring-1 ring-purple-400/50' 
-                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
-              }`}
-            >
-              <option value="">全 検討Type</option>
-              {ENGAGEMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-
-          {/* Priority (★) Filter Dropdown */}
-          <div className="w-full sm:w-auto">
-            <select
-              value={selectedPriority}
-              onChange={(e) => setSelectedPriority(e.target.value)}
-              className={`w-full sm:w-44 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-bold transition-all ${
-                selectedPriority 
-                  ? 'border-amber-400 text-amber-800 dark:text-amber-300 bg-amber-50/50 dark:bg-amber-950/40 ring-1 ring-amber-400/50' 
-                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
-              }`}
-            >
-              <option value="">全 優先度 (★1〜5)</option>
-              <option value="5">🔥 ★5: 絶対追う (今期重要)</option>
-              <option value="4+">⭐ ★4以上 (積極フォロー以上)</option>
-              <option value="3+">👀 ★3以上 (継続ウォッチ以上)</option>
-              <option value="2">📄 ★2: 情報収集のみ</option>
-              <option value="1">📁 ★1: (実質)見送り</option>
-            </select>
-          </div>
-
-          {/* 協業ステータス (1〜10) Filter */}
-          <div className="w-full sm:w-auto">
-            <select
-              value={selectedCollabStatus}
-              onChange={(e) => setSelectedCollabStatus(e.target.value)}
-              className={`w-full sm:w-40 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-bold transition-all ${
-                selectedCollabStatus 
-                  ? 'border-teal-400 text-teal-800 dark:text-teal-300 bg-teal-50/50 dark:bg-teal-950/40 ring-1 ring-teal-400/50' 
-                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
-              }`}
-            >
-              <option value="">全 協業ステータス</option>
-              {COLLAB_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-            </select>
-          </div>
-
-          {/* 復活可能性 Filter */}
-          <div className="w-full sm:w-auto">
-            <select
-              value={selectedRevivalFeasibility}
-              onChange={(e) => setSelectedRevivalFeasibility(e.target.value)}
-              className={`w-full sm:w-36 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border rounded-xl focus:outline-none text-xs font-medium transition-all ${
-                selectedRevivalFeasibility 
-                  ? 'border-emerald-400 text-emerald-800 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/40 ring-1 ring-emerald-400/50' 
-                  : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350'
-              }`}
-            >
-              <option value="">復活可能性: 全て</option>
-              {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>復活: {opt}</option>)}
-            </select>
-          </div>
-
-          {/* Sector Filter Dropdown */}
-          <div className="w-full sm:w-auto">
-            <select
-              value={selectedSector}
-              onChange={(e) => setSelectedSector(e.target.value)}
-              className="w-full sm:w-32 px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-xs font-medium text-slate-700 dark:text-slate-350 transition-all"
-            >
-              <option value="">全セクター</option>
-              {sectors.map(sec => <option key={sec} value={sec}>{sec}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {/* Row 2: ⚡ Quick Filter Badges (ワンクリック絞り込みタグ) */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mr-1">
-              クイック絞込:
-            </span>
-
+          {/* Quick Filter Tags & Controls */}
+          <div className="flex flex-wrap items-center gap-1.5 shrink-0">
             {/* Quick Badge: ★5 今期重要 */}
             <button
               type="button"
               onClick={() => setSelectedPriority(prev => prev === '5' ? '' : '5')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 min-h-[36px] ${
                 selectedPriority === '5'
                   ? 'bg-amber-500 text-white shadow-xs'
                   : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100'
               }`}
+              title="最優先（★5）のみ表示"
             >
-              <span>🔥 ★5 今期重要</span>
+              <span>🔥 ★5</span>
             </button>
 
             {/* Quick Badge: ★4以上 */}
             <button
               type="button"
               onClick={() => setSelectedPriority(prev => prev === '4+' ? '' : '4+')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 min-h-[36px] ${
                 selectedPriority === '4+'
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50 hover:bg-blue-100'
               }`}
+              title="★4以上（積極フォロー以上）"
             >
-              <span>⭐ ★4以上</span>
+              <span>⭐ ★4+</span>
             </button>
 
-            {/* Quick Badge: 6 PoC・7 事業化検討 */}
+            {/* Quick Badge: PoC・事業化 */}
             <button
               type="button"
               onClick={() => setSelectedCollabStatus(prev => prev ? '' : '6 PoC')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 min-h-[36px] ${
                 selectedCollabStatus.includes("PoC") || selectedCollabStatus.includes("事業化")
                   ? 'bg-teal-600 text-white shadow-xs'
                   : 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-900/50 hover:bg-teal-100'
               }`}
+              title="PoC・事業化検証中の案件"
             >
               <Handshake className="h-3.5 w-3.5" />
-              <span>🤝 PoC・事業化</span>
+              <span>🤝 PoC</span>
             </button>
 
-            {/* Quick Badge: 復活可能性 A 高い */}
+            {/* Quick Badge: DD・投資検討 */}
             <button
               type="button"
-              onClick={() => setSelectedRevivalFeasibility(prev => prev === 'A 高い' ? '' : 'A 高い')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                selectedRevivalFeasibility === 'A 高い'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100'
+              onClick={() => setSelectedInvestmentStatus(prev => prev ? '' : '4 DD中')}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 min-h-[36px] ${
+                selectedInvestmentStatus.includes("DD") || selectedInvestmentStatus.includes("投資実行")
+                  ? 'bg-purple-600 text-white shadow-xs'
+                  : 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50 hover:bg-purple-100'
               }`}
+              title="DD中・投資実行済の案件"
             >
-              <RotateCw className="h-3.5 w-3.5" />
-              <span>🔄 復活可能性: 高</span>
+              <Briefcase className="h-3.5 w-3.5" />
+              <span>💳 DD中</span>
             </button>
 
-            {/* Quick Badge: クローズ・保留 */}
+            {/* Expandable Filter Panel Toggle Button */}
             <button
               type="button"
-              onClick={() => setSelectedCollabStatus(prev => prev === '10 クローズ' ? '' : '10 クローズ')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                selectedCollabStatus === '10 クローズ' || selectedCollabStatus === '9 保流'
-                  ? 'bg-slate-700 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+              onClick={() => setIsFilterPanelOpen(prev => !prev)}
+              className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all min-h-[36px] border ${
+                isFilterPanelOpen || (hasActiveFilters && !searchTerm)
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-750'
               }`}
             >
-              <span>📁 クローズ・保留</span>
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span>詳細フィルター</span>
+              {hasActiveFilters && (
+                <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-white text-blue-600 dark:bg-slate-900 dark:text-blue-300">
+                  ON
+                </span>
+              )}
+              <ChevronDown className={`h-3 w-3 transition-transform ${isFilterPanelOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Quick Badge: 未完了タスクあり */}
-            <button
-              type="button"
-              onClick={() => setHasIncompleteTasksOnly(prev => !prev)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                hasIncompleteTasksOnly
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-100'
-              }`}
-            >
-              <ListTodo className="h-3.5 w-3.5" />
-              <span>📋 要タスク対応</span>
-            </button>
-          </div>
-
-          {/* Active Filter Clear & Hit Count */}
-          <div className="flex items-center space-x-2">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              該当: <strong className="text-slate-800 dark:text-slate-200">{filteredStartups.length}</strong> 件
-            </span>
+            {/* Clear All Filters Button (Visible only when filters active) */}
             {hasActiveFilters && (
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 transition-all flex items-center gap-1"
-                title="すべての検索・フィルター条件をリセット"
+                className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 border border-rose-200 dark:border-rose-900/40 transition-all min-h-[36px]"
+                title="すべての絞り込み条件をリセット"
               >
-                <X className="h-3 w-3" />
-                <span>条件クリア</span>
+                <RotateCcw className="h-3 w-3" />
+                <span>クリア</span>
               </button>
             )}
           </div>
         </div>
 
+        {/* Row 2: 展開式 詳細フィルターパネル */}
+        {isFilterPanelOpen && (
+          <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-950/50 border border-slate-200/80 dark:border-slate-800 animate-fade-in space-y-3.5">
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/80 pb-2">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase tracking-wider flex items-center gap-1.5">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-blue-500" />
+                <span>条件絞り込みパネル</span>
+              </span>
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="text-[11px] font-bold text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+              >
+                全条件をリセット
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* 1. 検討Type */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">検討Type</label>
+                <select
+                  value={selectedEngagementType}
+                  onChange={(e) => setSelectedEngagementType(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">全 検討Type</option>
+                  {ENGAGEMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+
+              {/* 2. 優先度 */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">優先度 (★1〜5)</label>
+                <select
+                  value={selectedPriority}
+                  onChange={(e) => setSelectedPriority(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">全 優先度</option>
+                  <option value="5">🔥 ★5: 絶対追う (今期重要)</option>
+                  <option value="4+">⭐ ★4以上 (積極フォロー以上)</option>
+                  <option value="3+">👀 ★3以上 (継続ウォッチ以上)</option>
+                  <option value="2">📄 ★2: 情報収集のみ</option>
+                  <option value="1">📁 ★1: (実質)見送り</option>
+                </select>
+              </div>
+
+              {/* 3. 協業ステータス */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">協業ステータス</label>
+                <select
+                  value={selectedCollabStatus}
+                  onChange={(e) => setSelectedCollabStatus(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">全 協業ステータス</option>
+                  {COLLAB_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                </select>
+              </div>
+
+              {/* 4. 投資ステータス */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">投資ステータス</label>
+                <select
+                  value={selectedInvestmentStatus}
+                  onChange={(e) => setSelectedInvestmentStatus(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">全 投資ステータス</option>
+                  {INVESTMENT_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                </select>
+              </div>
+
+              {/* 5. セクター */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">セクター</label>
+                <select
+                  value={selectedSector}
+                  onChange={(e) => setSelectedSector(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">全セクター</option>
+                  {sectors.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                </select>
+              </div>
+
+              {/* 6. 調達ステージ */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">調達ステージ</label>
+                <select
+                  value={selectedStage}
+                  onChange={(e) => setSelectedStage(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">全ステージ</option>
+                  {stages.map(st => <option key={st} value={st}>{st}</option>)}
+                </select>
+              </div>
+
+              {/* 7. 復活可能性 */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">復活可能性</label>
+                <select
+                  value={selectedRevivalFeasibility}
+                  onChange={(e) => setSelectedRevivalFeasibility(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">全 復活可能性</option>
+                  {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              {/* 8. 未完了タスク */}
+              <div className="space-y-1 flex flex-col justify-end">
+                <label className="flex items-center space-x-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={hasIncompleteTasksOnly}
+                    onChange={() => setHasIncompleteTasksOnly(prev => !prev)}
+                    className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                  />
+                  <span>未完了タスクありのみ</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Filter Hit Count & Status Bar */}
+        <div className="flex items-center justify-between pt-1 text-xs text-slate-500 dark:text-slate-400">
+          <div>
+            該当件数: <strong className="text-slate-800 dark:text-slate-200 font-bold">{filteredStartups.length}</strong> 件
+            {hasActiveFilters && (
+              <span className="ml-2 text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+                (絞り込み適用中)
+              </span>
+            )}
+          </div>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              className="text-[11px] font-bold text-rose-500 hover:text-rose-600 transition-colors"
+            >
+              条件をすべてクリア
+            </button>
+          )}
+        </div>
       </div>
 
       {/* List of Startup Companies (Table View vs Grid View) */}
@@ -1543,6 +1601,27 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       </th>
                     )}
 
+                    {/* 担当者 (自社) col */}
+                    {visibleColumns.assignedMember && (
+                      <th 
+                        style={{ width: `${columnWidths.assignedMember}px`, minWidth: `${columnWidths.assignedMember}px` }} 
+                        onClick={() => handleSort('assignedMember')} 
+                        className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>担当者</span>
+                          <SortIcon field="assignedMember" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('assignedMember', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
                     {/* 協業部署 col */}
                     {visibleColumns.partnerDept && (
                       <th 
@@ -1556,50 +1635,6 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('partnerDept', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
-                          title="左右にドラッグして列幅を変更" 
-                        >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
-                        </div>
-                      </th>
-                    )}
-
-                    {/* 事業検討メモ col */}
-                    {visibleColumns.bizDevNotes && (
-                      <th 
-                        style={{ width: `${columnWidths.bizDevNotes}px`, minWidth: `${columnWidths.bizDevNotes}px` }} 
-                        onClick={() => handleSort('bizDevNotes')} 
-                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <FileText className="h-3.5 w-3.5 mr-0.5 text-teal-500" />
-                          <span>事業検討メモ</span>
-                          <SortIcon field="bizDevNotes" />
-                        </div>
-                        <div 
-                          onMouseDown={(e) => startResizing('bizDevNotes', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
-                          title="左右にドラッグして列幅を変更" 
-                        >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
-                        </div>
-                      </th>
-                    )}
-
-                    {/* 投資検討メモ col */}
-                    {visibleColumns.investmentMemo && (
-                      <th 
-                        style={{ width: `${columnWidths.investmentMemo}px`, minWidth: `${columnWidths.investmentMemo}px` }} 
-                        onClick={() => handleSort('investmentMemo')} 
-                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <FileText className="h-3.5 w-3.5 mr-0.5 text-blue-500" />
-                          <span>投資検討メモ</span>
-                          <SortIcon field="investmentMemo" />
-                        </div>
-                        <div 
-                          onMouseDown={(e) => startResizing('investmentMemo', e)} 
                           className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
                           title="左右にドラッグして列幅を変更" 
                         >
@@ -1988,6 +2023,22 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           </td>
                         )}
 
+                        {/* 担当者 (自社) cell */}
+                        {visibleColumns.assignedMember && (
+                          <td style={{ width: `${columnWidths.assignedMember}px`, minWidth: `${columnWidths.assignedMember}px` }} className="py-3 px-3">
+                            <div className="text-[11px] font-medium text-slate-800 dark:text-slate-200 truncate" title={startup.assignedMember || startup.pic || '未設定'}>
+                              {startup.assignedMember || startup.pic ? (
+                                <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1">
+                                  <span className="text-blue-500 text-[10px]">👤</span>
+                                  <span>{startup.assignedMember || startup.pic}</span>
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">未設定</span>
+                              )}
+                            </div>
+                          </td>
+                        )}
+
                         {/* 協業部署 cell */}
                         {visibleColumns.partnerDept && (
                           <td style={{ width: `${columnWidths.partnerDept}px`, minWidth: `${columnWidths.partnerDept}px` }} className="py-3 px-4">
@@ -1999,38 +2050,6 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                                 </div>
                               ) : (
                                 <span className="text-slate-400 dark:text-slate-600 text-[10px]">未設定</span>
-                              )}
-                            </div>
-                          </td>
-                        )}
-
-                        {/* 事業検討メモ cell */}
-                        {visibleColumns.bizDevNotes && (
-                          <td style={{ width: `${columnWidths.bizDevNotes}px`, minWidth: `${columnWidths.bizDevNotes}px` }} className="py-3 px-4">
-                            <div className="text-[11px] text-slate-700 dark:text-slate-300 max-h-16 overflow-y-auto break-words whitespace-normal leading-relaxed pr-1" title={startup.bizDevNotes || '未入力'}>
-                              {startup.bizDevNotes ? (
-                                <div className="flex items-start space-x-1">
-                                  <span className="text-teal-600 dark:text-teal-400 shrink-0 text-xs mt-0.5">🤝</span>
-                                  <span>{startup.bizDevNotes}</span>
-                                </div>
-                              ) : (
-                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>
-                              )}
-                            </div>
-                          </td>
-                        )}
-
-                        {/* 投資検討メモ cell */}
-                        {visibleColumns.investmentMemo && (
-                          <td style={{ width: `${columnWidths.investmentMemo}px`, minWidth: `${columnWidths.investmentMemo}px` }} className="py-3 px-4">
-                            <div className="text-[11px] text-slate-700 dark:text-slate-300 max-h-16 overflow-y-auto break-words whitespace-normal leading-relaxed pr-1" title={startup.investmentMemo || '未入力'}>
-                              {startup.investmentMemo ? (
-                                <div className="flex items-start space-x-1">
-                                  <span className="text-blue-600 dark:text-blue-400 shrink-0 text-xs mt-0.5">💳</span>
-                                  <span>{startup.investmentMemo}</span>
-                                </div>
-                              ) : (
-                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>
                               )}
                             </div>
                           </td>
@@ -2304,8 +2323,14 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                         </span>
                         <span>{startup.location}</span>
                       </div>
-                      {startup.contactPerson && (
+                      {(startup.assignedMember || startup.pic) && (
                         <div className="flex items-center text-slate-700 dark:text-slate-300 font-medium truncate pt-1">
+                          <span className="text-blue-500 mr-1.5 shrink-0 text-xs">👤</span>
+                          <span className="truncate">担当: {startup.assignedMember || startup.pic}</span>
+                        </div>
+                      )}
+                      {startup.contactPerson && (
+                        <div className="flex items-center text-slate-700 dark:text-slate-300 font-medium truncate pt-0.5">
                           <UserCheck className="h-3.5 w-3.5 text-blue-500 mr-1.5 shrink-0" />
                           <span className="truncate">窓口: {startup.contactPerson}</span>
                         </div>
@@ -2605,10 +2630,22 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ</label>
                   <textarea 
                     rows="2"
-                    placeholder="例: DX推進部とのPoC検討中。2026年Q3開始を目標に協議。"
+                    placeholder="例: DX推進部とのPoC検討中。2026年Q3開始を目標に協議。" 
                     value={newBizDevNotes}
                     onChange={(e) => setNewBizDevNotes(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                  />
+                </div>
+
+                {/* 担当者 (事業開発メモの直後) */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">担当者 (自社 / CVC / BizDev担当)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例: 田中 健二, 佐藤 美咲" 
+                    value={newAssignedMember}
+                    onChange={(e) => setNewAssignedMember(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
                   />
                 </div>
 

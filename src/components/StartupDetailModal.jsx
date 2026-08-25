@@ -75,6 +75,7 @@ export default function StartupDetailModal({
   const [editRevivalFeasibility, setEditRevivalFeasibility] = useState(startup.revivalFeasibility || '');
   const [editRevivalScenario, setEditRevivalScenario] = useState(startup.revivalScenario || '');
   const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
+  const [editAssignedMember, setEditAssignedMember] = useState(startup.assignedMember || startup.pic || '');
   const [editBizDevStatus] = useState(startup.bizDevStatus || startup.collabStatus || '1 発掘');
 
   // Investment fields
@@ -216,6 +217,7 @@ export default function StartupDetailModal({
       funding: editFunding,
       investmentMemo: editInvestmentMemo,
       bizDevNotes: editBizDevNotes,
+      assignedMember: editAssignedMember,
       bizDevStatus: editCollabStatus || editBizDevStatus
     };
 
@@ -423,10 +425,22 @@ export default function StartupDetailModal({
                     <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ</label>
                     <textarea 
                       rows="2"
-                      placeholder="PoC検証項目や事業部門の反応など..."
+                      placeholder="PoC検証項目や事業部門の反応など..." 
                       value={editBizDevNotes}
                       onChange={(e) => setEditBizDevNotes(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
+                    />
+                  </div>
+
+                  {/* 担当者 (事業開発・PoC協業メモの直後) */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">担当者 (自社 / CVC / BizDev担当)</label>
+                    <input 
+                      type="text" 
+                      placeholder="例: 田中 健二, 佐藤 美咲" 
+                      value={editAssignedMember}
+                      onChange={(e) => setEditAssignedMember(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
                     />
                   </div>
 
@@ -861,6 +875,14 @@ export default function StartupDetailModal({
                       </p>
                     </div>
                   )}
+
+                  {/* 担当者 (自社 / CVC / BizDev担当) */}
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">担当者 (自社 / CVC担当)</span>
+                    <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5">
+                      {startup.assignedMember || startup.pic || '未設定'}
+                    </p>
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>

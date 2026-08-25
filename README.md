@@ -41,6 +41,7 @@
 
 ## 🛠️ 開発・デプロイルール
 1. **検証**: `npm run build` でビルド確認
-2. **GitHub Push**: `.git_tool/cmd/git.exe` 経由で `origin main` へPush
+2. **GitHub Push**: `git push origin main` で GitHub へ Push
 3. **Vercel デプロイ**: GitHub Push をトリガーとして Vercel が全自動デプロイ
+
 

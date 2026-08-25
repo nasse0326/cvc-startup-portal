@@ -32,6 +32,7 @@ export const initialStartups = [
     dealSourceDetail: "Vertex Ventures パートナー紹介",
     investmentMemo: "リアルタイムのコンプライアンス監査にフォーカス。DD結果良好につき投資委員会へ提出予定。",
     bizDevNotes: "当社法務部との実証実験（PoC）を完了。契約書の自動チェック制度98%を達成し、2026年Q4の全社導入に向けて協議中。",
+    assignedMember: "田中 健二",
     tasks: [
       { id: "task_1_1", title: "コードおよびセキュリティ脆弱性レビューの実施", dueDate: "2026-08-25", completed: false, assignedTo: "技術アナリスト", createdAt: "2026-08-10" },
       { id: "task_1_2", title: "投資委員会向けDDレポートの起草", dueDate: "2026-08-30", completed: false, assignedTo: "田中 健二", createdAt: "2026-08-12" },
@@ -71,6 +72,7 @@ export const initialStartups = [
     dealSourceDetail: "三井住友銀行 法人営業部紹介",
     investmentMemo: "本業シナジーが高く、ポートフォリオ企業として投資実行済み。",
     bizDevNotes: "当社物流子会社の第3倉庫にて本番導入済み。年間配車コストの12%削減を達成。",
+    assignedMember: "佐藤 寛",
     tasks: [
       { id: "task_2_1", title: "当社物流部門VPとの提携拡大アポイント設定", dueDate: "2026-08-28", completed: false, assignedTo: "佐藤 寛", createdAt: "2026-08-15" }
     ]
@@ -108,6 +110,7 @@ export const initialStartups = [
     dealSourceDetail: "COP29 気候テックピッチにて接触",
     investmentMemo: "当社の製造部門との強力なシナジーが見込まれるため詳細検討中。",
     bizDevNotes: "サステナビリティ推進部と Scope 3 算定自動化に関するPoC仕様を策定中。",
+    assignedMember: "田中 健二",
     tasks: [
       { id: "task_3_1", title: "競合他社比較および料金体系の分析", dueDate: "2026-08-22", completed: false, assignedTo: "佐藤 有希", createdAt: "2026-08-08" },
       { id: "task_3_2", title: "サステナビリティ推進部とのPoC仕様ミーティング", dueDate: "2026-09-05", completed: false, assignedTo: "田中 健二", createdAt: "2026-08-10" }
@@ -146,6 +149,7 @@ export const initialStartups = [
     dealSourceDetail: "公式サイトからの問い合わせ",
     investmentMemo: "銀行・金融分野における事業会社パートナーを探索中。規制面の検証が必要。",
     bizDevNotes: "海外事業部における東南アジア向け仕入送金の手数料削減の可能性について初回検討中。",
+    assignedMember: "佐藤 寛",
     tasks: [
       { id: "task_4_1", title: "国内におけるステーブルコイン取引の法的コンプライアンス検証", dueDate: "2026-08-26", completed: false, assignedTo: "法務コンプライアンス室", createdAt: "2026-08-14" }
     ]
@@ -183,6 +187,7 @@ export const initialStartups = [
     dealSourceDetail: "Interop 2026",
     investmentMemo: "技術評価段階で見送り判断。",
     bizDevNotes: "情シス部門にて評価実施、現行インフラへの組み込み困難と判定。",
+    assignedMember: "佐藤 美咲",
     tasks: []
   }
 ];
