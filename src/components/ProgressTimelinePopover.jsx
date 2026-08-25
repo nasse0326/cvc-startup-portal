@@ -207,36 +207,36 @@ export default function ProgressTimelinePopover({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">日付</label>
+                  <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">日付</label>
                   <input 
                     type="date"
                     required
                     value={newDate}
                     onChange={(e) => setNewDate(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">記入者 / 担当</label>
+                  <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">記入者 / 担当</label>
                   <input 
                     type="text"
                     placeholder="例: 田中 健二"
                     value={newAuthor}
                     onChange={(e) => setNewAuthor(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">進捗内容・打ち合わせメモ・ネクストステップ</label>
+                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">進捗内容・打ち合わせメモ・ネクストステップ</label>
                 <textarea 
                   rows="3"
                   required
                   placeholder="例: DX推進部とのPoCキックオフを実施。2026年Q3に向けた検証要件を確定。"
                   value={newText}
                   onChange={(e) => setNewText(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-lg text-xs leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
                 />
               </div>
 
@@ -245,7 +245,7 @@ export default function ProgressTimelinePopover({
                   <button
                     type="button"
                     onClick={() => setIsAdding(false)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="px-3 py-1.5 rounded-lg border border-slate-250 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   >
                     閉じる
                   </button>
@@ -279,29 +279,29 @@ export default function ProgressTimelinePopover({
 
                     <div className={`p-3.5 rounded-xl border transition-all ${
                       isLatest 
-                        ? 'bg-white dark:bg-slate-850 border-slate-200/90 dark:border-slate-750 shadow-xs' 
-                        : 'bg-slate-50/70 dark:bg-slate-950/40 border-slate-200/60 dark:border-slate-800/60'
+                        ? 'bg-slate-50 dark:bg-slate-800/90 border-slate-250 dark:border-slate-700 shadow-xs' 
+                        : 'bg-white dark:bg-slate-800/50 border-slate-200/90 dark:border-slate-700/60'
                     }`}>
                       {isEditing ? (
                         /* Edit Mode */
                         <div className="space-y-2.5">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[10px] font-bold text-slate-400">日付</label>
+                              <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300">日付</label>
                               <input 
                                 type="date"
                                 value={editDate}
                                 onChange={(e) => setEditDate(e.target.value)}
-                                className="w-full px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs font-medium"
+                                className="w-full px-2 py-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded text-xs font-medium text-slate-900 dark:text-slate-100"
                               />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold text-slate-400">記入者</label>
+                              <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300">記入者</label>
                               <input 
                                 type="text"
                                 value={editAuthor}
                                 onChange={(e) => setEditAuthor(e.target.value)}
-                                className="w-full px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-xs font-medium"
+                                className="w-full px-2 py-1 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded text-xs font-medium text-slate-900 dark:text-slate-100"
                               />
                             </div>
                           </div>
@@ -309,13 +309,13 @@ export default function ProgressTimelinePopover({
                             rows="3"
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs leading-relaxed"
+                            className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-250 dark:border-slate-700 rounded-lg text-xs leading-relaxed text-slate-900 dark:text-slate-100"
                           />
                           <div className="flex justify-end space-x-1.5">
                             <button
                               type="button"
                               onClick={() => setEditingId(null)}
-                              className="px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
+                              className="px-2.5 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
                             >
                               キャンセル
                             </button>
@@ -332,20 +332,20 @@ export default function ProgressTimelinePopover({
                       ) : (
                         /* View Mode */
                         <div>
-                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div className="flex items-center justify-between gap-2 mb-2">
                             <div className="flex items-center space-x-2">
-                              <span className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                                <Calendar className="w-3 h-3 text-slate-400" />
+                              <span className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200 bg-slate-200/80 dark:bg-slate-700 px-2 py-0.5 rounded">
+                                <Calendar className="w-3 h-3 text-slate-500 dark:text-slate-300" />
                                 {log.date || '日付未設定'}
                               </span>
                               {log.author && (
-                                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
                                   <User className="w-3 h-3 text-slate-400" />
                                   {log.author}
                                 </span>
                               )}
                               {isLatest && (
-                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50">
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                                   最新
                                 </span>
                               )}
@@ -356,7 +356,7 @@ export default function ProgressTimelinePopover({
                               <button
                                 type="button"
                                 onClick={() => handleStartEdit(log)}
-                                className="p-1 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors"
                                 title="この進捗を編集"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
@@ -364,7 +364,7 @@ export default function ProgressTimelinePopover({
                               <button
                                 type="button"
                                 onClick={() => handleDeleteLog(log.id)}
-                                className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors"
                                 title="この進捗を削除"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -372,7 +372,7 @@ export default function ProgressTimelinePopover({
                             </div>
                           </div>
 
-                          <p className="text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                          <p className="text-xs text-slate-900 dark:text-slate-100 whitespace-pre-wrap leading-relaxed font-normal">
                             {log.text}
                           </p>
                         </div>

@@ -537,7 +537,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-300 pb-16">
       
       {/* Premium Header */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 border-b border-slate-200/80 dark:border-slate-850 backdrop-blur-md">
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 border-b border-slate-200/80 dark:border-slate-800 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
           {/* Logo Brand */}
@@ -604,7 +604,7 @@ export default function App() {
             {/* Settings Toggler (Min 44x44px target) */}
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200/60 dark:border-slate-850 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all flex items-center justify-center min-h-[44px] min-w-[44px] relative"
+              className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all flex items-center justify-center min-h-[44px] min-w-[44px] relative"
             >
               <Settings className="h-5 w-5" />
               {(!hasFirebase || !hasGemini) && (
@@ -616,7 +616,7 @@ export default function App() {
             <div className="relative">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center space-x-1.5 p-1 rounded-xl border border-slate-200/65 dark:border-slate-850 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px]"
+                className="flex items-center space-x-1.5 p-1 rounded-xl border border-slate-200/65 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all min-h-[44px]"
               >
                 <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
                   {currentUser.email?.charAt(0) || "U"}
@@ -716,7 +716,7 @@ export default function App() {
       {/* API Settings Drawer Panel */}
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/60 backdrop-blur-sm">
-          <div className="w-full max-w-md h-full bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-850 flex flex-col animate-slide-in-right">
+          <div className="w-full max-w-md h-full bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col animate-slide-in-right">
             
             {/* Drawer Header */}
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
@@ -937,7 +937,7 @@ export default function App() {
                       placeholder="apiKey" 
                       value={fbApiKey}
                       onChange={(e) => setFbApiKey(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -959,7 +959,7 @@ export default function App() {
                       placeholder="authDomain (optional)" 
                       value={fbAuthDomain}
                       onChange={(e) => setFbAuthDomain(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -970,7 +970,7 @@ export default function App() {
                       placeholder="storageBucket (optional)" 
                       value={fbStorageBucket}
                       onChange={(e) => setFbStorageBucket(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -981,7 +981,7 @@ export default function App() {
                       placeholder="appId (optional)" 
                       value={fbAppId}
                       onChange={(e) => setFbAppId(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
+                      className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm disabled:cursor-not-allowed"
                     />
                   </div>
                 </fieldset>
@@ -1045,7 +1045,7 @@ export default function App() {
                     required
                     value={newTeamName}
                     onChange={(e) => setNewTeamName(e.target.value)}
-                    className="flex-1 px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm"
+                    className="flex-1 px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm"
                   />
                   <button
                     type="submit"
@@ -1072,7 +1072,7 @@ export default function App() {
                     maxLength={10}
                     value={joinInviteCode}
                     onChange={(e) => setJoinInviteCode(e.target.value)}
-                    className="flex-1 px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm uppercase tracking-widest text-center"
+                    className="flex-1 px-3.5 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm uppercase tracking-widest text-center"
                   />
                   <button
                     type="submit"
@@ -1173,17 +1173,17 @@ export default function App() {
 
       {/* Floating Toast Notification Box */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-55 max-w-sm rounded-2xl shadow-xl border bg-white dark:bg-slate-900 p-4 flex items-center space-x-3 border-slate-200 dark:border-slate-850 animate-scale-up">
+        <div className="fixed bottom-6 right-6 z-55 max-w-sm rounded-2xl shadow-xl border bg-white dark:bg-slate-900 p-4 flex items-center space-x-3 border-slate-200 dark:border-slate-800 animate-scale-up">
           {toast.type === 'success' && <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />}
           {toast.type === 'error' && <div className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />}
           {toast.type === 'warning' && <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />}
           {toast.type === 'info' && <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />}
-          <p className="text-xs font-bold text-slate-850 dark:text-slate-100">{toast.message}</p>
+          <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{toast.message}</p>
         </div>
       )}
 
       {/* Mobile Responsive Bottom Tab Bar (Min 44x44px target) */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 border-t border-slate-200/80 dark:border-slate-850 backdrop-blur-md lg:hidden h-16 flex items-center justify-around px-4">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-950/95 border-t border-slate-200/80 dark:border-slate-800 backdrop-blur-md lg:hidden h-16 flex items-center justify-around px-4">
         {[
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'directory', label: 'Startups', icon: Database },

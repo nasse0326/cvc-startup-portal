@@ -483,6 +483,7 @@ export default function StartupList({
   const resizingCol = useRef(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
+  const justResizedRef = useRef(false);
 
   const startResizing = useCallback((colKey, e) => {
     e.preventDefault();
@@ -490,9 +491,11 @@ export default function StartupList({
     resizingCol.current = colKey;
     startX.current = e.clientX;
     startWidth.current = columnWidths[colKey] || DEFAULT_COLUMN_WIDTHS[colKey] || 140;
+    justResizedRef.current = true;
 
     const handleMouseMove = (moveEvent) => {
       if (!resizingCol.current) return;
+      justResizedRef.current = true;
       const deltaX = moveEvent.clientX - startX.current;
       const newWidth = Math.max(60, startWidth.current + deltaX);
       setColumnWidths(prev => ({
@@ -505,6 +508,9 @@ export default function StartupList({
       resizingCol.current = null;
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      setTimeout(() => {
+        justResizedRef.current = false;
+      }, 200);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -683,6 +689,9 @@ export default function StartupList({
 
   // Sort Handler
   const handleSort = (field) => {
+    if (justResizedRef.current) {
+      return; // 列幅調整（ドラッグ・リサイズ）直後はソートを発火させない
+    }
     if (sortField === field) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
@@ -1062,7 +1071,7 @@ export default function StartupList({
                               className={`flex items-center space-x-2 p-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
                                 visibleColumns[key] 
                                   ? 'bg-blue-50/50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200 font-semibold' 
-                                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-850'
+                                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                               }`}
                             >
                               <input
