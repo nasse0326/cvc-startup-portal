@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   RotateCcw,
   MoveHorizontal,
   Briefcase,
