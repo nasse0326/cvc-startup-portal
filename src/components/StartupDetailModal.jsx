@@ -125,6 +125,38 @@ export default function StartupDetailModal({
   const [newTaskAssignedTo, setNewTaskAssignedTo] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
 
+  const handleAddBizDevLogInline = () => {
+    if (!newBizDevLogText.trim()) return;
+    const newLog = {
+      id: `log_biz_${Date.now()}_${Math.random().toString(36).substring(2,9)}`,
+      date: new Date().toISOString().split('T')[0].replace(/-/g, '/'),
+      author: currentUser?.displayName || currentUser?.email?.split('@')[0] || 'ユーザー',
+      text: newBizDevLogText,
+      createdAt: new Date().toISOString()
+    };
+    const updatedLogs = [newLog, ...editBizDevLogs];
+    setEditBizDevLogs(updatedLogs);
+    setEditBizDevNotes(newLog.text);
+    if (onUpdateStartup) onUpdateStartup(startup.id, { bizDevLogs: updatedLogs, bizDevNotes: newLog.text });
+    setNewBizDevLogText('');
+  };
+
+  const handleAddInvestLogInline = () => {
+    if (!newInvestLogText.trim()) return;
+    const newLog = {
+      id: `log_inv_${Date.now()}_${Math.random().toString(36).substring(2,9)}`,
+      date: new Date().toISOString().split('T')[0].replace(/-/g, '/'),
+      author: currentUser?.displayName || currentUser?.email?.split('@')[0] || 'ユーザー',
+      text: newInvestLogText,
+      createdAt: new Date().toISOString()
+    };
+    const updatedLogs = [newLog, ...editInvestmentLogs];
+    setEditInvestmentLogs(updatedLogs);
+    setEditInvestmentMemo(newLog.text);
+    if (onUpdateStartup) onUpdateStartup(startup.id, { investmentLogs: updatedLogs, investmentMemo: newLog.text });
+    setNewInvestLogText('');
+  };
+
   const dealSourceOptions = [
     "VC / アクセラレーター紹介",
     "銀行・証券会社紹介",
