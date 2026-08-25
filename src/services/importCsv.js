@@ -25,8 +25,8 @@ export const downloadImportTemplate = () => {
     "資金調達履歴 (Funding History)",
     "案件流入元 (Deal Source)",
     "案件流入元・詳細 (Deal Source Detail)",
-    "投資検討メモ (Investment Memo)",
-    "事業開発・PoC協業メモ (BizDev Notes)",
+    "投資検討進捗 (Investment Progress)",
+    "事業開発進捗 (BizDev Progress)",
     "担当者 (自社) (Assigned Member)",
     "タスク (Tasks)"
   ];
@@ -150,9 +150,9 @@ export const parseStartupsCSV = (csvText) => {
   const dealSourceIdx = getIdx(["流入元", "deal source", "経由"]);
   const dealSourceDetailIdx = getIdx(["流入元・詳細", "流入詳細", "紹介者"]);
   const statusIdx = getIdx(["投資ステータス", "status", "パイプライン"]);
-  const investmentMemoIdx = getIdx(["投資検討メモ", "investment memo", "投資メモ"]);
+  const investmentMemoIdx = getIdx(["投資検討進捗", "投資検討メモ", "investment progress", "investment memo", "投資メモ", "投資進捗"]);
   const bizDevStatusIdx = getIdx(["事業・pocステータス", "bizdev status"]);
-  const bizDevNotesIdx = getIdx(["事業開発・poc協業メモ", "bizdev notes", "協業メモ"]);
+  const bizDevNotesIdx = getIdx(["事業開発進捗", "事業開発・poc協業メモ", "bizdev progress", "bizdev notes", "協業メモ", "協業進捗"]);
   const tasksIdx = getIdx(["タスク", "tasks", "todo"]);
 
   const parsedStartups = [];
@@ -214,6 +214,46 @@ export const parseStartupsCSV = (csvText) => {
     const revivalFeasibilityVal = revivalFeasibilityIdx !== -1 && row[revivalFeasibilityIdx] ? row[revivalFeasibilityIdx].trim() : "";
     const revivalScenarioVal = revivalScenarioIdx !== -1 && row[revivalScenarioIdx] ? row[revivalScenarioIdx].trim() : "";
 
+    const rawInvestMemo = investmentMemoIdx !== -1 && row[investmentMemoIdx] ? row[investmentMemoIdx].trim() : "";
+    const rawBizDevNotes = bizDevNotesIdx !== -1 && row[bizDevNotesIdx] ? row[bizDevNotesIdx].trim() : "";
+    const assignedMemberVal = assignedMemberIdx !== -1 && row[assignedMemberIdx] ? row[assignedMemberIdx].trim() : "";
+
+    // Parse progress logs from multi-log formatted text or raw string
+    const parseLogsFromString = (rawStr, prefix) => {
+      if (!rawStr) return [];
+      if (rawStr.includes(" // ")) {
+        return rawStr.split(" // ").map((chunk, idx) => {
+          const match = chunk.match(/^\[(.*?)\s+(.*?)\]\s*(.*)$/);
+          if (match) {
+            return {
+              id: `log_imp_${Date.now()}_${prefix}_${idx}`,
+              date: match[1].trim(),
+              author: match[2].trim(),
+              text: match[3].trim(),
+              createdAt: new Date().toISOString()
+            };
+          }
+          return {
+            id: `log_imp_${Date.now()}_${prefix}_${idx}`,
+            date: createdAtDateStr || new Date().toISOString().split('T')[0].replace(/-/g, '/'),
+            author: assignedMemberVal || '担当者',
+            text: chunk.trim(),
+            createdAt: new Date().toISOString()
+          };
+        });
+      }
+      return [{
+        id: `log_imp_${Date.now()}_${prefix}_0`,
+        date: createdAtDateStr || new Date().toISOString().split('T')[0].replace(/-/g, '/'),
+        author: assignedMemberVal || '担当者',
+        text: rawStr,
+        createdAt: new Date().toISOString()
+      }];
+    };
+
+    const bizDevLogs = parseLogsFromString(rawBizDevNotes, 'biz');
+    const investmentLogs = parseLogsFromString(rawInvestMemo, 'inv');
+
     parsedStartups.push({
       no: !isNaN(parsedNo) && parsedNo ? parsedNo : null,
       name: name,
@@ -244,10 +284,12 @@ export const parseStartupsCSV = (csvText) => {
       funding: fundingIdx !== -1 && row[fundingIdx] ? row[fundingIdx].trim() : "",
       dealSource: dealSourceIdx !== -1 && row[dealSourceIdx] ? row[dealSourceIdx].trim() : "VC / アクセラレーター紹介",
       dealSourceDetail: dealSourceDetailIdx !== -1 && row[dealSourceDetailIdx] ? row[dealSourceDetailIdx].trim() : "",
-      investmentMemo: investmentMemoIdx !== -1 && row[investmentMemoIdx] ? row[investmentMemoIdx].trim() : "",
+      investmentMemo: investmentLogs.length > 0 ? investmentLogs[0].text : rawInvestMemo,
+      investmentLogs: investmentLogs,
       bizDevStatus: bizDevStatusIdx !== -1 && row[bizDevStatusIdx] ? row[bizDevStatusIdx].trim() : "Not Started / N/A (未着手 / 対象外)",
-      bizDevNotes: bizDevNotesIdx !== -1 && row[bizDevNotesIdx] ? row[bizDevNotesIdx].trim() : "",
-      assignedMember: assignedMemberIdx !== -1 && row[assignedMemberIdx] ? row[assignedMemberIdx].trim() : "",
+      bizDevNotes: bizDevLogs.length > 0 ? bizDevLogs[0].text : rawBizDevNotes,
+      bizDevLogs: bizDevLogs,
+      assignedMember: assignedMemberVal,
       tasks: parsedTasks
     });
   }

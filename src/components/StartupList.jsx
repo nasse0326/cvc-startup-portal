@@ -168,13 +168,12 @@ export const getRevivalColor = (feasibility) => {
   if (feasibility.includes("D")) return "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400";
   return "text-slate-400";
 };
-
 // 🌟 表示列のワンクリック・プリセット定義
 export const COLUMN_PRESETS = {
   default: {
     name: "標準 (総合)",
     icon: "🌟",
-    desc: "Type・優先度・協業/投資ステータス・担当者・タスクを表示",
+    desc: "Type・優先度・進捗・協業/投資ステータス・担当者・タスクを表示",
     columns: { 
       no: true, 
       name: true, 
@@ -182,6 +181,8 @@ export const COLUMN_PRESETS = {
       score: true, 
       collabStatus: true, 
       investmentStatus: true, 
+      bizDevNotes: true,
+      investmentMemo: false,
       assignedMember: true,
       partnerDept: true, 
       tasks: true, 
@@ -202,19 +203,21 @@ export const COLUMN_PRESETS = {
   bizDev: {
     name: "🤝 協業・事業連携重視",
     icon: "🤝",
-    desc: "協業ステータス・協業部署・担当者・到達ステージ・タスクに特化",
+    desc: "協業ステータス・事業開発進捗・協業部署・担当者・タスクに特化",
     columns: { 
       no: true, 
       name: true, 
       engagementType: true, 
       score: true, 
       collabStatus: true, 
+      bizDevNotes: true,
       assignedMember: true,
       partnerDept: true, 
       reachedStage: true, 
       tasks: true, 
       contactPerson: true, 
       sector: true, 
+      investmentMemo: false,
       stage: false, 
       closeReason: false, 
       revivalScenario: false, 
@@ -230,13 +233,15 @@ export const COLUMN_PRESETS = {
   investment: {
     name: "💳 投資検討重視",
     icon: "💳",
-    desc: "投資ステータス・担当者・到達ステージ・調達ステージ・流入元に特化",
+    desc: "投資ステータス・投資検討進捗・担当者・調達ステージ・流入元に特化",
     columns: { 
       no: true, 
       name: true, 
       engagementType: true, 
       score: true, 
       investmentStatus: true, 
+      investmentMemo: true,
+      bizDevNotes: false,
       assignedMember: true,
       investmentReachedStage: true, 
       stage: true, 
@@ -272,6 +277,8 @@ export const COLUMN_PRESETS = {
       investmentStatus: true, 
       investmentReachedStage: true, 
       investmentCloseReason: true, 
+      bizDevNotes: false,
+      investmentMemo: false,
       assignedMember: false,
       partnerDept: false, 
       contactPerson: false, 
@@ -294,6 +301,8 @@ export const COLUMN_PRESETS = {
       score: true, 
       collabStatus: true, 
       investmentStatus: true, 
+      bizDevNotes: false,
+      investmentMemo: false,
       assignedMember: false,
       tasks: true, 
       partnerDept: false, 
@@ -322,6 +331,8 @@ export const COLUMN_PRESETS = {
       score: true, 
       collabStatus: true, 
       investmentStatus: true, 
+      bizDevNotes: true,
+      investmentMemo: true,
       assignedMember: true,
       partnerDept: true, 
       reachedStage: true, 
@@ -742,6 +753,20 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
       funding: newFunding,
       investmentMemo: newInvestmentMemo,
       bizDevNotes: newBizDevNotes,
+      bizDevLogs: newBizDevNotes.trim() ? [{
+        id: `log_init_${Date.now()}_biz`,
+        date: newCreatedAtDate ? newCreatedAtDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/'),
+        author: newAssignedMember.trim() || '担当者',
+        text: newBizDevNotes.trim(),
+        createdAt: new Date().toISOString()
+      }] : [],
+      investmentLogs: newInvestmentMemo.trim() ? [{
+        id: `log_init_${Date.now()}_inv`,
+        date: newCreatedAtDate ? newCreatedAtDate.replace(/-/g, '/') : new Date().toISOString().split('T')[0].replace(/-/g, '/'),
+        author: newAssignedMember.trim() || '担当者',
+        text: newInvestmentMemo.trim(),
+        createdAt: new Date().toISOString()
+      }] : [],
       assignedMember: newAssignedMember,
       bizDevStatus: newCollabStatus || '1 発掘',
       tasks: []
@@ -959,6 +984,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       group: "🤝 協業・事業連携",
                       items: [
                         { key: "collabStatus", label: "協業ステータス" },
+                        { key: "bizDevNotes", label: "🤝 事業開発進捗" },
                         { key: "assignedMember", label: "担当者 (自社)" },
                         { key: "partnerDept", label: "協業部署" },
                         { key: "reachedStage", label: "協業到達ステージ" },
@@ -971,6 +997,7 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       group: "💳 投資・出資",
                       items: [
                         { key: "investmentStatus", label: "投資ステータス" },
+                        { key: "investmentMemo", label: "💳 投資検討進捗" },
                         { key: "investmentReachedStage", label: "投資到達ステージ" },
                         { key: "investmentCloseReason", label: "投資見送り理由" },
                       ]
@@ -1581,6 +1608,26 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                       </th>
                     )}
 
+                    {/* 🤝 事業開発進捗 col */}
+                    {visibleColumns.bizDevNotes && (
+                      <th 
+                        style={{ width: `${columnWidths.bizDevNotes || 220}px`, minWidth: `${columnWidths.bizDevNotes || 220}px` }} 
+                        className="py-3.5 px-3 hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span className="text-teal-600 dark:text-teal-400">🤝</span>
+                          <span>事業開発進捗</span>
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('bizDevNotes', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
                     {/* 投資ステータス col */}
                     {visibleColumns.investmentStatus && (
                       <th 
@@ -1594,6 +1641,26 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('investmentStatus', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* 💳 投資検討進捗 col */}
+                    {visibleColumns.investmentMemo && (
+                      <th 
+                        style={{ width: `${columnWidths.investmentMemo || 220}px`, minWidth: `${columnWidths.investmentMemo || 220}px` }} 
+                        className="py-3.5 px-3 hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span className="text-purple-600 dark:text-purple-400">💳</span>
+                          <span>投資検討進捗</span>
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('investmentMemo', e)} 
                           className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
                           title="左右にドラッグして列幅を変更" 
                         >
@@ -2015,12 +2082,100 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                           </td>
                         )}
 
+                        {/* 🤝 事業開発進捗 cell */}
+                        {visibleColumns.bizDevNotes && (
+                          <td 
+                            style={{ width: `${columnWidths.bizDevNotes || 220}px`, minWidth: `${columnWidths.bizDevNotes || 220}px` }} 
+                            className="py-2 px-3"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveTimelineModal({ isOpen: true, startup, type: 'bizDev' });
+                            }}
+                          >
+                            {(() => {
+                              const logs = Array.isArray(startup.bizDevLogs) && startup.bizDevLogs.length > 0 
+                                ? startup.bizDevLogs 
+                                : (startup.bizDevNotes ? [{ date: startup.createdAtDate, author: startup.assignedMember, text: startup.bizDevNotes }] : []);
+                              const latest = logs[0];
+                              return (
+                                <div className="p-2 rounded-xl border border-teal-200/60 dark:border-teal-900/40 bg-teal-50/40 dark:bg-teal-950/20 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-all cursor-pointer group/cell shadow-2xs">
+                                  {latest ? (
+                                    <div className="space-y-1">
+                                      <div className="flex items-center justify-between text-[10px]">
+                                        <span className="font-mono font-bold text-teal-800 dark:text-teal-300 flex items-center gap-1">
+                                          <span>📅</span>
+                                          <span>{latest.date || '最新'}</span>
+                                        </span>
+                                        <span className="text-[10px] text-teal-700 dark:text-teal-300 font-bold px-1.5 py-0.2 rounded bg-teal-100 dark:bg-teal-900/60 group-hover/cell:bg-teal-600 group-hover/cell:text-white transition-colors">
+                                          {logs.length}件 💬
+                                        </span>
+                                      </div>
+                                      <p className="text-[11px] text-slate-700 dark:text-slate-200 line-clamp-2 leading-relaxed" title={latest.text}>
+                                        {latest.text}
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <div className="text-[11px] text-teal-600 dark:text-teal-400 font-bold flex items-center justify-center gap-1 py-1">
+                                      <Plus className="w-3.5 h-3.5" />
+                                      <span>進捗を追記</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </td>
+                        )}
+
                         {/* 投資ステータス cell */}
                         {visibleColumns.investmentStatus && (
                           <td style={{ width: `${columnWidths.investmentStatus}px`, minWidth: `${columnWidths.investmentStatus}px` }} className="py-3 px-3">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-bold shadow-2xs ${getInvestmentStatusColor(startup.status || startup.investmentStatus || '1 ソーシング')}`}>
                               {startup.status || startup.investmentStatus || '1 ソーシング'}
                             </span>
+                          </td>
+                        )}
+
+                        {/* 💳 投資検討進捗 cell */}
+                        {visibleColumns.investmentMemo && (
+                          <td 
+                            style={{ width: `${columnWidths.investmentMemo || 220}px`, minWidth: `${columnWidths.investmentMemo || 220}px` }} 
+                            className="py-2 px-3"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveTimelineModal({ isOpen: true, startup, type: 'investment' });
+                            }}
+                          >
+                            {(() => {
+                              const logs = Array.isArray(startup.investmentLogs) && startup.investmentLogs.length > 0 
+                                ? startup.investmentLogs 
+                                : (startup.investmentMemo ? [{ date: startup.createdAtDate, author: startup.assignedMember, text: startup.investmentMemo }] : []);
+                              const latest = logs[0];
+                              return (
+                                <div className="p-2 rounded-xl border border-purple-200/60 dark:border-purple-900/40 bg-purple-50/40 dark:bg-purple-950/20 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-all cursor-pointer group/cell shadow-2xs">
+                                  {latest ? (
+                                    <div className="space-y-1">
+                                      <div className="flex items-center justify-between text-[10px]">
+                                        <span className="font-mono font-bold text-purple-800 dark:text-purple-300 flex items-center gap-1">
+                                          <span>📅</span>
+                                          <span>{latest.date || '最新'}</span>
+                                        </span>
+                                        <span className="text-[10px] text-purple-700 dark:text-purple-300 font-bold px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-900/60 group-hover/cell:bg-purple-600 group-hover/cell:text-white transition-colors">
+                                          {logs.length}件 💬
+                                        </span>
+                                      </div>
+                                      <p className="text-[11px] text-slate-700 dark:text-slate-200 line-clamp-2 leading-relaxed" title={latest.text}>
+                                        {latest.text}
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <div className="text-[11px] text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center gap-1 py-1">
+                                      <Plus className="w-3.5 h-3.5" />
+                                      <span>進捗を追記</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </td>
                         )}
 
@@ -2350,6 +2505,37 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                         </span>
                       </div>
                     )}
+
+                    {/* 事業開発進捗 / 投資検討進捗 クイックバッジ */}
+                    {(() => {
+                      const bizDevLogs = Array.isArray(startup.bizDevLogs) && startup.bizDevLogs.length > 0
+                        ? startup.bizDevLogs
+                        : (startup.bizDevNotes ? [{ date: startup.createdAtDate, text: startup.bizDevNotes }] : []);
+                      const latestBizDev = bizDevLogs[0];
+
+                      return latestBizDev ? (
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveTimelineModal({ isOpen: true, startup, type: 'bizDev' });
+                          }}
+                          className="mb-3 p-2.5 rounded-xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200/60 dark:border-teal-900/40 text-xs hover:bg-teal-100/70 dark:hover:bg-teal-950/50 transition-colors cursor-pointer group/prog shadow-2xs"
+                        >
+                          <div className="flex items-center justify-between text-[10px] font-bold text-teal-800 dark:text-teal-300 mb-1">
+                            <span className="flex items-center gap-1">
+                              <span>🤝</span>
+                              <span>事業開発進捗 ({latestBizDev.date || '最新'})</span>
+                            </span>
+                            <span className="text-[10px] text-teal-700 dark:text-teal-300 font-bold px-1.5 py-0.2 rounded bg-teal-100 dark:bg-teal-900/60 group-hover/prog:bg-teal-600 group-hover/prog:text-white transition-colors">
+                              {bizDevLogs.length}件 💬
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-700 dark:text-slate-200 line-clamp-2 leading-relaxed">
+                            {latestBizDev.text}
+                          </p>
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
 
                   {/* Card Footer: Rating Stars + Definition Badge */}
@@ -2626,9 +2812,9 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   </span>
                 </div>
 
-                {/* 事業開発メモ (協業パイプラインの一番始め) */}
+                {/* 事業開発進捗 (協業パイプラインの一番始め) */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ</label>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">🤝 事業開発進捗 (初期進捗メモ)</label>
                   <textarea 
                     rows="2"
                     placeholder="例: DX推進部とのPoC検討中。2026年Q3開始を目標に協議。" 
@@ -2762,12 +2948,12 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
                   </span>
                 </div>
 
-                {/* 投資検討メモ (投資パイプラインの一番始め) */}
+                {/* 投資検討進捗 (投資パイプラインの一番始め) */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ・所見</label>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">💳 投資検討進捗 (初期所見・進捗メモ)</label>
                   <textarea 
                     rows="2"
-                    placeholder="例: 独自のアルゴリズムに競合優位性あり。シリーズA以降での本格検討を推奨。"
+                    placeholder="例: 独自のアルゴリズムに競合優位性あり。シリーズA以降での本格検討を推奨。" 
                     value={newInvestmentMemo}
                     onChange={(e) => setNewInvestmentMemo(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
@@ -3002,6 +3188,16 @@ export default function StartupList({ startups, onSelectStartup, onAddStartup, o
           </div>
         </div>
       )}
+
+      {/* 🌟 進捗タイムライン ポップオーバー (一覧から直接閲覧・追記・編集) */}
+      <ProgressTimelinePopover 
+        isOpen={activeTimelineModal.isOpen}
+        onClose={() => setActiveTimelineModal({ isOpen: false, startup: null, type: 'bizDev' })}
+        startup={activeTimelineModal.startup}
+        type={activeTimelineModal.type}
+        onUpdateLogs={handleUpdateLogs}
+        currentUser={currentUser}
+      />
 
     </div>
   );

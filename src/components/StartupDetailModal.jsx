@@ -43,6 +43,7 @@ export default function StartupDetailModal({
   onClose, 
   onUpdateStartup, 
   onDeleteStartup,
+  currentUser,
   showToast
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -67,6 +68,20 @@ export default function StartupDetailModal({
   const [editStage, setEditStage] = useState(startup.stage || 'Seed');
   const [editScore, setEditScore] = useState(Number(startup.score || 3));
   
+  const getInitialLogs = (logsField, legacyText) => {
+    if (Array.isArray(logsField) && logsField.length > 0) return logsField;
+    if (legacyText && legacyText.trim()) {
+      return [{
+        id: `log_init_${Date.now()}`,
+        date: startup.createdAtDate || new Date().toISOString().split('T')[0].replace(/-/g, '/'),
+        author: startup.assignedMember || startup.pic || '担当者',
+        text: legacyText.trim(),
+        createdAt: new Date().toISOString()
+      }];
+    }
+    return [];
+  };
+
   // Collab fields
   const [editPartnerDept, setEditPartnerDept] = useState(startup.partnerDept || startup.internalPartnerDept || '');
   const [editCollabStatus, setEditCollabStatus] = useState(startup.collabStatus || '1 発掘');
@@ -74,6 +89,7 @@ export default function StartupDetailModal({
   const [editCloseReason, setEditCloseReason] = useState(startup.closeReason || '');
   const [editRevivalFeasibility, setEditRevivalFeasibility] = useState(startup.revivalFeasibility || '');
   const [editRevivalScenario, setEditRevivalScenario] = useState(startup.revivalScenario || '');
+  const [editBizDevLogs, setEditBizDevLogs] = useState(getInitialLogs(startup.bizDevLogs, startup.bizDevNotes));
   const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
   const [editAssignedMember, setEditAssignedMember] = useState(startup.assignedMember || startup.pic || '');
   const [editBizDevStatus] = useState(startup.bizDevStatus || startup.collabStatus || '1 発掘');
@@ -84,10 +100,15 @@ export default function StartupDetailModal({
   const [editInvestmentCloseReason, setEditInvestmentCloseReason] = useState(startup.investmentCloseReason || '');
   const [editInvestmentRevivalFeasibility, setEditInvestmentRevivalFeasibility] = useState(startup.investmentRevivalFeasibility || startup.revivalFeasibility || '');
   const [editInvestmentRevivalScenario, setEditInvestmentRevivalScenario] = useState(startup.investmentRevivalScenario || startup.revivalScenario || '');
+  const [editInvestmentLogs, setEditInvestmentLogs] = useState(getInitialLogs(startup.investmentLogs, startup.investmentMemo));
   const [editInvestmentMemo, setEditInvestmentMemo] = useState(startup.investmentMemo || '');
   const [editFunding, setEditFunding] = useState(startup.funding || '');
   const [showEditCollabSuggestions, setShowEditCollabSuggestions] = useState(false);
   const [showEditInvestSuggestions, setShowEditInvestSuggestions] = useState(false);
+
+  // New inline log states for detail modal
+  const [newBizDevLogText, setNewBizDevLogText] = useState('');
+  const [newInvestLogText, setNewInvestLogText] = useState('');
 
   // Profile & Contact fields
   const [editContactPerson, setEditContactPerson] = useState(startup.contactPerson || '');
@@ -120,6 +141,41 @@ export default function StartupDetailModal({
   const startupMeetings = (meetings || [])
     .filter(m => m.startupId === startup.id)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Sync edits if startup prop changes
+  useEffect(() => {
+    setEditCompanyType(startup.companyType || 'startup');
+    setEditEngagementType(startup.engagementType || '投資検討');
+    setEditName(startup.name || '');
+    setEditCreatedAtDate(startup.createdAtDate ? String(startup.createdAtDate).replace(/\//g, '-') : new Date().toISOString().split('T')[0]);
+    setEditSector(startup.sector || 'SaaS');
+    setEditStage(startup.stage || 'Seed');
+    setEditScore(Number(startup.score || 3));
+    setEditPartnerDept(startup.partnerDept || startup.internalPartnerDept || '');
+    setEditCollabStatus(startup.collabStatus || '1 発掘');
+    setEditReachedStage(startup.reachedStage || '1 発掘');
+    setEditCloseReason(startup.closeReason || '');
+    setEditRevivalFeasibility(startup.revivalFeasibility || '');
+    setEditRevivalScenario(startup.revivalScenario || '');
+    setEditBizDevLogs(getInitialLogs(startup.bizDevLogs, startup.bizDevNotes));
+    setEditBizDevNotes(startup.bizDevNotes || '');
+    setEditAssignedMember(startup.assignedMember || startup.pic || '');
+    setEditInvestmentStatus(startup.status || startup.investmentStatus || '1 ソーシング');
+    setEditInvestmentReachedStage(startup.investmentReachedStage || '1 ソーシング');
+    setEditInvestmentCloseReason(startup.investmentCloseReason || '');
+    setEditInvestmentRevivalFeasibility(startup.investmentRevivalFeasibility || startup.revivalFeasibility || '');
+    setEditInvestmentRevivalScenario(startup.investmentRevivalScenario || startup.revivalScenario || '');
+    setEditInvestmentLogs(getInitialLogs(startup.investmentLogs, startup.investmentMemo));
+    setEditInvestmentMemo(startup.investmentMemo || '');
+    setEditFunding(startup.funding || '');
+    setEditContactPerson(startup.contactPerson || '');
+    setEditDealSource(startup.dealSource || 'VC / アクセラレーター紹介');
+    setEditDealSourceDetail(startup.dealSourceDetail || '');
+    setEditTagline(startup.tagline || '');
+    setEditWebsite(startup.website || '');
+    setEditFoundedYear(startup.foundedYear || '');
+    setEditLocation(startup.location || '');
+  }, [startup]);
 
   // Current tasks list
   const currentTasks = startup.tasks || [];
@@ -185,6 +241,9 @@ export default function StartupDetailModal({
   // Save changes handler
   const handleSaveEdit = (e) => {
     e.preventDefault();
+    const latestBizDevText = editBizDevLogs.length > 0 ? editBizDevLogs[0].text : editBizDevNotes;
+    const latestInvestText = editInvestmentLogs.length > 0 ? editInvestmentLogs[0].text : editInvestmentMemo;
+
     const updatedData = {
       ...startup,
       companyType: editCompanyType,
@@ -215,8 +274,10 @@ export default function StartupDetailModal({
       foundedYear: editFoundedYear,
       location: editLocation,
       funding: editFunding,
-      investmentMemo: editInvestmentMemo,
-      bizDevNotes: editBizDevNotes,
+      investmentLogs: editInvestmentLogs,
+      investmentMemo: latestInvestText,
+      bizDevLogs: editBizDevLogs,
+      bizDevNotes: latestBizDevText,
       assignedMember: editAssignedMember,
       bizDevStatus: editCollabStatus || editBizDevStatus
     };
@@ -420,19 +481,81 @@ export default function StartupDetailModal({
 
               {isCollabSectionOpen && (
                 <div className="p-4 space-y-4 border-t border-teal-200/60 dark:border-teal-900/40 animate-fade-in">
-                  {/* 事業開発メモ (協業パイプラインの一番始め) */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">事業開発・PoC協業メモ</label>
-                    <textarea 
-                      rows="2"
-                      placeholder="PoC検証項目や事業部門の反応など..." 
-                      value={editBizDevNotes}
-                      onChange={(e) => setEditBizDevNotes(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                    />
+                  {/* 🤝 事業開発進捗 タイムライン管理 (編集モード) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-teal-800 dark:text-teal-300 uppercase flex items-center gap-1.5">
+                        <span>🤝 事業開発進捗 (タイムライン履歴)</span>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-teal-100 dark:bg-teal-900/60 font-mono">
+                          {editBizDevLogs.length}件
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* 既存ログ一覧 */}
+                    {editBizDevLogs.length > 0 && (
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {editBizDevLogs.map((log, idx) => (
+                          <div key={log.id || idx} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-teal-200/60 dark:border-teal-900/40 text-xs flex justify-between items-start gap-2 shadow-2xs">
+                            <div className="space-y-1 flex-1">
+                              <div className="flex items-center gap-2 text-[10px]">
+                                <span className="font-mono font-bold text-teal-700 dark:text-teal-300">📅 {log.date}</span>
+                                <span className="text-slate-500 font-semibold">👤 {log.author || '担当者'}</span>
+                              </div>
+                              <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium">{log.text}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm("この進捗ログを削除しますか？")) {
+                                  setEditBizDevLogs(prev => prev.filter((_, i) => i !== idx));
+                                }
+                              }}
+                              className="text-slate-400 hover:text-rose-500 p-1 rounded transition-colors"
+                              title="進捗を削除"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 新規進捗追記エリア */}
+                    <div className="p-2.5 rounded-xl bg-teal-100/50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/60 space-y-2">
+                      <textarea 
+                        rows="2"
+                        placeholder="新しい事業開発進捗を追記..." 
+                        value={newBizDevLogText}
+                        onChange={(e) => setNewBizDevLogText(e.target.value)}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-xs transition-all resize-none"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!newBizDevLogText.trim()) return;
+                            const newEntry = {
+                              id: `log_${Date.now()}_biz`,
+                              date: new Date().toISOString().split('T')[0].replace(/-/g, '/'),
+                              author: currentUser?.displayName || currentUser?.email?.split('@')[0] || editAssignedMember || '担当者',
+                              text: newBizDevLogText.trim(),
+                              createdAt: new Date().toISOString()
+                            };
+                            setEditBizDevLogs(prev => [newEntry, ...prev]);
+                            setNewBizDevLogText('');
+                          }}
+                          disabled={!newBizDevLogText.trim()}
+                          className="px-3 py-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-lg font-bold text-xs shadow-2xs transition-all flex items-center gap-1 min-h-[30px]"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>進捗を追記</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* 担当者 (事業開発・PoC協業メモの直後) */}
+                  {/* 担当者 (事業開発進捗の直後) */}
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">担当者 (自社 / CVC / BizDev担当)</label>
                     <input 
@@ -571,16 +694,78 @@ export default function StartupDetailModal({
 
               {isInvestmentSectionOpen && (
                 <div className="p-4 space-y-4 border-t border-blue-200/60 dark:border-blue-900/40 animate-fade-in">
-                  {/* 投資検討メモ (投資パイプラインの一番始め) */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資検討メモ・所見</label>
-                    <textarea 
-                      rows="2"
-                      placeholder="投資判断のポイント、DD留意事項など..." 
-                      value={editInvestmentMemo}
-                      onChange={(e) => setEditInvestmentMemo(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all resize-none"
-                    />
+                  {/* 💳 投資検討進捗 タイムライン管理 (編集モード) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase flex items-center gap-1.5">
+                        <span>💳 投資検討進捗 (タイムライン履歴)</span>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-900/60 font-mono">
+                          {editInvestmentLogs.length}件
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* 既存ログ一覧 */}
+                    {editInvestmentLogs.length > 0 && (
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {editInvestmentLogs.map((log, idx) => (
+                          <div key={log.id || idx} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-blue-200/60 dark:border-blue-900/40 text-xs flex justify-between items-start gap-2 shadow-2xs">
+                            <div className="space-y-1 flex-1">
+                              <div className="flex items-center gap-2 text-[10px]">
+                                <span className="font-mono font-bold text-blue-700 dark:text-blue-300">📅 {log.date}</span>
+                                <span className="text-slate-500 font-semibold">👤 {log.author || '担当者'}</span>
+                              </div>
+                              <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium">{log.text}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm("この進捗ログを削除しますか？")) {
+                                  setEditInvestmentLogs(prev => prev.filter((_, i) => i !== idx));
+                                }
+                              }}
+                              className="text-slate-400 hover:text-rose-500 p-1 rounded transition-colors"
+                              title="進捗を削除"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 新規進捗追記エリア */}
+                    <div className="p-2.5 rounded-xl bg-blue-100/50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-2">
+                      <textarea 
+                        rows="2"
+                        placeholder="新しい投資検討進捗・DD所見を追記..." 
+                        value={newInvestLogText}
+                        onChange={(e) => setNewInvestLogText(e.target.value)}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-xs transition-all resize-none"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!newInvestLogText.trim()) return;
+                            const newEntry = {
+                              id: `log_${Date.now()}_inv`,
+                              date: new Date().toISOString().split('T')[0].replace(/-/g, '/'),
+                              author: currentUser?.displayName || currentUser?.email?.split('@')[0] || editAssignedMember || '担当者',
+                              text: newInvestLogText.trim(),
+                              createdAt: new Date().toISOString()
+                            };
+                            setEditInvestmentLogs(prev => [newEntry, ...prev]);
+                            setNewInvestLogText('');
+                          }}
+                          disabled={!newInvestLogText.trim()}
+                          className="px-3 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg font-bold text-xs shadow-2xs transition-all flex items-center gap-1 min-h-[30px]"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>進捗を追記</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -866,15 +1051,56 @@ export default function StartupDetailModal({
 
               {isCollabSectionOpen && (
                 <div className="p-4 space-y-3.5 border-t border-teal-200/60 dark:border-teal-900/40 animate-fade-in text-xs">
-                  {/* 事業開発・PoC協業メモ (協業パイプラインの一番始め) */}
-                  {startup.bizDevNotes && (
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">事業開発・PoC協業メモ</span>
-                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
-                        {startup.bizDevNotes}
-                      </p>
+                  {/* 🤝 事業開発進捗 (タイムライン履歴＆即時追記) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-teal-800 dark:text-teal-300 uppercase flex items-center gap-1">
+                        <span>🤝 事業開発進捗 (タイムライン)</span>
+                        <span className="font-mono px-1.5 py-0.2 rounded bg-teal-100 dark:bg-teal-900/60">
+                          {editBizDevLogs.length}件
+                        </span>
+                      </span>
                     </div>
-                  )}
+
+                    {/* タイムラインリスト */}
+                    {editBizDevLogs.length > 0 ? (
+                      <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                        {editBizDevLogs.map((log, idx) => (
+                          <div key={log.id || idx} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-teal-200/60 dark:border-teal-900/40 shadow-2xs space-y-1">
+                            <div className="flex items-center justify-between text-[10px]">
+                              <span className="font-mono font-bold text-teal-700 dark:text-teal-300">📅 {log.date}</span>
+                              <span className="text-slate-500 font-semibold">👤 {log.author || '担当者'}</span>
+                            </div>
+                            <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-medium whitespace-pre-wrap">{log.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-400 italic text-[11px] py-1">進捗ログはまだ登録されていません。</p>
+                    )}
+
+                    {/* クイック追記フォーム */}
+                    <div className="p-2 rounded-xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200/60 dark:border-teal-900/40 space-y-1.5">
+                      <textarea 
+                        rows="2"
+                        placeholder="＋ 事業開発進捗を追記..." 
+                        value={newBizDevLogText}
+                        onChange={(e) => setNewBizDevLogText(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none text-slate-900 dark:text-slate-100 text-xs transition-all resize-none"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={handleAddBizDevLogInline}
+                          disabled={!newBizDevLogText.trim()}
+                          className="px-3 py-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white rounded-lg font-bold text-xs shadow-2xs transition-all flex items-center gap-1 min-h-[28px]"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>進捗を追記</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* 担当者 (自社 / CVC / BizDev担当) */}
                   <div>
@@ -956,15 +1182,56 @@ export default function StartupDetailModal({
 
               {isInvestmentSectionOpen && (
                 <div className="p-4 space-y-3.5 border-t border-blue-200/60 dark:border-blue-900/40 animate-fade-in text-xs">
-                  {/* 投資検討メモ (投資パイプラインの一番始め) */}
-                  {startup.investmentMemo && (
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">投資検討メモ・所見</span>
-                      <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-medium whitespace-pre-wrap">
-                        {startup.investmentMemo}
-                      </p>
+                  {/* 💳 投資検討進捗 (タイムライン履歴＆即時追記) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase flex items-center gap-1">
+                        <span>💳 投資検討進捗 (タイムライン)</span>
+                        <span className="font-mono px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-900/60">
+                          {editInvestmentLogs.length}件
+                        </span>
+                      </span>
                     </div>
-                  )}
+
+                    {/* タイムラインリスト */}
+                    {editInvestmentLogs.length > 0 ? (
+                      <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                        {editInvestmentLogs.map((log, idx) => (
+                          <div key={log.id || idx} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-blue-200/60 dark:border-blue-900/40 shadow-2xs space-y-1">
+                            <div className="flex items-center justify-between text-[10px]">
+                              <span className="font-mono font-bold text-blue-700 dark:text-blue-300">📅 {log.date}</span>
+                              <span className="text-slate-500 font-semibold">👤 {log.author || '担当者'}</span>
+                            </div>
+                            <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-medium whitespace-pre-wrap">{log.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-400 italic text-[11px] py-1">進捗ログはまだ登録されていません。</p>
+                    )}
+
+                    {/* クイック追記フォーム */}
+                    <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 space-y-1.5">
+                      <textarea 
+                        rows="2"
+                        placeholder="＋ 投資検討進捗・所見を追記..." 
+                        value={newInvestLogText}
+                        onChange={(e) => setNewInvestLogText(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none text-slate-900 dark:text-slate-100 text-xs transition-all resize-none"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={handleAddInvestLogInline}
+                          disabled={!newInvestLogText.trim()}
+                          className="px-3 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg font-bold text-xs shadow-2xs transition-all flex items-center gap-1 min-h-[28px]"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>進捗を追記</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>

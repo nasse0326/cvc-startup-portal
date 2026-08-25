@@ -31,7 +31,16 @@ export const initialStartups = [
     dealSource: "VC / アクセラレーター紹介",
     dealSourceDetail: "Vertex Ventures パートナー紹介",
     investmentMemo: "リアルタイムのコンプライアンス監査にフォーカス。DD結果良好につき投資委員会へ提出予定。",
+    investmentLogs: [
+      { id: "log_inv_1_2", date: "2026/08/18", author: "田中 健二", text: "法務DD・知財クリアランス完了。投資委員会（IC）向け上程資料を最終調整中。", createdAt: "2026-08-18T10:00:00Z" },
+      { id: "log_inv_1_1", date: "2026/08/02", author: "田中 健二", text: "リアルタイムのコンプライアンス監査にフォーカス。シリーズAリードVCと条件確認中。", createdAt: "2026-08-02T14:30:00Z" }
+    ],
     bizDevNotes: "当社法務部との実証実験（PoC）を完了。契約書の自動チェック制度98%を達成し、2026年Q4の全社導入に向けて協議中。",
+    bizDevLogs: [
+      { id: "log_biz_1_3", date: "2026/08/20", author: "田中 健二", text: "法務部とのPoC報告会を実施。精度98%で高評価。Q4本番導入に向けた予算申請を開始。", createdAt: "2026-08-20T16:00:00Z" },
+      { id: "log_biz_1_2", date: "2026/08/08", author: "佐藤 美咲", text: "法務部テスト環境にてダミー契約書100件を用いた抽出・チェック検証を実施中。", createdAt: "2026-08-08T11:00:00Z" },
+      { id: "log_biz_1_1", date: "2026/08/01", author: "田中 健二", text: "NDA締結完了。PoCのスコープ策定キックオフミーティングを実施。", createdAt: "2026-08-01T09:00:00Z" }
+    ],
     assignedMember: "田中 健二",
     tasks: [
       { id: "task_1_1", title: "コードおよびセキュリティ脆弱性レビューの実施", dueDate: "2026-08-25", completed: false, assignedTo: "技術アナリスト", createdAt: "2026-08-10" },
@@ -71,7 +80,14 @@ export const initialStartups = [
     dealSource: "銀行・証券会社紹介",
     dealSourceDetail: "三井住友銀行 法人営業部紹介",
     investmentMemo: "本業シナジーが高く、ポートフォリオ企業として投資実行済み。",
+    investmentLogs: [
+      { id: "log_inv_2_1", date: "2026/08/02", author: "佐藤 寛", text: "シリーズB出資実行完了（持分比率3.2%）。取締役会オブザーバーとして参加予定。", createdAt: "2026-08-02T10:00:00Z" }
+    ],
     bizDevNotes: "当社物流子会社の第3倉庫にて本番導入済み。年間配車コストの12%削減を達成。",
+    bizDevLogs: [
+      { id: "log_biz_2_2", date: "2026/08/15", author: "佐藤 寛", text: "第3倉庫での本番稼働3ヶ月レビュー。配車コスト12%削減を確認、他拠点への水平展開を協議。", createdAt: "2026-08-15T15:00:00Z" },
+      { id: "log_biz_2_1", date: "2026/08/02", author: "佐藤 寛", text: "第3倉庫での初期導入およびシステム連携完了。", createdAt: "2026-08-02T11:00:00Z" }
+    ],
     assignedMember: "佐藤 寛",
     tasks: [
       { id: "task_2_1", title: "当社物流部門VPとの提携拡大アポイント設定", dueDate: "2026-08-28", completed: false, assignedTo: "佐藤 寛", createdAt: "2026-08-15" }
@@ -109,7 +125,14 @@ export const initialStartups = [
     dealSource: "ピッチイベント・展示会",
     dealSourceDetail: "COP29 気候テックピッチにて接触",
     investmentMemo: "当社の製造部門との強力なシナジーが見込まれるため詳細検討中。",
+    investmentLogs: [
+      { id: "log_inv_3_1", date: "2026/08/05", author: "田中 健二", text: "製造部門のカーボンフットプリント算定ニーズに合致。競合比較中。", createdAt: "2026-08-05T10:00:00Z" }
+    ],
     bizDevNotes: "サステナビリティ推進部と Scope 3 算定自動化に関するPoC仕様を策定中。",
+    bizDevLogs: [
+      { id: "log_biz_3_2", date: "2026/08/19", author: "田中 健二", text: "サステナビリティ推進部との定例ミーティング。Scope 3算定のデータ連携仕様書を受領。", createdAt: "2026-08-19T14:00:00Z" },
+      { id: "log_biz_3_1", date: "2026/08/05", author: "田中 健二", text: "事業部へ初回紹介。API経由での炭素量取得トライアルに関心表明あり。", createdAt: "2026-08-05T16:00:00Z" }
+    ],
     assignedMember: "田中 健二",
     tasks: [
       { id: "task_3_1", title: "競合他社比較および料金体系の分析", dueDate: "2026-08-22", completed: false, assignedTo: "佐藤 有希", createdAt: "2026-08-08" },
@@ -148,7 +171,13 @@ export const initialStartups = [
     dealSource: "直接コンタクト・Web応募",
     dealSourceDetail: "公式サイトからの問い合わせ",
     investmentMemo: "銀行・金融分野における事業会社パートナーを探索中。規制面の検証が必要。",
+    investmentLogs: [
+      { id: "log_inv_4_1", date: "2026/08/10", author: "佐藤 寛", text: "シンガポール金融管理局（MAS）ライセンス保有確認。日本の資金決済法上の論点を整理中。", createdAt: "2026-08-10T10:00:00Z" }
+    ],
     bizDevNotes: "海外事業部における東南アジア向け仕入送金の手数料削減の可能性について初回検討中。",
+    bizDevLogs: [
+      { id: "log_biz_4_1", date: "2026/08/10", author: "佐藤 寛", text: "海外事業推進部と初回ディスカッション。東南アジア向け送金手数料削減（SWIFT対比90%減）の試算を依頼。", createdAt: "2026-08-10T15:30:00Z" }
+    ],
     assignedMember: "佐藤 寛",
     tasks: [
       { id: "task_4_1", title: "国内におけるステーブルコイン取引の法的コンプライアンス検証", dueDate: "2026-08-26", completed: false, assignedTo: "法務コンプライアンス室", createdAt: "2026-08-14" }
@@ -186,7 +215,13 @@ export const initialStartups = [
     dealSource: "ピッチイベント・展示会",
     dealSourceDetail: "Interop 2026",
     investmentMemo: "技術評価段階で見送り判断。",
+    investmentLogs: [
+      { id: "log_inv_5_1", date: "2026/08/12", author: "佐藤 美咲", text: "投資委員会事前スクリーニングで見送り決定（オンプレ依存性によるスケール課題）。", createdAt: "2026-08-12T11:00:00Z" }
+    ],
     bizDevNotes: "情シス部門にて評価実施、現行インフラへの組み込み困難と判定。",
+    bizDevLogs: [
+      { id: "log_biz_5_1", date: "2026/08/12", author: "佐藤 美咲", text: "情シス部門にてPoC評価実施。レガシー基幹システムとの接続コストが過大のため見送り合意。", createdAt: "2026-08-12T14:00:00Z" }
+    ],
     assignedMember: "佐藤 美咲",
     tasks: []
   }

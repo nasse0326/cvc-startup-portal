@@ -27,8 +27,8 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
     "資金調達履歴 (Funding History)",
     "案件流入元 (Deal Source)",
     "案件流入元・詳細 (Deal Source Detail)",
-    "投資検討メモ (Investment Memo)",
-    "事業開発・PoC協業メモ (BizDev Notes)",
+    "投資検討進捗 (Investment Progress)",
+    "事業開発進捗 (BizDev Progress)",
     "担当者 (自社) (Assigned Member)",
     "タスク (Tasks)"
   ];
@@ -59,8 +59,12 @@ export const exportStartupsToCSV = (startups, filename = "CVC_Startups_List.csv"
     s.funding || "",
     s.dealSource || "",
     s.dealSourceDetail || "",
-    s.investmentMemo || "",
-    s.bizDevNotes || "",
+    s.investmentLogs && Array.isArray(s.investmentLogs) && s.investmentLogs.length > 0 
+      ? s.investmentLogs.map(l => `[${l.date} ${l.author}] ${l.text}`).join(" // ") 
+      : (s.investmentMemo || ""),
+    s.bizDevLogs && Array.isArray(s.bizDevLogs) && s.bizDevLogs.length > 0 
+      ? s.bizDevLogs.map(l => `[${l.date} ${l.author}] ${l.text}`).join(" // ") 
+      : (s.bizDevNotes || ""),
     s.assignedMember || s.pic || "",
     s.tasks && Array.isArray(s.tasks) ? s.tasks.map(t => `[${t.completed ? '完了' : '未完'}] ${t.title}${t.dueDate ? ` (期日: ${t.dueDate})` : ''}`).join(" / ") : ""
   ]);

@@ -681,7 +681,9 @@ export default function App() {
             startups={processedStartups} 
             onSelectStartup={setSelectedStartup}
             onAddStartup={handleAddStartup}
+            onUpdateStartup={handleUpdateStartup}
             onBulkDeleteStartups={handleBulkDeleteStartups}
+            currentUser={currentUser}
             showToast={showToast}
           />
         )}
@@ -706,6 +708,7 @@ export default function App() {
           onClose={() => setSelectedStartup(null)}
           onUpdateStartup={handleUpdateStartup}
           onDeleteStartup={handleDeleteStartup}
+          currentUser={currentUser}
           showToast={showToast}
         />
       )}
