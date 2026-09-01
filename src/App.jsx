@@ -166,7 +166,7 @@ export default function App() {
     const unsubscribe = subscribeToUserTeams(currentUser.uid, (teams) => {
       setMyTeams(teams);
       setIsTeamsLoaded(true);
-    });
+    }, !!currentUser?.isMock);
     return unsubscribe;
   }, [currentUser, configReloadTrigger]);
 
@@ -312,7 +312,7 @@ export default function App() {
     setTeamFormLoading(true);
 
     try {
-      const team = await createTeam(newTeamName.trim(), currentUser.uid);
+      const team = await createTeam(newTeamName.trim(), currentUser.uid, !!currentUser?.isMock);
       setNewTeamName('');
       setActiveWorkspaceId(team.id);
       localStorage.setItem('cvc_active_workspace', team.id);
@@ -320,7 +320,7 @@ export default function App() {
       showToast(`Team "${team.name}" created!`, "success");
     } catch (err) {
       console.error(err);
-      showToast("Failed to create team.", "error");
+      showToast(err.message || "Failed to create team.", "error");
     } finally {
       setTeamFormLoading(false);
     }
@@ -333,7 +333,7 @@ export default function App() {
     setTeamFormLoading(true);
 
     try {
-      const team = await joinTeamWithCode(joinInviteCode.trim(), currentUser.uid);
+      const team = await joinTeamWithCode(joinInviteCode.trim(), currentUser.uid, !!currentUser?.isMock);
       setJoinInviteCode('');
       setActiveWorkspaceId(team.id);
       localStorage.setItem('cvc_active_workspace', team.id);

@@ -182,7 +182,7 @@ export const generateInviteCode = () => {
 };
 
 // Create a Team Workspace
-export const createTeam = async (name, ownerId) => {
+export const createTeam = async (name, ownerId, isMock = false) => {
   const inviteCode = generateInviteCode();
   const teamData = {
     name,
@@ -192,9 +192,17 @@ export const createTeam = async (name, ownerId) => {
     createdAt: new Date().toISOString()
   };
 
-  if (db) {
-    const docRef = await addDoc(collection(db, 'teams'), teamData);
-    return { id: docRef.id, ...teamData };
+  if (db && !isMock) {
+    try {
+      const docRef = await addDoc(collection(db, 'teams'), teamData);
+      return { id: docRef.id, ...teamData };
+    } catch (err) {
+      console.warn("Firestore createTeam failed, falling back to LocalStorage:", err);
+      if (err.code === 'permission-denied' || err.message?.includes('permission')) {
+        throw new Error("データベース書き込み権限エラー (Permission Denied)。Firebaseコンソールのセキュリティルールをご確認いただくか、ログイン状態をご確認ください。");
+      }
+      throw err;
+    }
   } else {
     // Local storage teams
     const stored = localStorage.getItem('teams');
@@ -209,30 +217,62 @@ export const createTeam = async (name, ownerId) => {
 };
 
 // Join a Team Workspace using Invite Code
-export const joinTeamWithCode = async (inviteCode, userId) => {
+export const joinTeamWithCode = async (inviteCode, userId, isMock = false) => {
   const cleanCode = inviteCode.trim().toUpperCase();
 
-  if (db) {
-    const teamsRef = collection(db, 'teams');
-    const q = query(teamsRef, where("inviteCode", "==", cleanCode));
-    const snapshot = await getDocs(q);
+  if (db && !isMock) {
+    try {
+      const teamsRef = collection(db, 'teams');
+      const q = query(teamsRef, where("inviteCode", "==", cleanCode));
+      const snapshot = await getDocs(q);
 
-    if (snapshot.empty) {
-      throw new Error("Invalid invite code. Team not found.");
+      if (snapshot.empty) {
+        // Fallback check local storage if not found in cloud
+        const stored = localStorage.getItem('teams');
+        const teams = stored ? JSON.parse(stored) : [];
+        const localTeam = teams.find(t => t.inviteCode === cleanCode);
+        if (localTeam) {
+          if (!localTeam.members.includes(userId)) {
+            localTeam.members.push(userId);
+            localStorage.setItem('teams', JSON.stringify(teams));
+            notifyLocalListeners('teams');
+          }
+          return localTeam;
+        }
+        throw new Error("無効な招待コードです。チームが見つかりませんでした。");
+      }
+
+      const teamDoc = snapshot.docs[0];
+      const teamData = teamDoc.data();
+      
+      if (teamData.members && teamData.members.includes(userId)) {
+        return { id: teamDoc.id, ...teamData }; // Already a member
+      }
+
+      await updateDoc(doc(db, 'teams', teamDoc.id), {
+        members: arrayUnion(userId)
+      });
+
+      return { id: teamDoc.id, ...teamData, members: [...(teamData.members || []), userId] };
+    } catch (err) {
+      console.warn("Firestore joinTeamWithCode error:", err);
+      if (err.code === 'permission-denied' || err.message?.includes('permission') || err.message?.includes('permissions')) {
+        // Check if it exists locally before throwing permission error
+        const stored = localStorage.getItem('teams');
+        const teams = stored ? JSON.parse(stored) : [];
+        const localTeam = teams.find(t => t.inviteCode === cleanCode);
+        if (localTeam) {
+          if (!localTeam.members.includes(userId)) {
+            localTeam.members.push(userId);
+            localStorage.setItem('teams', JSON.stringify(teams));
+            notifyLocalListeners('teams');
+          }
+          return localTeam;
+        }
+        throw new Error("データベースのアクセス権限エラー: Firestoreのセキュリティルールで teams コレクションの読み書き権限が許可されているかご確認ください。");
+      }
+      throw err;
     }
-
-    const teamDoc = snapshot.docs[0];
-    const teamData = teamDoc.data();
-    
-    if (teamData.members.includes(userId)) {
-      return { id: teamDoc.id, ...teamData }; // Already a member
-    }
-
-    await updateDoc(doc(db, 'teams', teamDoc.id), {
-      members: arrayUnion(userId)
-    });
-
-    return { id: teamDoc.id, ...teamData, members: [...teamData.members, userId] };
   } else {
     // Local storage teams fallback
     const stored = localStorage.getItem('teams');
@@ -240,7 +280,7 @@ export const joinTeamWithCode = async (inviteCode, userId) => {
     const teamIndex = teams.findIndex(t => t.inviteCode === cleanCode);
 
     if (teamIndex === -1) {
-      throw new Error("Invalid invite code. Team not found.");
+      throw new Error("無効な招待コードです。ローカルチームが見つかりませんでした。");
     }
 
     const team = teams[teamIndex];
@@ -254,30 +294,31 @@ export const joinTeamWithCode = async (inviteCode, userId) => {
 };
 
 // Subscribe to User's Team list
-export const subscribeToUserTeams = (userId, callback) => {
-  if (db) {
+export const subscribeToUserTeams = (userId, callback, isMock = false) => {
+  // Local Storage fallback helper
+  const fetchLocalTeams = () => {
+    const stored = localStorage.getItem('teams');
+    const teams = stored ? JSON.parse(stored) : [];
+    const userTeams = teams.filter(t => t.members && t.members.includes(userId));
+    callback(userTeams);
+  };
+
+  if (db && !isMock) {
     try {
       const q = query(collection(db, 'teams'), where("members", "array-contains", userId));
-      return onSnapshot(q, (snapshot) => {
+      const unsubscribe = onSnapshot(q, (snapshot) => {
         const teams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         callback(teams);
       }, (error) => {
         console.error("Teams subscribe error:", error);
-        callback([]);
+        fetchLocalTeams();
       });
+      return unsubscribe;
     } catch (e) {
       console.error("Failed to subscribe to Firestore teams:", e);
-      callback([]);
+      fetchLocalTeams();
     }
   }
-
-  // Local Storage fallback
-  const fetchLocalTeams = () => {
-    const stored = localStorage.getItem('teams');
-    const teams = stored ? JSON.parse(stored) : [];
-    const userTeams = teams.filter(t => t.members.includes(userId));
-    callback(userTeams);
-  };
 
   // Register listener for local updates
   if (!localListeners['teams']) {
