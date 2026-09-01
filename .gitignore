@@ -29,8 +29,3 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
-
-# Local tooling & Vercel cache
-.git_tool/
-.vercel/
-
