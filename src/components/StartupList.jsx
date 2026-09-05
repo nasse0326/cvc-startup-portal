@@ -568,7 +568,7 @@ export default function StartupList({
 
   // Form State (New Schema)
   const [newCompanyType, setNewCompanyType] = useState('startup');
-  const [newEngagementType, setNewEngagementType] = useState('投資検討');
+  const [newEngagementType, setNewEngagementType] = useState('両方');
   const [newName, setNewName] = useState('');
   const [newCreatedAtDate, setNewCreatedAtDate] = useState(new Date().toISOString().split('T')[0]);
   const [newSector, setNewSector] = useState('SaaS');
@@ -598,8 +598,10 @@ export default function StartupList({
   const [newInvestmentMemo, setNewInvestmentMemo] = useState('');
   const [newBizDevNotes, setNewBizDevNotes] = useState('');
   const [newAssignedMember, setNewAssignedMember] = useState('');
-  const [isNewCollabOpen, setIsNewCollabOpen] = useState(false);
+  const [isNewCollabOpen, setIsNewCollabOpen] = useState(true);
   const [isNewInvestmentOpen, setIsNewInvestmentOpen] = useState(true);
+  const [isNewCollabCloseInfoOpen, setIsNewCollabCloseInfoOpen] = useState(false);
+  const [isNewInvestmentCloseInfoOpen, setIsNewInvestmentCloseInfoOpen] = useState(false);
 
   // Sync accordion expansion with engagement type
   useEffect(() => {
@@ -841,7 +843,7 @@ export default function StartupList({
     
     // Reset Form
     setNewName('');
-    setNewEngagementType('投資検討');
+    setNewEngagementType('両方');
     setNewSector('SaaS');
     setNewStage('Seed');
     setNewScore(3);
@@ -867,6 +869,8 @@ export default function StartupList({
     setNewInvestmentMemo('');
     setNewBizDevNotes('');
     setNewAssignedMember('');
+    setIsNewCollabCloseInfoOpen(false);
+    setIsNewInvestmentCloseInfoOpen(false);
     setIsAddModalOpen(false);
   };
 
@@ -2978,7 +2982,13 @@ export default function StartupList({
                         <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業ステータス *</label>
                         <select 
                           value={newCollabStatus}
-                          onChange={(e) => setNewCollabStatus(e.target.value)}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setNewCollabStatus(val);
+                            if (val.includes('クローズ') || val.includes('見送り')) {
+                              setIsNewCollabCloseInfoOpen(true);
+                            }
+                          }}
                           className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
                         >
                           {COLLAB_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
@@ -2997,82 +3007,111 @@ export default function StartupList({
                       </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 到達ステージ</label>
-                      <select 
-                        value={newReachedStage}
-                        onChange={(e) => setNewReachedStage(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                    {/* 協業 見送り・クローズ情報（折りたたみボックス） */}
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsNewCollabCloseInfoOpen(prev => !prev)}
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-left transition-all hover:bg-slate-200/60 dark:hover:bg-slate-800/60"
                       >
-                        {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-                      </select>
-                    </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span>🔒</span>
+                            <span>協業 見送り・クローズ情報 (クローズ理由・復活シナリオ等)</span>
+                          </span>
+                          {(newCloseReason || newRevivalScenario || newRevivalFeasibility || newReachedStage !== '1 発掘') && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-800">
+                              入力あり
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1 text-xs font-bold text-teal-600 dark:text-teal-400">
+                          <span className="text-[11px]">{isNewCollabCloseInfoOpen ? '閉じる' : '展開する'}</span>
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isNewCollabCloseInfoOpen ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
 
-                    {/* 協業クローズ理由 (サジェスト付き) */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
-                          協業 クローズ理由 (自由記述)
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowNewCollabSuggestions(prev => !prev)}
-                          className="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:text-teal-700 flex items-center gap-1 transition-colors"
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          <span>{showNewCollabSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
-                        </button>
-                      </div>
-                      <input 
-                        type="text" 
-                        placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
-                        value={newCloseReason}
-                        onChange={(e) => setNewCloseReason(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                      />
-                      {showNewCollabSuggestions && (
-                        <div className="flex flex-wrap gap-1 p-2 bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 rounded-xl animate-fade-in">
-                          <span className="text-[10px] text-teal-700 dark:text-teal-300 font-bold w-full mb-0.5">クリックで入力:</span>
-                          {COLLAB_CLOSE_REASONS.map(reason => (
-                            <button
-                              type="button"
-                              key={reason}
-                              onClick={() => {
-                                setNewCloseReason(reason);
-                                setShowNewCollabSuggestions(false);
-                              }}
-                              className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white border border-teal-200 dark:border-teal-800 shadow-2xs transition-all"
+                      {isNewCollabCloseInfoOpen && (
+                        <div className="mt-3 p-3.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3 animate-fade-in">
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 到達ステージ</label>
+                            <select 
+                              value={newReachedStage}
+                              onChange={(e) => setNewReachedStage(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
                             >
-                              {reason}
-                            </button>
-                          ))}
+                              {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                            </select>
+                          </div>
+
+                          {/* 協業クローズ理由 (サジェスト付き) */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
+                                協業 クローズ理由 (自由記述)
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => setShowNewCollabSuggestions(prev => !prev)}
+                                className="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:text-teal-700 flex items-center gap-1 transition-colors"
+                              >
+                                <Sparkles className="w-3 h-3" />
+                                <span>{showNewCollabSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
+                              </button>
+                            </div>
+                            <input 
+                              type="text" 
+                              placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
+                              value={newCloseReason}
+                              onChange={(e) => setNewCloseReason(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                            />
+                            {showNewCollabSuggestions && (
+                              <div className="flex flex-wrap gap-1 p-2 bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 rounded-xl animate-fade-in">
+                                <span className="text-[10px] text-teal-700 dark:text-teal-300 font-bold w-full mb-0.5">クリックで入力:</span>
+                                {COLLAB_CLOSE_REASONS.map(reason => (
+                                  <button
+                                    type="button"
+                                    key={reason}
+                                    onClick={() => {
+                                      setNewCloseReason(reason);
+                                      setShowNewCollabSuggestions(false);
+                                    }}
+                                    className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white border border-teal-200 dark:border-teal-800 shadow-2xs transition-all"
+                                  >
+                                    {reason}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* 協業 復活シナリオ */}
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活シナリオ (再アプローチ条件・トリガー)</label>
+                            <input 
+                              type="text" 
+                              placeholder="例: 次世代SaaS版ローンチ時、シリーズB調達完了時" 
+                              value={newRevivalScenario}
+                              onChange={(e) => setNewRevivalScenario(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                            />
+                          </div>
+
+                          {/* 協業 復活可能性 (復活シナリオの次) */}
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活可能性</label>
+                            <select 
+                              value={newRevivalFeasibility}
+                              onChange={(e) => setNewRevivalFeasibility(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                            >
+                              <option value="">未設定</option>
+                              {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          </div>
                         </div>
                       )}
-                    </div>
-
-                    {/* 協業 復活シナリオ */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活シナリオ (再アプローチ条件・トリガー)</label>
-                      <input 
-                        type="text" 
-                        placeholder="例: 次世代SaaS版ローンチ時、シリーズB調達完了時" 
-                        value={newRevivalScenario}
-                        onChange={(e) => setNewRevivalScenario(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                      />
-                    </div>
-
-                    {/* 協業 復活可能性 (復活シナリオの次) */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活可能性</label>
-                      <select 
-                        value={newRevivalFeasibility}
-                        onChange={(e) => setNewRevivalFeasibility(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                      >
-                        <option value="">未設定</option>
-                        {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
                     </div>
                   </div>
                 )}
@@ -3140,94 +3179,128 @@ export default function StartupList({
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス *</label>
-                        <select 
-                          value={newInvestmentStatus}
-                          onChange={(e) => setNewInvestmentStatus(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
-                        >
-                          {INVESTMENT_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 到達ステージ</label>
-                        <select 
-                          value={newInvestmentReachedStage}
-                          onChange={(e) => setNewInvestmentReachedStage(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                        >
-                          {INVESTMENT_REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-                        </select>
-                      </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス *</label>
+                      <select 
+                        value={newInvestmentStatus}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNewInvestmentStatus(val);
+                          if (val.includes('見送り') || val.includes('クローズ')) {
+                            setIsNewInvestmentCloseInfoOpen(true);
+                          }
+                        }}
+                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
+                      >
+                        {INVESTMENT_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                      </select>
                     </div>
 
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
-                          投資 見送り理由 (自由記述)
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowNewInvestSuggestions(prev => !prev)}
-                          className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 transition-colors"
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          <span>{showNewInvestSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
-                        </button>
-                      </div>
-                      <input 
-                        type="text" 
-                        placeholder="例: Valuation目線不一致、競合優位性不足" 
-                        value={newInvestmentCloseReason}
-                        onChange={(e) => setNewInvestmentCloseReason(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                      />
-                      {showNewInvestSuggestions && (
-                        <div className="flex flex-wrap gap-1 p-2 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 rounded-xl animate-fade-in">
-                          <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold w-full mb-0.5">クリックで入力:</span>
-                          {INVESTMENT_CLOSE_REASONS.map(reason => (
-                            <button
-                              type="button"
-                              key={reason}
-                              onClick={() => {
-                                setNewInvestmentCloseReason(reason);
-                                setShowNewInvestSuggestions(false);
-                              }}
-                              className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-800 shadow-2xs transition-all"
+                    {/* 投資 見送り・クローズ情報（折りたたみボックス） */}
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsNewInvestmentCloseInfoOpen(prev => !prev)}
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-left transition-all hover:bg-slate-200/60 dark:hover:bg-slate-800/60"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                            <span>🔒</span>
+                            <span>投資 見送り・クローズ情報 (見送り理由・復活シナリオ等)</span>
+                          </span>
+                          {(newInvestmentCloseReason || newInvestmentRevivalScenario || newInvestmentRevivalFeasibility || newInvestmentReachedStage !== '1 ソーシング') && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                              入力あり
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1 text-xs font-bold text-blue-600 dark:text-blue-400">
+                          <span className="text-[11px]">{isNewInvestmentCloseInfoOpen ? '閉じる' : '展開する'}</span>
+                          <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isNewInvestmentCloseInfoOpen ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+
+                      {isNewInvestmentCloseInfoOpen && (
+                        <div className="mt-3 p-3.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3 animate-fade-in">
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 到達ステージ</label>
+                            <select 
+                              value={newInvestmentReachedStage}
+                              onChange={(e) => setNewInvestmentReachedStage(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
                             >
-                              {reason}
-                            </button>
-                          ))}
+                              {INVESTMENT_REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                            </select>
+                          </div>
+
+                          {/* 投資 見送り理由 (自由記述) */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
+                                投資 見送り理由 (自由記述)
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => setShowNewInvestSuggestions(prev => !prev)}
+                                className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                              >
+                                <Sparkles className="w-3 h-3" />
+                                <span>{showNewInvestSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
+                              </button>
+                            </div>
+                            <input 
+                              type="text" 
+                              placeholder="例: Valuation目線不一致、競合優位性不足" 
+                              value={newInvestmentCloseReason}
+                              onChange={(e) => setNewInvestmentCloseReason(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                            />
+                            {showNewInvestSuggestions && (
+                              <div className="flex flex-wrap gap-1 p-2 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 rounded-xl animate-fade-in">
+                                <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold w-full mb-0.5">クリックで入力:</span>
+                                {INVESTMENT_CLOSE_REASONS.map(reason => (
+                                  <button
+                                    type="button"
+                                    key={reason}
+                                    onClick={() => {
+                                      setNewInvestmentCloseReason(reason);
+                                      setShowNewInvestSuggestions(false);
+                                    }}
+                                    className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-800 shadow-2xs transition-all"
+                                  >
+                                    {reason}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">次回検討トリガー・復活シナリオ</label>
+                              <input 
+                                type="text" 
+                                placeholder="例: シリーズB調達時、ARR 1億円達成時" 
+                                value={newInvestmentRevivalScenario}
+                                onChange={(e) => setNewInvestmentRevivalScenario(e.target.value)}
+                                className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 復活可能性</label>
+                              <select 
+                                value={newInvestmentRevivalFeasibility}
+                                onChange={(e) => setNewInvestmentRevivalFeasibility(e.target.value)}
+                                className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                              >
+                                <option value="">未設定</option>
+                                {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            </div>
+                          </div>
                         </div>
                       )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">次回検討トリガー・復活シナリオ</label>
-                        <input 
-                          type="text" 
-                          placeholder="例: シリーズB調達時、ARR 1億円達成時" 
-                          value={newInvestmentRevivalScenario}
-                          onChange={(e) => setNewInvestmentRevivalScenario(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 復活可能性</label>
-                        <select 
-                          value={newInvestmentRevivalFeasibility}
-                          onChange={(e) => setNewInvestmentRevivalFeasibility(e.target.value)}
-                          className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                        >
-                          <option value="">未設定</option>
-                          {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                      </div>
                     </div>
                   </div>
                 )}

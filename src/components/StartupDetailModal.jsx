@@ -116,6 +116,22 @@ export default function StartupDetailModal({
   const [showEditCollabSuggestions, setShowEditCollabSuggestions] = useState(false);
   const [showEditInvestSuggestions, setShowEditInvestSuggestions] = useState(false);
 
+  // Close info accordion states (default closed unless existing data or close status)
+  const hasInitialCollabCloseData = Boolean(
+    startup.closeReason || 
+    startup.revivalScenario || 
+    startup.revivalFeasibility || 
+    (startup.collabStatus && (startup.collabStatus.includes('クローズ') || startup.collabStatus.includes('見送り')))
+  );
+  const hasInitialInvestmentCloseData = Boolean(
+    startup.investmentCloseReason || 
+    startup.investmentRevivalScenario || 
+    startup.investmentRevivalFeasibility || 
+    ((startup.status || startup.investmentStatus) && ((startup.status || startup.investmentStatus).includes('見送り') || (startup.status || startup.investmentStatus).includes('クローズ')))
+  );
+  const [isEditCollabCloseInfoOpen, setIsEditCollabCloseInfoOpen] = useState(hasInitialCollabCloseData);
+  const [isEditInvestmentCloseInfoOpen, setIsEditInvestmentCloseInfoOpen] = useState(hasInitialInvestmentCloseData);
+
   // New inline log states for detail modal
   const [newBizDevLogText, setNewBizDevLogText] = useState('');
   const [newInvestLogText, setNewInvestLogText] = useState('');
@@ -217,6 +233,22 @@ export default function StartupDetailModal({
     setEditWebsite(startup.website || '');
     setEditFoundedYear(startup.foundedYear || '');
     setEditLocation(startup.location || '');
+    setIsEditCollabCloseInfoOpen(
+      Boolean(
+        startup.closeReason || 
+        startup.revivalScenario || 
+        startup.revivalFeasibility || 
+        (startup.collabStatus && (startup.collabStatus.includes('クローズ') || startup.collabStatus.includes('見送り')))
+      )
+    );
+    setIsEditInvestmentCloseInfoOpen(
+      Boolean(
+        startup.investmentCloseReason || 
+        startup.investmentRevivalScenario || 
+        startup.investmentRevivalFeasibility || 
+        ((startup.status || startup.investmentStatus) && ((startup.status || startup.investmentStatus).includes('見送り') || (startup.status || startup.investmentStatus).includes('クローズ')))
+      )
+    );
   }, [startup]);
 
   // Current tasks list
@@ -620,7 +652,13 @@ export default function StartupDetailModal({
                       <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業ステータス *</label>
                       <select 
                         value={editCollabStatus}
-                        onChange={(e) => setEditCollabStatus(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditCollabStatus(val);
+                          if (val.includes('クローズ') || val.includes('見送り')) {
+                            setIsEditCollabCloseInfoOpen(true);
+                          }
+                        }}
                         className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
                       >
                         {COLLAB_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
@@ -638,82 +676,111 @@ export default function StartupDetailModal({
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 到達ステージ</label>
-                    <select 
-                      value={editReachedStage}
-                      onChange={(e) => setEditReachedStage(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                  {/* 協業 見送り・クローズ情報（折りたたみボックス） */}
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditCollabCloseInfoOpen(prev => !prev)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-left transition-all hover:bg-slate-200/60 dark:hover:bg-slate-800/60"
                     >
-                      {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-                    </select>
-                  </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span>🔒</span>
+                          <span>協業 見送り・クローズ情報 (クローズ理由・復活シナリオ等)</span>
+                        </span>
+                        {(editCloseReason || editRevivalScenario || editRevivalFeasibility || editReachedStage !== '1 発掘') && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-800">
+                            入力あり
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-1 text-xs font-bold text-teal-600 dark:text-teal-400">
+                        <span className="text-[11px]">{isEditCollabCloseInfoOpen ? '閉じる' : '展開する'}</span>
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isEditCollabCloseInfoOpen ? 'rotate-180' : ''}`} />
+                      </div>
+                    </button>
 
-                  {/* 協業クローズ理由 (サジェスト付き) */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
-                        協業 クローズ理由 (自由記述)
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowEditCollabSuggestions(prev => !prev)}
-                        className="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:text-teal-700 flex items-center gap-1 transition-colors"
-                      >
-                        <Sparkles className="w-3 h-3" />
-                        <span>{showEditCollabSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
-                      </button>
-                    </div>
-                    <input 
-                      type="text" 
-                      placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
-                      value={editCloseReason}
-                      onChange={(e) => setEditCloseReason(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                    />
-                    {showEditCollabSuggestions && (
-                      <div className="flex flex-wrap gap-1 p-2 bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 rounded-xl animate-fade-in">
-                        <span className="text-[10px] text-teal-700 dark:text-teal-300 font-bold w-full mb-0.5">クリックで入力:</span>
-                        {COLLAB_CLOSE_REASONS.map(reason => (
-                          <button
-                            type="button"
-                            key={reason}
-                            onClick={() => {
-                              setEditCloseReason(reason);
-                              setShowEditCollabSuggestions(false);
-                            }}
-                            className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white border border-teal-200 dark:border-teal-800 shadow-2xs transition-all"
+                    {isEditCollabCloseInfoOpen && (
+                      <div className="mt-3 p-3.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3 animate-fade-in">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 到達ステージ</label>
+                          <select 
+                            value={editReachedStage}
+                            onChange={(e) => setEditReachedStage(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
                           >
-                            {reason}
-                          </button>
-                        ))}
+                            {REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                          </select>
+                        </div>
+
+                        {/* 協業クローズ理由 (サジェスト付き) */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
+                              協業 クローズ理由 (自由記述)
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setShowEditCollabSuggestions(prev => !prev)}
+                              className="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:text-teal-700 flex items-center gap-1 transition-colors"
+                            >
+                              <Sparkles className="w-3 h-3" />
+                              <span>{showEditCollabSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
+                            </button>
+                          </div>
+                          <input 
+                            type="text" 
+                            placeholder="例: 価格帯ミスマッチ、オンプレ要件不適合" 
+                            value={editCloseReason}
+                            onChange={(e) => setEditCloseReason(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                          />
+                          {showEditCollabSuggestions && (
+                            <div className="flex flex-wrap gap-1 p-2 bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 rounded-xl animate-fade-in">
+                              <span className="text-[10px] text-teal-700 dark:text-teal-300 font-bold w-full mb-0.5">クリックで入力:</span>
+                              {COLLAB_CLOSE_REASONS.map(reason => (
+                                <button
+                                  type="button"
+                                  key={reason}
+                                  onClick={() => {
+                                    setEditCloseReason(reason);
+                                    setShowEditCollabSuggestions(false);
+                                  }}
+                                  className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-teal-600 hover:text-white border border-teal-200 dark:border-teal-800 shadow-2xs transition-all"
+                                >
+                                  {reason}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 協業 復活シナリオ */}
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活シナリオ (再アプローチ条件・トリガー)</label>
+                          <input 
+                            type="text" 
+                            placeholder="例: 次世代SaaS版ローンチ時、事業部ニーズ発生時" 
+                            value={editRevivalScenario}
+                            onChange={(e) => setEditRevivalScenario(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                          />
+                        </div>
+
+                        {/* 協業 復活可能性 */}
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活可能性</label>
+                          <select 
+                            value={editRevivalFeasibility}
+                            onChange={(e) => setEditRevivalFeasibility(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                          >
+                            <option value="">未設定</option>
+                            {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                        </div>
                       </div>
                     )}
-                  </div>
-
-                  {/* 協業 復活シナリオ */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活シナリオ (再アプローチ条件・トリガー)</label>
-                    <input 
-                      type="text" 
-                      placeholder="例: 次世代SaaS版ローンチ時、事業部ニーズ発生時" 
-                      value={editRevivalScenario}
-                      onChange={(e) => setEditRevivalScenario(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                    />
-                  </div>
-
-                  {/* 協業 復活可能性 (復活シナリオの次) */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">協業 復活可能性</label>
-                    <select 
-                      value={editRevivalFeasibility}
-                      onChange={(e) => setEditRevivalFeasibility(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                    >
-                      <option value="">未設定</option>
-                      {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
                   </div>
                 </div>
               )}
@@ -816,94 +883,128 @@ export default function StartupDetailModal({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス *</label>
-                      <select 
-                        value={editInvestmentStatus}
-                        onChange={(e) => setEditInvestmentStatus(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
-                      >
-                        {INVESTMENT_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 到達ステージ</label>
-                      <select 
-                        value={editInvestmentReachedStage}
-                        onChange={(e) => setEditInvestmentReachedStage(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                      >
-                        {INVESTMENT_REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
-                      </select>
-                    </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資ステータス *</label>
+                    <select 
+                      value={editInvestmentStatus}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditInvestmentStatus(val);
+                        if (val.includes('見送り') || val.includes('クローズ')) {
+                          setIsEditInvestmentCloseInfoOpen(true);
+                        }
+                      }}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 font-bold text-sm transition-all"
+                    >
+                      {INVESTMENT_STATUS_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                    </select>
                   </div>
 
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
-                        投資 見送り・クローズ理由 (自由記述)
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowEditInvestSuggestions(prev => !prev)}
-                        className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 transition-colors"
-                      >
-                        <Sparkles className="w-3 h-3" />
-                        <span>{showEditInvestSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
-                      </button>
-                    </div>
-                    <input 
-                      type="text" 
-                      placeholder="例: Valuation目線不一致、競合優位性不足" 
-                      value={editInvestmentCloseReason}
-                      onChange={(e) => setEditInvestmentCloseReason(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                    />
-                    {showEditInvestSuggestions && (
-                      <div className="flex flex-wrap gap-1 p-2 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 rounded-xl animate-fade-in">
-                        <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold w-full mb-0.5">クリックで入力:</span>
-                        {INVESTMENT_CLOSE_REASONS.map(reason => (
-                          <button
-                            type="button"
-                            key={reason}
-                            onClick={() => {
-                              setEditInvestmentCloseReason(reason);
-                              setShowEditInvestSuggestions(false);
-                            }}
-                            className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-800 shadow-2xs transition-all"
+                  {/* 投資 見送り・クローズ情報（折りたたみボックス） */}
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditInvestmentCloseInfoOpen(prev => !prev)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-left transition-all hover:bg-slate-200/60 dark:hover:bg-slate-800/60"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span>🔒</span>
+                          <span>投資 見送り・クローズ情報 (見送り理由・復活シナリオ等)</span>
+                        </span>
+                        {(editInvestmentCloseReason || editInvestmentRevivalScenario || editInvestmentRevivalFeasibility || editInvestmentReachedStage !== '1 ソーシング') && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                            入力あり
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-1 text-xs font-bold text-blue-600 dark:text-blue-400">
+                        <span className="text-[11px]">{isEditInvestmentCloseInfoOpen ? '閉じる' : '展開する'}</span>
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isEditInvestmentCloseInfoOpen ? 'rotate-180' : ''}`} />
+                      </div>
+                    </button>
+
+                    {isEditInvestmentCloseInfoOpen && (
+                      <div className="mt-3 p-3.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3 animate-fade-in">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 到達ステージ</label>
+                          <select 
+                            value={editInvestmentReachedStage}
+                            onChange={(e) => setEditInvestmentReachedStage(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
                           >
-                            {reason}
-                          </button>
-                        ))}
+                            {INVESTMENT_REACHED_STAGE_OPTIONS.map(st => <option key={st} value={st}>{st}</option>)}
+                          </select>
+                        </div>
+
+                        {/* 投資 見送り理由 (自由記述) */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">
+                              投資 見送り・クローズ理由 (自由記述)
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setShowEditInvestSuggestions(prev => !prev)}
+                              className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 transition-colors"
+                            >
+                              <Sparkles className="w-3 h-3" />
+                              <span>{showEditInvestSuggestions ? '候補を閉じる' : '💡 候補から選ぶ'}</span>
+                            </button>
+                          </div>
+                          <input 
+                            type="text" 
+                            placeholder="例: Valuation目線不一致、競合優位性不足" 
+                            value={editInvestmentCloseReason}
+                            onChange={(e) => setEditInvestmentCloseReason(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                          />
+                          {showEditInvestSuggestions && (
+                            <div className="flex flex-wrap gap-1 p-2 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 rounded-xl animate-fade-in">
+                              <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold w-full mb-0.5">クリックで入力:</span>
+                              {INVESTMENT_CLOSE_REASONS.map(reason => (
+                                <button
+                                  type="button"
+                                  key={reason}
+                                  onClick={() => {
+                                    setEditInvestmentCloseReason(reason);
+                                    setShowEditInvestSuggestions(false);
+                                  }}
+                                  className="text-[11px] px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-blue-600 hover:text-white border border-blue-200 dark:border-blue-800 shadow-2xs transition-all"
+                                >
+                                  {reason}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">次回検討トリガー・復活シナリオ</label>
+                            <input 
+                              type="text" 
+                              placeholder="例: シリーズB調達時、ARR 1億円達成時" 
+                              value={editInvestmentRevivalScenario}
+                              onChange={(e) => setEditInvestmentRevivalScenario(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 復活可能性</label>
+                            <select 
+                              value={editInvestmentRevivalFeasibility}
+                              onChange={(e) => setEditInvestmentRevivalFeasibility(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
+                            >
+                              <option value="">未設定</option>
+                              {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          </div>
+                        </div>
                       </div>
                     )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">次回検討トリガー・復活シナリオ</label>
-                      <input 
-                        type="text" 
-                        placeholder="例: シリーズB調達時、ARR 1億円達成時" 
-                        value={editInvestmentRevivalScenario}
-                        onChange={(e) => setEditInvestmentRevivalScenario(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">投資 復活可能性</label>
-                      <select 
-                        value={editInvestmentRevivalFeasibility}
-                        onChange={(e) => setEditInvestmentRevivalFeasibility(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-800 dark:text-slate-200 text-sm transition-all"
-                      >
-                        <option value="">未設定</option>
-                        {REVIVAL_FEASIBILITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
                   </div>
                 </div>
               )}
