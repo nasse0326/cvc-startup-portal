@@ -2985,7 +2985,7 @@ export default function StartupList({
                           onChange={(e) => {
                             const val = e.target.value;
                             setNewCollabStatus(val);
-                            if (val.includes('クローズ') || val.includes('見送り')) {
+                            if (val.includes('クローズ') || val.includes('見送り') || val.includes('保留')) {
                               setIsNewCollabCloseInfoOpen(true);
                             }
                           }}
@@ -3007,7 +3007,7 @@ export default function StartupList({
                       </div>
                     </div>
 
-                    {/* 協業 見送り・クローズ情報（折りたたみボックス） */}
+                    {/* 協業 保留・クローズ情報（折りたたみボックス） */}
                     <div className="pt-1">
                       <button
                         type="button"
@@ -3017,7 +3017,7 @@ export default function StartupList({
                         <div className="flex items-center space-x-2">
                           <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                             <span>🔒</span>
-                            <span>協業 見送り・クローズ情報 (クローズ理由・復活シナリオ等)</span>
+                            <span>協業 保留・クローズ情報 (理由・復活シナリオ等)</span>
                           </span>
                           {(newCloseReason || newRevivalScenario || newRevivalFeasibility || newReachedStage !== '1 発掘') && (
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-800">
@@ -3186,7 +3186,7 @@ export default function StartupList({
                         onChange={(e) => {
                           const val = e.target.value;
                           setNewInvestmentStatus(val);
-                          if (val.includes('見送り') || val.includes('クローズ')) {
+                          if (val.includes('見送り') || val.includes('クローズ') || val.includes('保留')) {
                             setIsNewInvestmentCloseInfoOpen(true);
                           }
                         }}
@@ -3196,7 +3196,7 @@ export default function StartupList({
                       </select>
                     </div>
 
-                    {/* 投資 見送り・クローズ情報（折りたたみボックス） */}
+                    {/* 投資 保留・見送り情報（折りたたみボックス） */}
                     <div className="pt-1">
                       <button
                         type="button"
@@ -3206,7 +3206,7 @@ export default function StartupList({
                         <div className="flex items-center space-x-2">
                           <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                             <span>🔒</span>
-                            <span>投資 見送り・クローズ情報 (見送り理由・復活シナリオ等)</span>
+                            <span>投資 保留・見送り情報 (理由・復活シナリオ等)</span>
                           </span>
                           {(newInvestmentCloseReason || newInvestmentRevivalScenario || newInvestmentRevivalFeasibility || newInvestmentReachedStage !== '1 ソーシング') && (
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
