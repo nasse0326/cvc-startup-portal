@@ -24,7 +24,6 @@ import {
   Sparkles,
   Eye,
   EyeOff,
-  RotateCw,
   AlertCircle,
   Table,
   Download,

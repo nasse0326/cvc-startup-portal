@@ -207,11 +207,11 @@ export default function App() {
     try {
       unsubStartups = subscribeToCollection('startups', activeWorkspaceId, (data) => {
         setStartups(data);
-      }, initialStartups);
+      }, initialStartups, !!currentUser?.isMock);
 
       unsubMeetings = subscribeToCollection('meetings', activeWorkspaceId, (data) => {
         setMeetings(data);
-      }, initialMeetings);
+      }, initialMeetings, !!currentUser?.isMock);
     } catch (err) {
       console.error("Subscription setup failed:", err);
       showToast("Subscription setup error. Running in local fallback.", "error");
@@ -367,7 +367,7 @@ export default function App() {
         updatedAt: nowStr,
         createdAt: new Date().toISOString()
       };
-      await addDocument('startups', enriched);
+      await addDocument('startups', enriched, !!currentUser?.isMock);
       showToast(`${startupData.name} profile initialized!`, "success");
     } catch (error) {
       console.error(error);
@@ -433,7 +433,7 @@ export default function App() {
         updatedAt: nowStr
       };
 
-      await updateDocument('startups', id, enriched);
+      await updateDocument('startups', id, enriched, !!currentUser?.isMock);
       if (selectedStartup && selectedStartup.id === id) {
         setSelectedStartup(enriched);
       }
@@ -445,10 +445,10 @@ export default function App() {
 
   const handleDeleteStartup = async (id) => {
     try {
-      await deleteDocument('startups', id);
+      await deleteDocument('startups', id, !!currentUser?.isMock);
       const linked = meetings.filter(m => m.startupId === id);
       for (const m of linked) {
-        await deleteDocument('meetings', m.id);
+        await deleteDocument('meetings', m.id, !!currentUser?.isMock);
       }
     } catch (error) {
       console.error(error);
@@ -461,10 +461,10 @@ export default function App() {
     try {
       let count = 0;
       for (const id of ids) {
-        await deleteDocument('startups', id);
+        await deleteDocument('startups', id, !!currentUser?.isMock);
         const linked = meetings.filter(m => m.startupId === id);
         for (const m of linked) {
-          await deleteDocument('meetings', m.id);
+          await deleteDocument('meetings', m.id, !!currentUser?.isMock);
         }
         count++;
       }
@@ -488,7 +488,7 @@ export default function App() {
         updatedAt: nowStr,
         createdAt: new Date().toISOString()
       };
-      await addDocument('meetings', enriched);
+      await addDocument('meetings', enriched, !!currentUser?.isMock);
     } catch (error) {
       console.error(error);
       showToast("Failed to save meeting log.", "error");
@@ -506,7 +506,7 @@ export default function App() {
         updatedAt: nowStr
       };
 
-      await updateDocument('meetings', id, enriched);
+      await updateDocument('meetings', id, enriched, !!currentUser?.isMock);
     } catch (error) {
       console.error(error);
       showToast("Failed to update meeting log.", "error");

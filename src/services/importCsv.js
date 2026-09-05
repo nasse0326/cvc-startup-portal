@@ -159,7 +159,7 @@ export const parseStartupsCSV = (csvText) => {
 
   for (let i = 1; i < lines.length; i++) {
     const row = lines[i];
-    if (!row || row.length === 0 || row.every(cell => !cell.trim())) continue;
+    if (!row || row.every(cell => !cell.trim())) continue;
 
     const name = nameIdx !== -1 ? row[nameIdx]?.trim() : row[0]?.trim();
     if (!name) continue;

@@ -7,9 +7,7 @@ import {
   Edit2, 
   Trash2, 
   Check, 
-  Clock, 
   MessageSquareText,
-  TrendingUp,
   Briefcase,
   Handshake
 } from 'lucide-react';

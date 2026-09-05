@@ -103,7 +103,6 @@ export default function StartupDetailModal({
   const [editBizDevLogs, setEditBizDevLogs] = useState(getInitialLogs(startup.bizDevLogs, startup.bizDevNotes));
   const [editBizDevNotes, setEditBizDevNotes] = useState(startup.bizDevNotes || '');
   const [editAssignedMember, setEditAssignedMember] = useState(startup.assignedMember || startup.pic || '');
-  const [editBizDevStatus] = useState(startup.bizDevStatus || startup.collabStatus || '1 発掘');
 
   // Investment fields
   const [editInvestmentStatus, setEditInvestmentStatus] = useState(startup.status || startup.investmentStatus || '1 ソーシング');
@@ -322,7 +321,7 @@ export default function StartupDetailModal({
       bizDevLogs: editBizDevLogs,
       bizDevNotes: latestBizDevText,
       assignedMember: editAssignedMember,
-      bizDevStatus: editCollabStatus || editBizDevStatus
+      bizDevStatus: editCollabStatus || startup.bizDevStatus || '1 発掘'
     };
 
     onUpdateStartup(startup.id, updatedData);

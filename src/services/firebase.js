@@ -356,8 +356,8 @@ const notifyLocalListeners = (collectionName) => {
 };
 
 // Subscribe to items filtered by workspaceId
-export const subscribeToCollection = (collectionName, workspaceId, callback, fallbackData) => {
-  if (db) {
+export const subscribeToCollection = (collectionName, workspaceId, callback, fallbackData, isMock = false) => {
+  if (db && !isMock) {
     try {
       const colRef = collection(db, collectionName);
       // Filter by workspaceId
@@ -365,6 +365,17 @@ export const subscribeToCollection = (collectionName, workspaceId, callback, fal
       
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // If Firestore returns 0 items for this workspace and it is a personal workspace on first visit, check local fallback
+        if (items.length === 0 && fallbackData) {
+          const stored = localStorage.getItem(collectionName);
+          if (stored) {
+            const localList = JSON.parse(stored).filter(item => item.workspaceId === workspaceId);
+            if (localList.length > 0) {
+              callback(localList);
+              return;
+            }
+          }
+        }
         callback(items);
       }, (error) => {
         console.error(`Firestore subscribe error for ${collectionName}:`, error);
@@ -407,45 +418,62 @@ const readLocalStorageFallback = (collectionName, workspaceId, callback, fallbac
   callback(filtered);
 };
 
-export const addDocument = async (collectionName, data) => {
-  if (db) {
-    const colRef = collection(db, collectionName);
-    const docRef = await addDoc(colRef, data);
-    return docRef.id;
-  } else {
-    const stored = localStorage.getItem(collectionName);
-    const list = stored ? JSON.parse(stored) : [];
-    const newId = 'local_' + Date.now().toString() + Math.random().toString(36).substring(2, 5);
-    const newItem = { id: newId, ...data };
-    list.push(newItem);
-    localStorage.setItem(collectionName, JSON.stringify(list));
-    notifyLocalListeners(collectionName);
-    return newId;
+export const addDocument = async (collectionName, data, isMock = false) => {
+  if (db && !isMock) {
+    try {
+      const colRef = collection(db, collectionName);
+      const docRef = await addDoc(colRef, data);
+      return docRef.id;
+    } catch (err) {
+      console.warn(`Firestore addDocument failed for ${collectionName}, falling back to LocalStorage:`, err);
+    }
   }
+  
+  // LocalStorage handling
+  const stored = localStorage.getItem(collectionName);
+  const list = stored ? JSON.parse(stored) : [];
+  const newId = 'local_' + Date.now().toString() + Math.random().toString(36).substring(2, 5);
+  const newItem = { id: newId, ...data };
+  list.push(newItem);
+  localStorage.setItem(collectionName, JSON.stringify(list));
+  notifyLocalListeners(collectionName);
+  return newId;
 };
 
-export const updateDocument = async (collectionName, docId, data) => {
-  if (db) {
-    const docRef = doc(db, collectionName, docId);
-    await updateDoc(docRef, data);
-  } else {
-    const stored = localStorage.getItem(collectionName);
-    let list = stored ? JSON.parse(stored) : [];
-    list = list.map(item => item.id === docId ? { ...item, ...data } : item);
-    localStorage.setItem(collectionName, JSON.stringify(list));
-    notifyLocalListeners(collectionName);
+export const updateDocument = async (collectionName, docId, data, isMock = false) => {
+  if (db && !isMock) {
+    try {
+      const docRef = doc(db, collectionName, docId);
+      await updateDoc(docRef, data);
+      return;
+    } catch (err) {
+      console.warn(`Firestore updateDocument failed for ${collectionName}, falling back to LocalStorage:`, err);
+    }
   }
+  
+  // LocalStorage handling
+  const stored = localStorage.getItem(collectionName);
+  let list = stored ? JSON.parse(stored) : [];
+  list = list.map(item => item.id === docId ? { ...item, ...data } : item);
+  localStorage.setItem(collectionName, JSON.stringify(list));
+  notifyLocalListeners(collectionName);
 };
 
-export const deleteDocument = async (collectionName, docId) => {
-  if (db) {
-    const docRef = doc(db, collectionName, docId);
-    await deleteDoc(docRef);
-  } else {
-    const stored = localStorage.getItem(collectionName);
-    let list = stored ? JSON.parse(stored) : [];
-    list = list.filter(item => item.id !== docId);
-    localStorage.setItem(collectionName, JSON.stringify(list));
-    notifyLocalListeners(collectionName);
+export const deleteDocument = async (collectionName, docId, isMock = false) => {
+  if (db && !isMock) {
+    try {
+      const docRef = doc(db, collectionName, docId);
+      await deleteDoc(docRef);
+      return;
+    } catch (err) {
+      console.warn(`Firestore deleteDocument failed for ${collectionName}, falling back to LocalStorage:`, err);
+    }
   }
+  
+  // LocalStorage handling
+  const stored = localStorage.getItem(collectionName);
+  let list = stored ? JSON.parse(stored) : [];
+  list = list.filter(item => item.id !== docId);
+  localStorage.setItem(collectionName, JSON.stringify(list));
+  notifyLocalListeners(collectionName);
 };
