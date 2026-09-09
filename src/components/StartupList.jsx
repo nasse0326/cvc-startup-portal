@@ -29,7 +29,10 @@ import {
   Download,
   Trash2,
   Calendar,
-  User
+  User,
+  CheckSquare,
+  Square,
+  Clock
 } from 'lucide-react';
 import { exportStartupsToCSV } from '../services/exportCsv';
 import VoiceInputButton from './VoiceInputButton';
@@ -373,7 +376,7 @@ const DEFAULT_COLUMN_WIDTHS = {
   contactPerson: 170,
   bizDevNotes: 280,
   investmentMemo: 280,
-  tasks: 200,
+  tasks: 240,
   sector: 120,
   stage: 110,
   dealSource: 160,
@@ -602,6 +605,82 @@ export default function StartupList({
   const [isNewInvestmentOpen, setIsNewInvestmentOpen] = useState(true);
   const [isNewCollabCloseInfoOpen, setIsNewCollabCloseInfoOpen] = useState(false);
   const [isNewInvestmentCloseInfoOpen, setIsNewInvestmentCloseInfoOpen] = useState(false);
+
+  // Quick Inline Task Popover States
+  const [taskAddPopoverStartupId, setTaskAddPopoverStartupId] = useState(null);
+  const [taskViewPopoverStartupId, setTaskViewPopoverStartupId] = useState(null);
+  const [quickTaskTitle, setQuickTaskTitle] = useState('');
+  const [quickTaskDueDate, setQuickTaskDueDate] = useState('');
+  const [quickTaskAssignedTo, setQuickTaskAssignedTo] = useState('');
+
+  // New Startup Modal Initial Task
+  const [newInitialTaskTitle, setNewInitialTaskTitle] = useState('');
+  const [newInitialTaskDueDate, setNewInitialTaskDueDate] = useState('');
+
+  // Quick Inline Task Handlers
+  const handleInlineToggleTask = (startup, taskId, e) => {
+    if (e) e.stopPropagation();
+    const currentTasks = startup.tasks || [];
+    const updatedTasks = currentTasks.map(t => {
+      if (t.id === taskId) {
+        const nextCompleted = !t.completed;
+        return {
+          ...t,
+          completed: nextCompleted,
+          completedAt: nextCompleted ? new Date().toISOString().split('T')[0] : null
+        };
+      }
+      return t;
+    });
+    onUpdateStartup(startup.id, { ...startup, tasks: updatedTasks });
+    if (showToast) showToast("タスクの状態を更新しました", "info");
+  };
+
+  const handleInlineAddTask = (startup, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!quickTaskTitle.trim()) return;
+
+    const newTask = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      title: quickTaskTitle.trim(),
+      dueDate: quickTaskDueDate || '',
+      assignedTo: quickTaskAssignedTo.trim() || startup.assignedMember || currentUser?.displayName || '',
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedTasks = [...(startup.tasks || []), newTask];
+    onUpdateStartup(startup.id, { ...startup, tasks: updatedTasks });
+    if (showToast) showToast(`タスク「${newTask.title}」を追加しました`, "success");
+
+    setQuickTaskTitle('');
+    setQuickTaskDueDate('');
+    setQuickTaskAssignedTo('');
+    setTaskAddPopoverStartupId(null);
+  };
+
+  // Helper to format/evaluate task due date
+  const getTaskDueInfo = (dueDate) => {
+    if (!dueDate) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+    const diffTime = due.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return { label: `期限超過 ${Math.abs(diffDays)}日`, color: 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-900', isOverdue: true };
+    } else if (diffDays === 0) {
+      return { label: '本日中', color: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-900', isToday: true };
+    } else if (diffDays <= 3) {
+      return { label: `あと${diffDays}日`, color: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-900', isSoon: true };
+    }
+    return { label: dueDate, color: 'text-slate-500 dark:text-slate-400' };
+  };
 
   // Sync accordion expansion with engagement type
   useEffect(() => {
@@ -836,7 +915,14 @@ export default function StartupList({
       }] : [],
       assignedMember: newAssignedMember,
       bizDevStatus: newCollabStatus || '1 発掘',
-      tasks: []
+      tasks: newInitialTaskTitle.trim() ? [{
+        id: `task_init_${Date.now()}`,
+        title: newInitialTaskTitle.trim(),
+        dueDate: newInitialTaskDueDate || '',
+        assignedTo: newAssignedMember.trim() || currentUser?.displayName || currentUser?.email?.split('@')[0] || '',
+        completed: false,
+        createdAt: new Date().toISOString()
+      }] : []
     };
 
     onAddStartup(newStartupObj);
@@ -869,6 +955,8 @@ export default function StartupList({
     setNewInvestmentMemo('');
     setNewBizDevNotes('');
     setNewAssignedMember('');
+    setNewInitialTaskTitle('');
+    setNewInitialTaskDueDate('');
     setIsNewCollabCloseInfoOpen(false);
     setIsNewInvestmentCloseInfoOpen(false);
     setIsAddModalOpen(false);
@@ -1603,27 +1691,6 @@ export default function StartupList({
                       </th>
                     )}
 
-                    {/* 検討Type col */}
-                    {visibleColumns.engagementType && (
-                      <th 
-                        style={{ width: `${columnWidths.engagementType}px`, minWidth: `${columnWidths.engagementType}px` }} 
-                        onClick={() => handleSort('engagementType')} 
-                        className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Type</span>
-                          <SortIcon field="engagementType" />
-                        </div>
-                        <div 
-                          onMouseDown={(e) => startResizing('engagementType', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
-                          title="左右にドラッグして列幅を変更" 
-                        >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
-                        </div>
-                      </th>
-                    )}
-
                     {/* Priority Score col */}
                     {visibleColumns.score && (
                       <th 
@@ -1656,6 +1723,68 @@ export default function StartupList({
                       </th>
                     )}
 
+                    {/* Tasks col (Moved right after Priority Score!) */}
+                    {visibleColumns.tasks && (
+                      <th 
+                        style={{ width: `${columnWidths.tasks}px`, minWidth: `${columnWidths.tasks}px` }} 
+                        className="py-3.5 px-3 relative group"
+                      >
+                        <div className="flex items-center space-x-1 text-slate-700 dark:text-slate-300">
+                          <ListTodo className="h-3.5 w-3.5 mr-0.5 text-blue-600 dark:text-blue-400" />
+                          <span>次回タスク・Action</span>
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('tasks', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* 担当者 (自社) col */}
+                    {visibleColumns.assignedMember && (
+                      <th 
+                        style={{ width: `${columnWidths.assignedMember}px`, minWidth: `${columnWidths.assignedMember}px` }} 
+                        onClick={() => handleSort('assignedMember')} 
+                        className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>担当者</span>
+                          <SortIcon field="assignedMember" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('assignedMember', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* 検討Type col */}
+                    {visibleColumns.engagementType && (
+                      <th 
+                        style={{ width: `${columnWidths.engagementType}px`, minWidth: `${columnWidths.engagementType}px` }} 
+                        onClick={() => handleSort('engagementType')} 
+                        className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Type</span>
+                          <SortIcon field="engagementType" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('engagementType', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
                     {/* 協業ステータス col */}
                     {visibleColumns.collabStatus && (
                       <th 
@@ -1680,7 +1809,7 @@ export default function StartupList({
                     {/* 🤝 事業開発進捗 col */}
                     {visibleColumns.bizDevNotes && (
                       <th 
-                        style={{ width: `${columnWidths.bizDevNotes || 220}px`, minWidth: `${columnWidths.bizDevNotes || 220}px` }} 
+                        style={{ width: `${columnWidths.bizDevNotes || 280}px`, minWidth: `${columnWidths.bizDevNotes || 280}px` }} 
                         className="py-3.5 px-3 hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
                       >
                         <div className="flex items-center space-x-1">
@@ -1689,6 +1818,27 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('bizDevNotes', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* 協業部署 col */}
+                    {visibleColumns.partnerDept && (
+                      <th 
+                        style={{ width: `${columnWidths.partnerDept}px`, minWidth: `${columnWidths.partnerDept}px` }} 
+                        onClick={() => handleSort('partnerDept')} 
+                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>協業部署</span>
+                          <SortIcon field="partnerDept" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('partnerDept', e)} 
                           className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
                           title="左右にドラッグして列幅を変更" 
                         >
@@ -1721,7 +1871,7 @@ export default function StartupList({
                     {/* 💳 投資検討進捗 col */}
                     {visibleColumns.investmentMemo && (
                       <th 
-                        style={{ width: `${columnWidths.investmentMemo || 220}px`, minWidth: `${columnWidths.investmentMemo || 220}px` }} 
+                        style={{ width: `${columnWidths.investmentMemo || 280}px`, minWidth: `${columnWidths.investmentMemo || 280}px` }} 
                         className="py-3.5 px-3 hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
                       >
                         <div className="flex items-center space-x-1">
@@ -1738,19 +1888,19 @@ export default function StartupList({
                       </th>
                     )}
 
-                    {/* 担当者 (自社) col */}
-                    {visibleColumns.assignedMember && (
+                    {/* Sector col */}
+                    {visibleColumns.sector && (
                       <th 
-                        style={{ width: `${columnWidths.assignedMember}px`, minWidth: `${columnWidths.assignedMember}px` }} 
-                        onClick={() => handleSort('assignedMember')} 
-                        className="py-3.5 px-3 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                        style={{ width: `${columnWidths.sector}px`, minWidth: `${columnWidths.sector}px` }} 
+                        onClick={() => handleSort('sector')} 
+                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
                       >
                         <div className="flex items-center space-x-1">
-                          <span>担当者</span>
-                          <SortIcon field="assignedMember" />
+                          <span>セクター</span>
+                          <SortIcon field="sector" />
                         </div>
                         <div 
-                          onMouseDown={(e) => startResizing('assignedMember', e)} 
+                          onMouseDown={(e) => startResizing('sector', e)} 
                           className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
                           title="左右にドラッグして列幅を変更" 
                         >
@@ -1759,19 +1909,62 @@ export default function StartupList({
                       </th>
                     )}
 
-                    {/* 協業部署 col */}
-                    {visibleColumns.partnerDept && (
+                    {/* Stage col */}
+                    {visibleColumns.stage && (
                       <th 
-                        style={{ width: `${columnWidths.partnerDept}px`, minWidth: `${columnWidths.partnerDept}px` }} 
-                        onClick={() => handleSort('partnerDept')} 
+                        style={{ width: `${columnWidths.stage}px`, minWidth: `${columnWidths.stage}px` }} 
+                        onClick={() => handleSort('stage')} 
                         className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
                       >
                         <div className="flex items-center space-x-1">
-                          <span>協業部署</span>
-                          <SortIcon field="partnerDept" />
+                          <span>ステージ</span>
+                          <SortIcon field="stage" />
                         </div>
                         <div 
-                          onMouseDown={(e) => startResizing('partnerDept', e)} 
+                          onMouseDown={(e) => startResizing('stage', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* Contact Person col */}
+                    {visibleColumns.contactPerson && (
+                      <th 
+                        style={{ width: `${columnWidths.contactPerson}px`, minWidth: `${columnWidths.contactPerson}px` }} 
+                        onClick={() => handleSort('contactPerson')} 
+                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <UserCheck className="h-3.5 w-3.5 mr-0.5 text-blue-500" />
+                          <span>窓口担当者</span>
+                          <SortIcon field="contactPerson" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('contactPerson', e)} 
+                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          title="左右にドラッグして列幅を変更" 
+                        >
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                        </div>
+                      </th>
+                    )}
+
+                    {/* Deal Source col */}
+                    {visibleColumns.dealSource && (
+                      <th 
+                        style={{ width: `${columnWidths.dealSource}px`, minWidth: `${columnWidths.dealSource}px` }} 
+                        onClick={() => handleSort('dealSource')} 
+                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>案件流入元</span>
+                          <SortIcon field="dealSource" />
+                        </div>
+                        <div 
+                          onMouseDown={(e) => startResizing('dealSource', e)} 
                           className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
                           title="左右にドラッグして列幅を変更" 
                         >
@@ -1894,111 +2087,6 @@ export default function StartupList({
                       </th>
                     )}
 
-                    {/* Contact Person col */}
-                    {visibleColumns.contactPerson && (
-                      <th 
-                        style={{ width: `${columnWidths.contactPerson}px`, minWidth: `${columnWidths.contactPerson}px` }} 
-                        onClick={() => handleSort('contactPerson')} 
-                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <UserCheck className="h-3.5 w-3.5 mr-0.5 text-blue-500" />
-                          <span>窓口担当者</span>
-                          <SortIcon field="contactPerson" />
-                        </div>
-                        <div 
-                          onMouseDown={(e) => startResizing('contactPerson', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
-                          title="左右にドラッグして列幅を変更" 
-                        >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
-                        </div>
-                      </th>
-                    )}
-
-                    {/* Tasks col */}
-                    {visibleColumns.tasks && (
-                      <th 
-                        style={{ width: `${columnWidths.tasks}px`, minWidth: `${columnWidths.tasks}px` }} 
-                        className="py-3.5 px-4 relative group"
-                      >
-                        <div className="flex items-center space-x-1 text-slate-700 dark:text-slate-300">
-                          <ListTodo className="h-3.5 w-3.5 mr-0.5 text-indigo-500" />
-                          <span>タスク・TODO</span>
-                        </div>
-                        <div 
-                          onMouseDown={(e) => startResizing('tasks', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
-                          title="左右にドラッグして列幅を変更" 
-                        >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
-                        </div>
-                      </th>
-                    )}
-
-                    {/* Sector col */}
-                    {visibleColumns.sector && (
-                      <th 
-                        style={{ width: `${columnWidths.sector}px`, minWidth: `${columnWidths.sector}px` }} 
-                        onClick={() => handleSort('sector')} 
-                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>セクター</span>
-                          <SortIcon field="sector" />
-                        </div>
-                        <div 
-                          onMouseDown={(e) => startResizing('sector', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
-                          title="左右にドラッグして列幅を変更" 
-                        >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
-                        </div>
-                      </th>
-                    )}
-
-                    {/* Stage col */}
-                    {visibleColumns.stage && (
-                      <th 
-                        style={{ width: `${columnWidths.stage}px`, minWidth: `${columnWidths.stage}px` }} 
-                        onClick={() => handleSort('stage')} 
-                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>ステージ</span>
-                          <SortIcon field="stage" />
-                        </div>
-                        <div 
-                          onMouseDown={(e) => startResizing('stage', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
-                          title="左右にドラッグして列幅を変更" 
-                        >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
-                        </div>
-                      </th>
-                    )}
-
-                    {/* Deal Source col */}
-                    {visibleColumns.dealSource && (
-                      <th 
-                        style={{ width: `${columnWidths.dealSource}px`, minWidth: `${columnWidths.dealSource}px` }} 
-                        onClick={() => handleSort('dealSource')} 
-                        className="py-3.5 px-4 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors relative group"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>案件流入元</span>
-                          <SortIcon field="dealSource" />
-                        </div>
-                        <div 
-                          onMouseDown={(e) => startResizing('dealSource', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
-                          title="左右にドラッグして列幅を変更" 
-                        >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
-                        </div>
-                      </th>
-                    )}
-
                     {/* Registered Date col */}
                     {visibleColumns.createdAtDate && (
                       <th 
@@ -2112,15 +2200,6 @@ export default function StartupList({
                           </td>
                         )}
 
-                        {/* 検討Type cell */}
-                        {visibleColumns.engagementType && (
-                          <td style={{ width: `${columnWidths.engagementType}px`, minWidth: `${columnWidths.engagementType}px` }} className="py-3 px-3">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${getEngagementTypeColor(startup.engagementType || '投資検討')}`}>
-                              {startup.engagementType || '投資検討'}
-                            </span>
-                          </td>
-                        )}
-
                         {/* Priority Score cell */}
                         {visibleColumns.score && (
                           <td 
@@ -2142,6 +2221,286 @@ export default function StartupList({
                           </td>
                         )}
 
+                        {/* Tasks cell (Placed right after Priority Score) */}
+                        {visibleColumns.tasks && (
+                          <td 
+                            style={{ width: `${columnWidths.tasks}px`, minWidth: `${columnWidths.tasks}px` }} 
+                            className="py-2.5 px-3 relative"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="space-y-1.5">
+                              {/* Top row: Status count badge & Add Task button */}
+                              <div className="flex items-center justify-between gap-1">
+                                <div className="flex items-center gap-1">
+                                  {uncompletedTasks.length > 0 ? (
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50">
+                                      未完 {uncompletedTasks.length}件
+                                    </span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/40 flex items-center gap-0.5">
+                                      <CheckCircle2 className="h-3 w-3" />
+                                      <span>タスク完了</span>
+                                    </span>
+                                  )}
+
+                                  {/* View all tasks popover trigger if more than 1 task */}
+                                  {(startup.tasks || []).length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setTaskViewPopoverStartupId(prev => prev === startup.id ? null : startup.id)}
+                                      className="text-[10px] font-bold px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                      title="全タスクリストを表示"
+                                    >
+                                      一覧({(startup.tasks || []).length}) ▾
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Quick Add Task button */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTaskAddPopoverStartupId(prev => prev === startup.id ? null : startup.id);
+                                    setQuickTaskTitle('');
+                                    setQuickTaskDueDate('');
+                                    setQuickTaskAssignedTo(startup.assignedMember || '');
+                                  }}
+                                  className={`p-1 rounded-md text-xs font-bold transition-all flex items-center gap-0.5 ${
+                                    taskAddPopoverStartupId === startup.id
+                                      ? 'bg-blue-600 text-white shadow-xs'
+                                      : 'bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-slate-600 dark:text-slate-300 hover:text-blue-600'
+                                  }`}
+                                  title="タスクを追加"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
+                              </div>
+
+                              {/* Primary Active Task (Checkbox + Title + Due info) */}
+                              {uncompletedTasks.length > 0 ? (
+                                (() => {
+                                  const firstTask = uncompletedTasks[0];
+                                  const dueInfo = getTaskDueInfo(firstTask.dueDate);
+                                  return (
+                                    <div className="flex items-start gap-1.5 p-1 rounded-lg bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/60">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleInlineToggleTask(startup, firstTask.id, e)}
+                                        className="text-slate-400 hover:text-emerald-600 transition-colors shrink-0 mt-0.5"
+                                        title="クリックして完了にする"
+                                      >
+                                        <Square className="h-3.5 w-3.5" />
+                                      </button>
+                                      <div className="flex-1 min-w-0">
+                                        <div 
+                                          className="text-[11px] font-medium text-slate-800 dark:text-slate-200 truncate cursor-pointer hover:text-blue-600"
+                                          title={firstTask.title}
+                                          onClick={() => setTaskViewPopoverStartupId(startup.id)}
+                                        >
+                                          {firstTask.title}
+                                        </div>
+                                        {dueInfo && (
+                                          <div className="flex items-center gap-1 mt-0.5">
+                                            <Clock className="h-2.5 w-2.5 text-slate-400 shrink-0" />
+                                            <span className={`text-[9px] font-bold px-1 rounded ${dueInfo.color}`}>
+                                              {dueInfo.label}
+                                            </span>
+                                            {firstTask.assignedTo && (
+                                              <span className="text-[9px] text-slate-400 truncate max-w-[60px]">
+                                                {firstTask.assignedTo}
+                                              </span>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })()
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTaskAddPopoverStartupId(startup.id);
+                                    setQuickTaskTitle('');
+                                    setQuickTaskDueDate('');
+                                    setQuickTaskAssignedTo(startup.assignedMember || '');
+                                  }}
+                                  className="w-full py-1 px-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-[10px] font-semibold text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/30 transition-all flex items-center justify-center gap-1"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                  <span>次回タスクを登録</span>
+                                </button>
+                              )}
+
+                              {/* Inline Quick Add Task Popover */}
+                              {taskAddPopoverStartupId === startup.id && (
+                                <div 
+                                  className="absolute left-2 right-2 top-full mt-1 z-40 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl space-y-2 animate-fade-in"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
+                                    <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                                      <Plus className="h-3 w-3 text-blue-600" />
+                                      <span>タスク追加</span>
+                                    </span>
+                                    <button 
+                                      type="button"
+                                      onClick={() => setTaskAddPopoverStartupId(null)}
+                                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+
+                                  <input 
+                                    type="text"
+                                    autoFocus
+                                    placeholder="タスク内容 (例: PoC提案書送付)"
+                                    value={quickTaskTitle}
+                                    onChange={(e) => setQuickTaskTitle(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleInlineAddTask(startup, e);
+                                      }
+                                    }}
+                                    className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
+                                  />
+
+                                  <div className="grid grid-cols-2 gap-1.5">
+                                    <input 
+                                      type="date"
+                                      value={quickTaskDueDate}
+                                      onChange={(e) => setQuickTaskDueDate(e.target.value)}
+                                      className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-[10px] focus:outline-none text-slate-800 dark:text-slate-200"
+                                      title="期日"
+                                    />
+                                    <input 
+                                      type="text"
+                                      placeholder="担当者"
+                                      value={quickTaskAssignedTo}
+                                      onChange={(e) => setQuickTaskAssignedTo(e.target.value)}
+                                      className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-[10px] focus:outline-none text-slate-800 dark:text-slate-200"
+                                      title="担当者"
+                                    />
+                                  </div>
+
+                                  <div className="flex justify-end gap-1.5 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setTaskAddPopoverStartupId(null)}
+                                      className="px-2 py-1 text-[10px] font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                                    >
+                                      キャンセル
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={!quickTaskTitle.trim()}
+                                      onClick={(e) => handleInlineAddTask(startup, e)}
+                                      className="px-2.5 py-1 text-[10px] font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg disabled:opacity-50 transition-all shadow-xs"
+                                    >
+                                      追加
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* View All Tasks Popover */}
+                              {taskViewPopoverStartupId === startup.id && (
+                                <div 
+                                  className="absolute left-2 right-2 top-full mt-1 z-40 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl space-y-2 animate-fade-in max-h-60 overflow-y-auto"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
+                                    <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                                      <ListTodo className="h-3 w-3 text-blue-600" />
+                                      <span>タスク全件 ({(startup.tasks || []).length}件)</span>
+                                    </span>
+                                    <button 
+                                      type="button"
+                                      onClick={() => setTaskViewPopoverStartupId(null)}
+                                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+
+                                  <div className="space-y-1.5">
+                                    {(startup.tasks || []).length === 0 ? (
+                                      <div className="text-[11px] text-slate-400 text-center py-2">タスクはありません</div>
+                                    ) : (
+                                      (startup.tasks || []).map(task => {
+                                        const dueInfo = getTaskDueInfo(task.dueDate);
+                                        return (
+                                          <div 
+                                            key={task.id}
+                                            className={`flex items-start gap-1.5 p-1.5 rounded-lg border text-[11px] transition-all ${
+                                              task.completed 
+                                                ? 'bg-slate-50/50 dark:bg-slate-900/30 border-slate-100 dark:border-slate-800/50 text-slate-400 line-through' 
+                                                : 'bg-white dark:bg-slate-950/60 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200'
+                                            }`}
+                                          >
+                                            <button
+                                              type="button"
+                                              onClick={(e) => handleInlineToggleTask(startup, task.id, e)}
+                                              className="shrink-0 mt-0.5 transition-colors"
+                                            >
+                                              {task.completed ? (
+                                                <CheckSquare className="h-3.5 w-3.5 text-emerald-600" />
+                                              ) : (
+                                                <Square className="h-3.5 w-3.5 text-slate-400 hover:text-emerald-600" />
+                                              )}
+                                            </button>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="break-words leading-tight font-medium">
+                                                {task.title}
+                                              </div>
+                                              <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-slate-400">
+                                                {dueInfo && (
+                                                  <span className={`px-1 rounded ${dueInfo.color}`}>
+                                                    {dueInfo.label}
+                                                  </span>
+                                                )}
+                                                {task.assignedTo && (
+                                                  <span>担当: {task.assignedTo}</span>
+                                                )}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        )}
+
+                        {/* 担当者 (自社) cell */}
+                        {visibleColumns.assignedMember && (
+                          <td style={{ width: `${columnWidths.assignedMember}px`, minWidth: `${columnWidths.assignedMember}px` }} className="py-3 px-3">
+                            <div className="text-[11px] font-medium text-slate-800 dark:text-slate-200 truncate" title={startup.assignedMember || startup.pic || '未設定'}>
+                              {startup.assignedMember || startup.pic ? (
+                                <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1">
+                                  <span className="text-blue-500 text-[10px]">👤</span>
+                                  <span>{startup.assignedMember || startup.pic}</span>
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">未設定</span>
+                              )}
+                            </div>
+                          </td>
+                        )}
+
+                        {/* 検討Type cell */}
+                        {visibleColumns.engagementType && (
+                          <td style={{ width: `${columnWidths.engagementType}px`, minWidth: `${columnWidths.engagementType}px` }} className="py-3 px-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${getEngagementTypeColor(startup.engagementType || '投資検討')}`}>
+                              {startup.engagementType || '投資検討'}
+                            </span>
+                          </td>
+                        )}
+
                         {/* 協業ステータス cell */}
                         {visibleColumns.collabStatus && (
                           <td style={{ width: `${columnWidths.collabStatus}px`, minWidth: `${columnWidths.collabStatus}px` }} className="py-3 px-3">
@@ -2154,7 +2513,7 @@ export default function StartupList({
                         {/* 🤝 事業開発進捗 cell */}
                         {visibleColumns.bizDevNotes && (
                           <td 
-                            style={{ width: `${columnWidths.bizDevNotes || 220}px`, minWidth: `${columnWidths.bizDevNotes || 220}px` }} 
+                            style={{ width: `${columnWidths.bizDevNotes || 280}px`, minWidth: `${columnWidths.bizDevNotes || 280}px` }} 
                             className="py-2 px-3"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -2195,6 +2554,22 @@ export default function StartupList({
                           </td>
                         )}
 
+                        {/* 協業部署 cell */}
+                        {visibleColumns.partnerDept && (
+                          <td style={{ width: `${columnWidths.partnerDept}px`, minWidth: `${columnWidths.partnerDept}px` }} className="py-3 px-4">
+                            <div className="text-[11px] text-slate-700 dark:text-slate-300 font-medium break-words whitespace-normal max-h-16 overflow-y-auto pr-1" title={partnerDeptDisplay || '未設定'}>
+                              {partnerDeptDisplay ? (
+                                <div className="flex items-start space-x-1">
+                                  <span className="text-teal-600 dark:text-teal-400 shrink-0">🤝</span>
+                                  <span>{partnerDeptDisplay}</span>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">未設定</span>
+                              )}
+                            </div>
+                          </td>
+                        )}
+
                         {/* 投資ステータス cell */}
                         {visibleColumns.investmentStatus && (
                           <td style={{ width: `${columnWidths.investmentStatus}px`, minWidth: `${columnWidths.investmentStatus}px` }} className="py-3 px-3">
@@ -2207,7 +2582,7 @@ export default function StartupList({
                         {/* 💳 投資検討進捗 cell */}
                         {visibleColumns.investmentMemo && (
                           <td 
-                            style={{ width: `${columnWidths.investmentMemo || 220}px`, minWidth: `${columnWidths.investmentMemo || 220}px` }} 
+                            style={{ width: `${columnWidths.investmentMemo || 280}px`, minWidth: `${columnWidths.investmentMemo || 280}px` }} 
                             className="py-2 px-3"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -2248,33 +2623,49 @@ export default function StartupList({
                           </td>
                         )}
 
-                        {/* 担当者 (自社) cell */}
-                        {visibleColumns.assignedMember && (
-                          <td style={{ width: `${columnWidths.assignedMember}px`, minWidth: `${columnWidths.assignedMember}px` }} className="py-3 px-3">
-                            <div className="text-[11px] font-medium text-slate-800 dark:text-slate-200 truncate" title={startup.assignedMember || startup.pic || '未設定'}>
-                              {startup.assignedMember || startup.pic ? (
-                                <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1">
-                                  <span className="text-blue-500 text-[10px]">👤</span>
-                                  <span>{startup.assignedMember || startup.pic}</span>
-                                </span>
+                        {/* Sector cell */}
+                        {visibleColumns.sector && (
+                          <td style={{ width: `${columnWidths.sector}px`, minWidth: `${columnWidths.sector}px` }} className="py-3 px-4">
+                            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium inline-block truncate max-w-full">
+                              {startup.sector}
+                            </span>
+                          </td>
+                        )}
+
+                        {/* Stage cell */}
+                        {visibleColumns.stage && (
+                          <td style={{ width: `${columnWidths.stage}px`, minWidth: `${columnWidths.stage}px` }} className="py-3 px-4">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
+                              {startup.stage}
+                            </span>
+                          </td>
+                        )}
+
+                        {/* Contact Person cell */}
+                        {visibleColumns.contactPerson && (
+                          <td style={{ width: `${columnWidths.contactPerson}px`, minWidth: `${columnWidths.contactPerson}px` }} className="py-3 px-4">
+                            <div className="max-h-16 overflow-y-auto break-words whitespace-normal text-[11px] text-slate-700 dark:text-slate-300 font-medium pr-1" title={startup.contactPerson || '未設定'}>
+                              {startup.contactPerson ? (
+                                <div className="flex items-start space-x-1">
+                                  <UserCheck className="h-3.5 w-3.5 text-blue-500 shrink-0 mt-0.5" />
+                                  <span>{startup.contactPerson}</span>
+                                </div>
                               ) : (
-                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">未設定</span>
+                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">未登録</span>
                               )}
                             </div>
                           </td>
                         )}
 
-                        {/* 協業部署 cell */}
-                        {visibleColumns.partnerDept && (
-                          <td style={{ width: `${columnWidths.partnerDept}px`, minWidth: `${columnWidths.partnerDept}px` }} className="py-3 px-4">
-                            <div className="text-[11px] text-slate-700 dark:text-slate-300 font-medium break-words whitespace-normal max-h-16 overflow-y-auto pr-1" title={partnerDeptDisplay || '未設定'}>
-                              {partnerDeptDisplay ? (
-                                <div className="flex items-start space-x-1">
-                                  <span className="text-teal-600 dark:text-teal-400 shrink-0">🤝</span>
-                                  <span>{partnerDeptDisplay}</span>
+                        {/* Deal Source cell */}
+                        {visibleColumns.dealSource && (
+                          <td style={{ width: `${columnWidths.dealSource}px`, minWidth: `${columnWidths.dealSource}px` }} className="py-3 px-4">
+                            <div className="max-h-16 overflow-y-auto break-words whitespace-normal text-[11px] text-slate-700 dark:text-slate-300 font-medium pr-1">
+                              <div>{startup.dealSource || '未設定'}</div>
+                              {startup.dealSourceDetail && (
+                                <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5" title={startup.dealSourceDetail}>
+                                  {startup.dealSourceDetail}
                                 </div>
-                              ) : (
-                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">未設定</span>
                               )}
                             </div>
                           </td>
@@ -2342,84 +2733,6 @@ export default function StartupList({
                           <td style={{ width: `${columnWidths.revivalScenario}px`, minWidth: `${columnWidths.revivalScenario}px` }} className="py-3 px-4">
                             <div className="text-[11px] text-slate-600 dark:text-slate-350 max-h-16 overflow-y-auto break-words whitespace-normal leading-relaxed pr-1" title={startup.revivalScenario}>
                               {startup.revivalScenario || <span className="text-slate-400 dark:text-slate-600 text-[10px]">-</span>}
-                            </div>
-                          </td>
-                        )}
-
-                        {/* Contact Person cell */}
-                        {visibleColumns.contactPerson && (
-                          <td style={{ width: `${columnWidths.contactPerson}px`, minWidth: `${columnWidths.contactPerson}px` }} className="py-3 px-4">
-                            <div className="max-h-16 overflow-y-auto break-words whitespace-normal text-[11px] text-slate-700 dark:text-slate-300 font-medium pr-1" title={startup.contactPerson || '未設定'}>
-                              {startup.contactPerson ? (
-                                <div className="flex items-start space-x-1">
-                                  <UserCheck className="h-3.5 w-3.5 text-blue-500 shrink-0 mt-0.5" />
-                                  <span>{startup.contactPerson}</span>
-                                </div>
-                              ) : (
-                                <span className="text-slate-400 dark:text-slate-600 text-[10px]">未登録</span>
-                              )}
-                            </div>
-                          </td>
-                        )}
-
-                        {/* Tasks cell */}
-                        {visibleColumns.tasks && (
-                          <td style={{ width: `${columnWidths.tasks}px`, minWidth: `${columnWidths.tasks}px` }} className="py-3 px-4">
-                            <div className="max-h-16 overflow-y-auto break-words whitespace-normal pr-1 space-y-1">
-                              {uncompletedTasks.length > 0 ? (
-                                <>
-                                  <div className="flex items-center space-x-1">
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50">
-                                      未完 {uncompletedTasks.length}件
-                                    </span>
-                                  </div>
-                                  <div className="text-[11px] text-slate-700 dark:text-slate-200 line-clamp-2" title={uncompletedTasks[0].title}>
-                                    • {uncompletedTasks[0].title}
-                                    {uncompletedTasks[0].dueDate && (
-                                      <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1">
-                                        ({uncompletedTasks[0].dueDate})
-                                      </span>
-                                    )}
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                                  <CheckCircle2 className="h-3.5 w-3.5" />
-                                  <span>タスク完了 / なし</span>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        )}
-
-                        {/* Sector cell */}
-                        {visibleColumns.sector && (
-                          <td style={{ width: `${columnWidths.sector}px`, minWidth: `${columnWidths.sector}px` }} className="py-3 px-4">
-                            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium inline-block truncate max-w-full">
-                              {startup.sector}
-                            </span>
-                          </td>
-                        )}
-
-                        {/* Stage cell */}
-                        {visibleColumns.stage && (
-                          <td style={{ width: `${columnWidths.stage}px`, minWidth: `${columnWidths.stage}px` }} className="py-3 px-4">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
-                              {startup.stage}
-                            </span>
-                          </td>
-                        )}
-
-                        {/* Deal Source cell */}
-                        {visibleColumns.dealSource && (
-                          <td style={{ width: `${columnWidths.dealSource}px`, minWidth: `${columnWidths.dealSource}px` }} className="py-3 px-4">
-                            <div className="max-h-16 overflow-y-auto break-words whitespace-normal text-[11px] text-slate-700 dark:text-slate-300 font-medium pr-1">
-                              <div>{startup.dealSource || '未設定'}</div>
-                              {startup.dealSourceDetail && (
-                                <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5" title={startup.dealSourceDetail}>
-                                  {startup.dealSourceDetail}
-                                </div>
-                              )}
                             </div>
                           </td>
                         )}
@@ -2861,6 +3174,69 @@ export default function StartupList({
                   </div>
                 </div>
 
+                {/* 事業概要（一言タグライン） - 企業名の直下に配置 */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業概要（一言タグライン）</label>
+                    <VoiceInputButton onTranscript={(text) => setNewTagline(prev => prev ? `${prev} ${text}` : text)} />
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="例: 金融コンプライアンス監査ワークフロー向けの次世代生成AIセーフティガードレール。" 
+                    value={newTagline}
+                    onChange={(e) => setNewTagline(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  />
+                </div>
+
+                {/* 自社担当者 (基本プロファイルへ集約) */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">自社担当者 (CVC / BizDev担当)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例: 田中 健二, 佐藤 美咲" 
+                    value={newAssignedMember}
+                    onChange={(e) => setNewAssignedMember(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  />
+                </div>
+
+                {/* 📋 初回タスク / 次回アクション (任意) */}
+                <div className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                      <ListTodo className="h-3.5 w-3.5 text-blue-600" />
+                      <span>次回タスク・Actionの登録 (任意)</span>
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
+                      一覧画面に表示
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="md:col-span-2">
+                      <input 
+                        type="text" 
+                        placeholder="例: 初回面談の議事録共有、PoC提案資料の送付" 
+                        value={newInitialTaskTitle}
+                        onChange={(e) => setNewInitialTaskTitle(e.target.value)}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-xs transition-all placeholder:text-slate-400"
+                      />
+                    </div>
+                    <div>
+                      <input 
+                        type="date" 
+                        value={newInitialTaskDueDate}
+                        onChange={(e) => setNewInitialTaskDueDate(e.target.value)}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-xs transition-all"
+                        title="期日"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                    ※ 登録後、名簿一覧画面の「次回タスク・Action」列からチェック完了や追加登録が可能です。
+                  </p>
+                </div>
+
                 {/* Priority Star Rating with Interactive Definition Display */}
                 <div className="space-y-1 p-3.5 rounded-2xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40">
                   <div className="flex items-center justify-between">
@@ -2963,18 +3339,6 @@ export default function StartupList({
                       <p className="text-[11px] text-slate-400 dark:text-slate-500">
                         ※ 入力した内容は名簿一覧の「🤝 事業開発進捗」の最新ログとしてカード表示されます。
                       </p>
-                    </div>
-
-                    {/* 担当者 (自社 / CVC / BizDev担当) */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600 dark:text-slate-350 uppercase">担当者 (自社 / CVC / BizDev担当)</label>
-                      <input 
-                        type="text" 
-                        placeholder="例: 田中 健二, 佐藤 美咲" 
-                        value={newAssignedMember}
-                        onChange={(e) => setNewAssignedMember(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                      />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3358,20 +3722,6 @@ export default function StartupList({
                       {stages.map(stg => <option key={stg} value={stg}>{stg}</option>)}
                     </select>
                   </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">事業概要（一言タグライン）</label>
-                    <VoiceInputButton onTranscript={(text) => setNewTagline(prev => prev ? `${prev} ${text}` : text)} />
-                  </div>
-                  <input 
-                    type="text" 
-                    placeholder="例: 金融コンプライアンス監査ワークフロー向けの次世代生成AIセーフティガードレール。" 
-                    value={newTagline}
-                    onChange={(e) => setNewTagline(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none text-slate-900 dark:text-slate-100 text-sm transition-all"
-                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
