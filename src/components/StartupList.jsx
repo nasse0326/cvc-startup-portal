@@ -496,22 +496,30 @@ export default function StartupList({
     e.stopPropagation();
     resizingCol.current = colKey;
     startX.current = e.clientX;
-    startWidth.current = columnWidths[colKey] || DEFAULT_COLUMN_WIDTHS[colKey] || 140;
+    startWidth.current = Number(columnWidths[colKey]) || DEFAULT_COLUMN_WIDTHS[colKey] || 140;
     justResizedRef.current = true;
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
 
     const handleMouseMove = (moveEvent) => {
       if (!resizingCol.current) return;
       justResizedRef.current = true;
       const deltaX = moveEvent.clientX - startX.current;
-      const newWidth = Math.max(60, startWidth.current + deltaX);
-      setColumnWidths(prev => ({
-        ...prev,
-        [resizingCol.current]: newWidth
-      }));
+      const newWidth = Math.max(70, Math.round(startWidth.current + deltaX));
+      setColumnWidths(prev => {
+        if (prev[resizingCol.current] === newWidth) return prev;
+        return {
+          ...prev,
+          [resizingCol.current]: newWidth
+        };
+      });
     };
 
     const handleMouseUp = () => {
       resizingCol.current = null;
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       setTimeout(() => {
@@ -527,6 +535,36 @@ export default function StartupList({
     setColumnWidths(DEFAULT_COLUMN_WIDTHS);
     if (showToast) showToast("列の幅を初期サイズにリセットしました", "info");
   };
+
+  // Calculate total table width to keep table-fixed layout perfectly aligned during resizing
+  const totalTableWidth = useMemo(() => {
+    let w = columnWidths.select || 48;
+    if (visibleColumns.no) w += (columnWidths.no || 60);
+    if (visibleColumns.name) w += (columnWidths.name || 220);
+    if (visibleColumns.score) w += (columnWidths.score || 110);
+    if (visibleColumns.tasks) w += (columnWidths.tasks || 240);
+    if (visibleColumns.assignedMember) w += (columnWidths.assignedMember || 130);
+    if (visibleColumns.engagementType) w += (columnWidths.engagementType || 110);
+    if (visibleColumns.collabStatus) w += (columnWidths.collabStatus || 140);
+    if (visibleColumns.bizDevNotes) w += (columnWidths.bizDevNotes || 280);
+    if (visibleColumns.partnerDept) w += (columnWidths.partnerDept || 170);
+    if (visibleColumns.investmentStatus) w += (columnWidths.investmentStatus || 140);
+    if (visibleColumns.investmentMemo) w += (columnWidths.investmentMemo || 280);
+    if (visibleColumns.sector) w += (columnWidths.sector || 120);
+    if (visibleColumns.stage) w += (columnWidths.stage || 110);
+    if (visibleColumns.contactPerson) w += (columnWidths.contactPerson || 170);
+    if (visibleColumns.dealSource) w += (columnWidths.dealSource || 160);
+    if (visibleColumns.reachedStage) w += (columnWidths.reachedStage || 130);
+    if (visibleColumns.investmentReachedStage) w += (columnWidths.investmentReachedStage || 130);
+    if (visibleColumns.closeReason) w += (columnWidths.closeReason || 220);
+    if (visibleColumns.investmentCloseReason) w += (columnWidths.investmentCloseReason || 220);
+    if (visibleColumns.revivalFeasibility) w += (columnWidths.revivalFeasibility || 120);
+    if (visibleColumns.revivalScenario) w += (columnWidths.revivalScenario || 220);
+    if (visibleColumns.createdAtDate) w += (columnWidths.createdAtDate || 110);
+    if (visibleColumns.location) w += (columnWidths.location || 160);
+    w += (columnWidths.actions || 80);
+    return Math.max(w, 1200);
+  }, [visibleColumns, columnWidths]);
 
   // Sync scroll progress on table scroll
   const handleTableScroll = () => {
@@ -1622,9 +1660,36 @@ export default function StartupList({
             <div 
               ref={tableContainerRef} 
               onScroll={handleTableScroll}
-              className="overflow-x-auto max-h-[calc(100vh-280px)] overflow-y-auto relative scroll-smooth"
+              className="overflow-x-auto max-h-[calc(100vh-170px)] min-h-[520px] overflow-y-auto relative scroll-smooth"
             >
-              <table className="text-left border-collapse text-xs table-fixed" style={{ minWidth: '100%' }}>
+              <table className="text-left border-collapse text-xs table-fixed" style={{ width: `${totalTableWidth}px`, minWidth: '100%' }}>
+                <colgroup>
+                  <col style={{ width: `${columnWidths.select}px` }} />
+                  {visibleColumns.no && <col style={{ width: `${columnWidths.no}px` }} />}
+                  {visibleColumns.name && <col style={{ width: `${columnWidths.name}px` }} />}
+                  {visibleColumns.score && <col style={{ width: `${columnWidths.score}px` }} />}
+                  {visibleColumns.tasks && <col style={{ width: `${columnWidths.tasks}px` }} />}
+                  {visibleColumns.assignedMember && <col style={{ width: `${columnWidths.assignedMember}px` }} />}
+                  {visibleColumns.engagementType && <col style={{ width: `${columnWidths.engagementType}px` }} />}
+                  {visibleColumns.collabStatus && <col style={{ width: `${columnWidths.collabStatus}px` }} />}
+                  {visibleColumns.bizDevNotes && <col style={{ width: `${columnWidths.bizDevNotes || 280}px` }} />}
+                  {visibleColumns.partnerDept && <col style={{ width: `${columnWidths.partnerDept}px` }} />}
+                  {visibleColumns.investmentStatus && <col style={{ width: `${columnWidths.investmentStatus}px` }} />}
+                  {visibleColumns.investmentMemo && <col style={{ width: `${columnWidths.investmentMemo || 280}px` }} />}
+                  {visibleColumns.sector && <col style={{ width: `${columnWidths.sector}px` }} />}
+                  {visibleColumns.stage && <col style={{ width: `${columnWidths.stage}px` }} />}
+                  {visibleColumns.contactPerson && <col style={{ width: `${columnWidths.contactPerson}px` }} />}
+                  {visibleColumns.dealSource && <col style={{ width: `${columnWidths.dealSource}px` }} />}
+                  {visibleColumns.reachedStage && <col style={{ width: `${columnWidths.reachedStage}px` }} />}
+                  {visibleColumns.investmentReachedStage && <col style={{ width: `${columnWidths.investmentReachedStage}px` }} />}
+                  {visibleColumns.closeReason && <col style={{ width: `${columnWidths.closeReason}px` }} />}
+                  {visibleColumns.investmentCloseReason && <col style={{ width: `${columnWidths.investmentCloseReason}px` }} />}
+                  {visibleColumns.revivalFeasibility && <col style={{ width: `${columnWidths.revivalFeasibility}px` }} />}
+                  {visibleColumns.revivalScenario && <col style={{ width: `${columnWidths.revivalScenario}px` }} />}
+                  {visibleColumns.createdAtDate && <col style={{ width: `${columnWidths.createdAtDate}px` }} />}
+                  {visibleColumns.location && <col style={{ width: `${columnWidths.location}px` }} />}
+                  <col style={{ width: `${columnWidths.actions || 80}px` }} />
+                </colgroup>
                 <thead className="sticky top-0 z-20 shadow-xs">
                   <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-100/95 dark:bg-slate-900/95 text-slate-600 dark:text-slate-300 uppercase tracking-wider font-bold select-none backdrop-blur">
                     
@@ -1658,10 +1723,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('no', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1683,10 +1748,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('name', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1715,10 +1780,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('score', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1735,10 +1800,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('tasks', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1756,10 +1821,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('assignedMember', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1777,10 +1842,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('engagementType', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1798,10 +1863,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('collabStatus', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1818,10 +1883,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('bizDevNotes', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1839,10 +1904,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('partnerDept', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1860,10 +1925,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('investmentStatus', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1880,10 +1945,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('investmentMemo', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1901,10 +1966,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('sector', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1922,10 +1987,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('stage', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1944,10 +2009,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('contactPerson', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1965,10 +2030,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('dealSource', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -1986,10 +2051,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('reachedStage', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -2007,10 +2072,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('investmentReachedStage', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -2024,10 +2089,10 @@ export default function StartupList({
                         <span>協業クローズ理由</span>
                         <div 
                           onMouseDown={(e) => startResizing('closeReason', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -2041,10 +2106,10 @@ export default function StartupList({
                         <span>投資見送り理由</span>
                         <div 
                           onMouseDown={(e) => startResizing('investmentCloseReason', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -2062,10 +2127,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('revivalFeasibility', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -2079,10 +2144,10 @@ export default function StartupList({
                         <span>復活シナリオ</span>
                         <div 
                           onMouseDown={(e) => startResizing('revivalScenario', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -2100,10 +2165,10 @@ export default function StartupList({
                         </div>
                         <div 
                           onMouseDown={(e) => startResizing('createdAtDate', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
@@ -2117,10 +2182,10 @@ export default function StartupList({
                         <span>設立 / 拠点 / Web</span>
                         <div 
                           onMouseDown={(e) => startResizing('location', e)} 
-                          className="absolute right-0 top-0 bottom-0 w-3 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors" 
+                          className="absolute -right-2 top-0 bottom-0 w-4 flex items-center justify-center cursor-col-resize z-30 group/resizer hover:bg-blue-500/20 transition-colors select-none touch-none" 
                           title="左右にドラッグして列幅を変更" 
                         >
-                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full" />
+                          <div className="w-[2px] h-4 bg-slate-300 dark:bg-slate-650 group-hover/resizer:bg-blue-500 group-hover/resizer:h-full transition-all rounded-full pointer-events-none" />
                         </div>
                       </th>
                     )}
